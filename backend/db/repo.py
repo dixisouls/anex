@@ -211,6 +211,14 @@ async def create_user(
     return user
 
 
+async def get_user(session, user_id) -> User:
+    uid = user_id if isinstance(user_id, uuid.UUID) else uuid.UUID(str(user_id))
+    user = await session.get(User, uid)
+    if user is None:
+        raise KeyError(user_id)
+    return user
+
+
 async def get_user_by_email(session, email: str) -> User | None:
     res = await session.execute(select(User).where(User.email == email))
     return res.scalar_one_or_none()
@@ -246,6 +254,24 @@ async def upsert_holding(session, user_id, model_id: str, shares: float) -> None
     else:
         existing.shares = shares
     await session.flush()
+
+
+async def upsert_holding_delta(
+    session, user_id, model_id: str, delta_shares: float
+) -> float:
+    """Insert or add shares; clamp result to >= 0. Returns new share balance."""
+    existing = await get_holding(session, user_id, model_id)
+    if existing is None:
+        new_shares = max(0.0, float(delta_shares))
+        if new_shares > 0:
+            session.add(
+                Holding(user_id=user_id, model_id=model_id, shares=new_shares)
+            )
+    else:
+        new_shares = max(0.0, float(existing.shares) + float(delta_shares))
+        existing.shares = new_shares
+    await session.flush()
+    return new_shares if existing is not None else max(0.0, float(delta_shares))
 
 
 async def list_holdings(session, user_id) -> list[Holding]:
