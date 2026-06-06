@@ -2,7 +2,7 @@
     {
       "type": "task_posted",
       "event_id": "a1f0c2d3e4b54a6f8c9d0e1f2a3b4c5d",
-      "ts": "2026-06-02T18:30:00.100000+00:00",
+      "ts": "2026-06-06T18:30:00.100000+00:00",
       "task_id": "t-001",
       "goal": "Write a launch announcement for our new API and include a short code snippet showing a call",
       "subtasks": [
@@ -13,7 +13,7 @@
     {
       "type": "candidates_ranked",
       "event_id": "b2e1d3c4f5a64b7e9d0a1b2c3d4e5f60",
-      "ts": "2026-06-02T18:30:01.250000+00:00",
+      "ts": "2026-06-06T18:30:01.250000+00:00",
       "subtask_id": "s-001",
       "candidates": [
         { "agent_id": "writer-01", "match_score": 0.91, "reputation": 0.50, "price": 5.0, "final_score": 0.74 },
@@ -24,14 +24,14 @@
     {
       "type": "agent_hired",
       "event_id": "c3f2e4d5a6b74c8f0e1b2c3d4e5f6071",
-      "ts": "2026-06-02T18:30:01.400000+00:00",
+      "ts": "2026-06-06T18:30:01.400000+00:00",
       "subtask_id": "s-001",
       "agent_id": "writer-01"
     },
     {
       "type": "task_executed",
       "event_id": "d4a3f5e6b7c84d9a0f2c3d4e5f607182",
-      "ts": "2026-06-02T18:30:03.900000+00:00",
+      "ts": "2026-06-06T18:30:03.900000+00:00",
       "subtask_id": "s-001",
       "agent_id": "writer-01",
       "output_preview": "Introducing our new API. Build in minutes, not weeks. Today we are opening access to..."
@@ -39,7 +39,7 @@
     {
       "type": "task_scored",
       "event_id": "e5b4a6f7c8d94e0b1a3d4e5f60718293",
-      "ts": "2026-06-02T18:30:05.050000+00:00",
+      "ts": "2026-06-06T18:30:05.050000+00:00",
       "subtask_id": "s-001",
       "agent_id": "writer-01",
       "judge_score": 0.86
@@ -47,7 +47,7 @@
     {
       "type": "reputation_changed",
       "event_id": "f6c5b7a8d9e04f1c2b4e5f6071829304",
-      "ts": "2026-06-02T18:30:05.200000+00:00",
+      "ts": "2026-06-06T18:30:05.200000+00:00",
       "agent_id": "writer-01",
       "old": 0.50,
       "new": 0.608
@@ -55,7 +55,7 @@
     {
       "type": "credits_changed",
       "event_id": "07d6c8b9e0f15021c3a5f60718293041",
-      "ts": "2026-06-02T18:30:05.260000+00:00",
+      "ts": "2026-06-06T18:30:05.260000+00:00",
       "agent_id": "writer-01",
       "old": 100.0,
       "new": 104.3
@@ -63,7 +63,7 @@
     {
       "type": "agent_upgraded",
       "event_id": "18e7d9c0f1a26132d4b6071829304152",
-      "ts": "2026-06-02T18:31:42.000000+00:00",
+      "ts": "2026-06-06T18:31:42.000000+00:00",
       "agent_id": "writer-01",
       "change_type": "model_swap",
       "detail": "gemini-flash to gemini-pro",
