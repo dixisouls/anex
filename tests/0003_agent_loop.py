@@ -163,7 +163,9 @@ async def test_run_task_dispatches_sequentially(mock_agent):
         mock_queue.enqueue_run_and_wait.side_effect = fake_wait
         mock_get_queue.return_value = mock_queue
 
-        await broker.run_task(r, session, "00000000-0000-0000-0000-000000000001", "goal")
+        await broker._run_task_body(
+            r, session, "00000000-0000-0000-0000-000000000001", "goal"
+        )
 
     assert dispatch_order == [
         "00000000-0000-0000-0000-000000000001-0",

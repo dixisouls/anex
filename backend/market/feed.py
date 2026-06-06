@@ -12,12 +12,18 @@ read_new() here is the same read, used by tests and the SSE loop.
 
 from contracts.events import EVENT_ADAPTER, MarketEvent
 from backend.config import STREAM_KEY
+from backend.infra.retry import with_redis_retry
 from backend.infra.util import to_str
 
 
 async def emit(r, event: MarketEvent) -> str:
     """Append an event to market:feed. Returns the stream entry id."""
-    entry_id = await r.xadd(STREAM_KEY, {"data": event.model_dump_json()})
+    payload = event.model_dump_json()
+
+    async def _xadd() -> bytes | str:
+        return await r.xadd(STREAM_KEY, {"data": payload})
+
+    entry_id = await with_redis_retry(_xadd)
     return to_str(entry_id)
 
 

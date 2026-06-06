@@ -15,7 +15,9 @@ from contracts.events import (
 from contracts.schemas import Candidate, Subtask
 from backend.config import GCP_CHAT_MODEL, W_MATCH, W_PRICE, W_REP
 from backend.db import repo
+from backend.infra.db import session_scope
 from backend.infra.model_router import generate
+from backend.infra.redis_client import get_redis
 from backend.market import pricing, registry
 from backend.market.judge import judge
 from backend.market.ledger import settle
@@ -94,7 +96,15 @@ async def rank(r, subtask_text: str, k: int = 5) -> list[Candidate]:
     return out
 
 
-async def run_task(r, session, task_id: str, goal: str) -> None:
+@weave.op
+async def run_task(task_id: str, goal: str) -> None:
+    """Root trace for one posted task; decompose/rank/judge/settle nest under this op."""
+    async with session_scope() as session:
+        r = get_redis()
+        await _run_task_body(r, session, task_id, goal)
+
+
+async def _run_task_body(r, session, task_id: str, goal: str) -> None:
     queue = get_queue()
     subtask_texts = decompose(goal)
     subtasks = [
