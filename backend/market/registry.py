@@ -172,6 +172,20 @@ async def get_model_price(r, model_id: str) -> float | None:
     return float(to_str(p)) if p is not None else None
 
 
+async def read_price_history(r, count: int = 500) -> list[dict]:
+    """Recent price ticks from the Redis stream, oldest first."""
+    entries = await r.xrevrange(PRICE_HISTORY_KEY, count=count)
+    entries.reverse()
+    out: list[dict] = []
+    for entry_id, fields in entries:
+        row = {to_str(k): to_str(v) for k, v in fields.items()}
+        row["id"] = to_str(entry_id)
+        if "price" in row:
+            row["price"] = float(row["price"])
+        out.append(row)
+    return out
+
+
 async def search(r, query_vector_bytes: bytes, k: int = 5) -> list[tuple[str, float]]:
     query = (
         Query(f"*=>[KNN {k} @{VECTOR_FIELD} $vec AS score]")
