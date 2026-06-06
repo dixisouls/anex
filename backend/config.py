@@ -32,6 +32,7 @@ MODEL_PREFIX = "model:"
 TASK_PREFIX = "task:"
 LEADERBOARD_KEY = "leaderboard"
 MODEL_PRICES_KEY = "model_prices"
+PRICE_HISTORY_KEY = "price:history"
 STREAM_KEY = "market:feed"
 INDEX_NAME = os.getenv("INDEX_NAME", "agents_idx")
 VECTOR_FIELD = "embedding"
@@ -77,6 +78,17 @@ TIER_IPO_PRICE = {
 USER_START_CREDITS = float(os.getenv("USER_START_CREDITS", "1000"))
 SIM_POSTERS = int(os.getenv("SIM_POSTERS", "2"))
 SIM_INVESTORS = int(os.getenv("SIM_INVESTORS", "3"))
+
+# Model exchange AMM tuning
+EARN_RATE = float(os.getenv("EARN_RATE", "20.0"))
+EARN_CLAMP = float(os.getenv("EARN_CLAMP", "200.0"))
+MIN_POOL_SHARES = 1.0
+MIN_POOL_CREDITS = 1.0
+
+# Ledger tuning
+REP_ALPHA = float(os.getenv("REP_ALPHA", "0.3"))
+AWARD_RATE = float(os.getenv("AWARD_RATE", "1.0"))
+UPGRADE_THRESHOLD = float(os.getenv("UPGRADE_THRESHOLD", "200.0"))
 
 # Placeholder model price before live exchange reads (Branch 2 only)
 PLACEHOLDER_MODEL_PRICE = float(os.getenv("PLACEHOLDER_MODEL_PRICE", "10.0"))
