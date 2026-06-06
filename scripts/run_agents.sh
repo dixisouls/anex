@@ -3,8 +3,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-export WEAVE_DISABLED="${WEAVE_DISABLED:-1}"
-
 declare -a AGENTS=(
   "writer-01:9001"
   "coder-01:9002"
