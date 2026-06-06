@@ -11,7 +11,8 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from contracts.schemas import UserPublic
-from backend.config import USER_START_CREDITS
+from backend.config import API_URL, USER_START_CREDITS
+from backend.sim import runner as sim_runner
 from backend.db import repo
 from backend.db.models import Model as ModelORM
 from backend.infra.db import get_session, session_scope
@@ -74,6 +75,12 @@ class CreateUserBody(BaseModel):
 
 class CreateUserResponse(BaseModel):
     user_id: str
+
+
+class SimStartBody(BaseModel):
+    n_posters: int | None = None
+    n_investors: int | None = None
+    cadence_s: float | None = None
 
 
 class MarketResponse(BaseModel):
@@ -164,6 +171,19 @@ async def run_result(body: RunResultBody, session=Depends(get_session)):
 
 @app.get("/healthz")
 async def healthz():
+    return {"ok": True}
+
+
+@app.post("/sim/start")
+async def sim_start(body: SimStartBody | None = None):
+    params = body.model_dump(exclude_none=True) if body else {}
+    await sim_runner.start(API_URL, **params)
+    return {"ok": True}
+
+
+@app.post("/sim/stop")
+async def sim_stop():
+    await sim_runner.stop()
     return {"ok": True}
 
 
