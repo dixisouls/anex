@@ -271,7 +271,9 @@ async def upsert_holding_delta(
         new_shares = max(0.0, float(existing.shares) + float(delta_shares))
         existing.shares = new_shares
     await session.flush()
-    return new_shares if existing is not None else max(0.0, float(delta_shares))
+    if existing is None:
+        return max(0.0, float(delta_shares))
+    return new_shares
 
 
 async def list_holdings(session, user_id) -> list[Holding]:
