@@ -18,6 +18,7 @@ from backend.db import repo
 from backend.infra.model_router import generate
 from backend.market import pricing, registry
 from backend.market.judge import judge
+from backend.market.ledger import settle
 from backend.market.seed_agents import SUGGESTED_PROMPTS
 from backend.ports.factory import get_embeddings, get_event_bus, get_queue
 from backend.ports.queue import RunDispatch
@@ -152,3 +153,15 @@ async def handle_run_result(
         output_preview=output[:280],
         judge_score=score,
     )
+    a = await registry.get_agent_cached(r, agent_id)
+    if a is not None:
+        mp = await pricing.model_price(r, a.model)
+        await settle(
+            r,
+            session,
+            agent_id=agent_id,
+            model_id=a.model,
+            judge_score=score,
+            derived_price=pricing.derived_price(mp, a.margin),
+            task_id=task_id,
+        )
