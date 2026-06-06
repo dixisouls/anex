@@ -27,10 +27,33 @@ bus = get_event_bus()
 emb = get_embeddings()
 
 
+def _build_subtask_prompt(
+    goal: str,
+    subtask_text: str,
+    prior_results: list[tuple[str, str]],
+) -> str:
+    if not prior_results:
+        return f"ORIGINAL GOAL: {goal}\n\nCURRENT TASK: {subtask_text}"
+    lines = [
+        f"- Step {i} ({text}): {output}"
+        for i, (text, output) in enumerate(prior_results)
+    ]
+    return (
+        f"ORIGINAL GOAL: {goal}\n\n"
+        f"PRIOR RESULTS:\n"
+        + "\n".join(lines)
+        + f"\n\nCURRENT TASK: {subtask_text}"
+    )
+
+
 @weave.op
 def decompose(goal: str) -> list[str]:
     prompt = (
-        "Split GOAL into 1-4 ordered subtasks. Reply ONLY JSON list of strings.\n\n"
+        "Split GOAL into 1-4 ordered subtasks for specialized agents.\n"
+        "Each subtask string MUST be self-contained: include concrete content "
+        "from GOAL (phrases, names, code, data) so an agent can execute it "
+        "without seeing the original goal.\n"
+        "Reply ONLY a JSON list of strings.\n\n"
         f"GOAL: {goal}"
     )
     raw = generate(GCP_CHAT_MODEL, "gcp", prompt)
@@ -85,6 +108,7 @@ async def run_task(r, session, task_id: str, goal: str) -> None:
 
     await bus.publish(TaskPosted(task_id=task_id, goal=goal, subtasks=subtasks))
 
+    prior_results: list[tuple[str, str]] = []
     for st in subtasks:
         cands = await rank(r, st.text)
         if not cands:
@@ -108,16 +132,19 @@ async def run_task(r, session, task_id: str, goal: str) -> None:
             "system": SUGGESTED_PROMPTS.get(top.agent_id),
             "tools": a.tools,
         }
-        await queue.enqueue_run(
+        agent_input = _build_subtask_prompt(goal, st.text, prior_results)
+        output = await queue.enqueue_run_and_wait(
             RunDispatch(
                 subtask_id=st.subtask_id,
                 agent_id=top.agent_id,
                 service_url=a.service_url,
-                subtask_text=st.text,
+                subtask_text=agent_input,
                 config=config,
                 task_id=task_id,
             )
         )
+        if output is not None:
+            prior_results.append((st.text, output))
 
 
 async def handle_run_result(
@@ -150,7 +177,7 @@ async def handle_run_result(
         session,
         subtask_id=subtask_id,
         agent_id=agent_id,
-        output_preview=output[:280],
+        output_preview=output,
         judge_score=score,
     )
     a = await registry.get_agent_cached(r, agent_id)

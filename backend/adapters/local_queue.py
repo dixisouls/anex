@@ -19,7 +19,10 @@ class LocalQueue:
         asyncio.create_task(self._run(dispatch))
         return dispatch_id
 
-    async def _run(self, dispatch: RunDispatch) -> None:
+    async def enqueue_run_and_wait(self, dispatch: RunDispatch) -> str | None:
+        return await self._run(dispatch)
+
+    async def _run(self, dispatch: RunDispatch) -> str | None:
         from backend.market import broker
 
         try:
@@ -42,9 +45,11 @@ class LocalQueue:
                     output=output,
                     task_id=dispatch.task_id,
                 )
+            return output
         except Exception:
             logger.exception(
                 "local queue dispatch failed subtask=%s agent=%s",
                 dispatch.subtask_id,
                 dispatch.agent_id,
             )
+            return None
