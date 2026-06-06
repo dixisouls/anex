@@ -33,5 +33,6 @@ google-cloud-secret-manager>=2.28   # 2.28.0 (2026-05-07). Read secrets at start
 cloud-sql-python-connector[asyncpg]>=1.20.3  # 1.20.3 (2026-05-27). Cloud SQL private-IP connectivity (lazy refresh).
 
 # --- Dev / test ---
+python-dotenv>=1.0       # load .env for local runs (backend/config.py)
 pytest>=8.4              # required by pytest-asyncio 1.4.0
 pytest-asyncio>=1.4      # 1.4.0 (2026-05-26)

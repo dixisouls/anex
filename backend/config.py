@@ -3,6 +3,17 @@ Central configuration for the backend.
 """
 
 import os
+from pathlib import Path
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+except ImportError:
+    pass
+
+# Local↔cloud seam: selects Queue + EventBus adapters (ports/factory.py)
+RUNTIME_ENV = os.getenv("RUNTIME_ENV", "local")  # "local" | "gcp"
 
 # Redis connection
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
@@ -31,8 +42,25 @@ VECTOR_METRIC = "COSINE"
 
 # GCP Gemini Enterprise Agent Platform (google-genai)
 GCP_PROJECT = os.getenv("GCP_PROJECT", os.getenv("VERTEX_PROJECT", ""))
-GCP_LOCATION = os.getenv("GCP_LOCATION", os.getenv("VERTEX_LOCATION", "us-central1"))
-GCP_EMBED_MODEL = os.getenv("GCP_EMBED_MODEL", "gemini-embedding-001")
+GCP_LOCATION = os.getenv("GCP_LOCATION", os.getenv("VERTEX_LOCATION", "global"))
+GCP_CHAT_MODEL = os.getenv("GCP_CHAT_MODEL", "gemini-3.5-flash")
+GCP_EMBED_MODEL = os.getenv(
+    "GCP_EMBED_MODEL", os.getenv("VERTEX_EMBED_MODEL", "gemini-embedding-001")
+)
+
+# OpenAI (worker variety + simulation)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-4.1-mini")
+
+# Cloud-only names (read by GCP adapters in Branch 7; harmless defaults locally)
+API_URL = os.getenv("API_URL", "http://localhost:8000")
+PUBSUB_TOPIC = os.getenv("PUBSUB_TOPIC", "market-feed")
+PUBSUB_SUB = os.getenv("PUBSUB_SUB", "market-feed-sse")
+TASKS_INVOKER_SA = os.getenv("TASKS_INVOKER_SA", "")
+
+# Weave observability
+WEAVE_PROJECT = os.getenv("WEAVE_PROJECT", "agent-bazaar")
+WEAVE_DISABLED = os.getenv("WEAVE_DISABLED", "0") == "1"
 
 # Broker rank weights
 W_MATCH = float(os.getenv("W_MATCH", "1.0"))
@@ -49,3 +77,9 @@ TIER_IPO_PRICE = {
 USER_START_CREDITS = float(os.getenv("USER_START_CREDITS", "1000"))
 SIM_POSTERS = int(os.getenv("SIM_POSTERS", "2"))
 SIM_INVESTORS = int(os.getenv("SIM_INVESTORS", "3"))
+
+# Placeholder model price before live exchange reads (Branch 2 only)
+PLACEHOLDER_MODEL_PRICE = float(os.getenv("PLACEHOLDER_MODEL_PRICE", "10.0"))
+
+# Idempotency keys for scored subtasks
+SCORED_PREFIX = "scored:"
