@@ -1,20 +1,5 @@
 """
-Seed roster.
-
-Six distinct specialists so the market has variety to select from. Two are
-deliberately weak (a lite model and a vague capability_text) so the demo shows
-an agent getting starved. Starting reputation is equal at 0.5 so divergence is
-earned, not seeded. Prices are spread so the rank step has something to trade
-off. service_url points at the localhost port each agent will run on in dev
-(Track A), and gets repointed to a Cloud Run URL at the cloud cutover.
-
-Only the Agent fields are written to Redis here. The system prompt that defines
-each agent's behavior belongs to the agent service (Track A), so SUGGESTED_PROMPTS
-below is a handoff aid for Track A, not something this module stores.
-
-The model strings are tier labels the agent service maps to real Vertex model
-ids. Track A confirms the exact ids. The upgrade module (B5) swaps an agent up
-this ladder: flash-lite -> flash -> pro.
+Seed roster. margin spreads derived hire cost; model must exist in SEED_MODELS.
 """
 
 from contracts.schemas import Agent
@@ -27,7 +12,7 @@ SEED_AGENTS: list[Agent] = [
         capability_text="Writes and summarizes marketing and technical copy, blog posts, and product announcements",
         model="gemini-3.5-flash",
         tools=[],
-        price=5.0,
+        margin=0.20,
         service_url="http://localhost:9001",
     ),
     Agent(
@@ -37,7 +22,7 @@ SEED_AGENTS: list[Agent] = [
         capability_text="Generates and debugs code snippets and small programs in Python and JavaScript",
         model="gemini-3.1-pro-preview",
         tools=[],
-        price=8.0,
+        margin=0.30,
         service_url="http://localhost:9002",
     ),
     Agent(
@@ -47,7 +32,7 @@ SEED_AGENTS: list[Agent] = [
         capability_text="Summarizes long documents and extracts key points and figures from data",
         model="gemini-3.5-flash",
         tools=[],
-        price=4.0,
+        margin=0.15,
         service_url="http://localhost:9003",
     ),
     Agent(
@@ -57,11 +42,9 @@ SEED_AGENTS: list[Agent] = [
         capability_text="Checks claims for factual accuracy and flags unsupported or incorrect statements",
         model="gemini-3.5-flash",
         tools=[],
-        price=6.0,
+        margin=0.25,
         service_url="http://localhost:9004",
     ),
-    # Deliberately weak: vague capability, cheap lite model. Should match poorly
-    # and lose hires as the market diverges.
     Agent(
         agent_id="translator-01",
         name="Translator",
@@ -69,23 +52,21 @@ SEED_AGENTS: list[Agent] = [
         capability_text="Translates text",
         model="gemma-4-26b-a4b-it",
         tools=[],
-        price=3.0,
+        margin=0.10,
         service_url="http://localhost:9005",
     ),
-    # Deliberately weak: vague capability, cheap lite model.
     Agent(
         agent_id="planner-01",
         name="Planner",
         skills=["planning"],
         capability_text="Makes plans",
-        model="gemini-3.1-flash-lite-preview",
+        model="gemini-3.1-flash-lite",
         tools=[],
-        price=3.0,
+        margin=0.10,
         service_url="http://localhost:9006",
     ),
 ]
 
-# Handoff to Track A. Not written to Redis by the seeder.
 SUGGESTED_PROMPTS: dict[str, str] = {
     "writer-01": "You are a sharp copywriter. Write clear, compelling marketing and technical copy. Keep it tight.",
     "coder-01": "You are a careful software engineer. Produce correct, minimal code with a one line explanation.",

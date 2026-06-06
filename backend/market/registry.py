@@ -1,19 +1,5 @@
 """
 Registry: the Redis projection and the hiring index.
-
-Postgres is the source of truth for agents (see backend/db). Redis holds a
-projection of each agent as a hash plus its capability vector, so the hot path
-(KNN hiring, reading price and service_url during a task, the leaderboard) never
-needs a database round trip. The projection is rebuilt by the seeder and updated
-by the ledger.
-
-This module owns the Redis layout:
-- agent:{id}   hash, the projected Agent fields plus the embedding bytes
-- agents_idx   FLAT COSINE vector index over the embeddings, for KNN hiring
-- leaderboard  sorted set, member agent_id scored by reputation
-
-agent_to_mapping and mapping_to_agent are pure (no Redis) and unit testable.
-Everything that touches Redis is async and takes the client first.
 """
 
 import json
@@ -31,12 +17,15 @@ from backend.config import (
     AGENT_PREFIX,
     INDEX_NAME,
     LEADERBOARD_KEY,
+    MODEL_PREFIX,
+    MODEL_PRICES_KEY,
     STREAM_KEY,
     TASK_PREFIX,
     VECTOR_DIM,
     VECTOR_FIELD,
     VECTOR_METRIC,
 )
+from backend.db.models import Model as ModelORM
 from backend.infra.util import to_str
 
 
@@ -44,7 +33,9 @@ def agent_key(agent_id: str) -> str:
     return f"{AGENT_PREFIX}{agent_id}"
 
 
-# ----- serialize and deserialize (pure, no Redis) -----
+def model_key(model_id: str) -> str:
+    return f"{MODEL_PREFIX}{model_id}"
+
 
 def agent_to_mapping(agent: Agent, vector_bytes: bytes) -> dict:
     return {
@@ -56,7 +47,7 @@ def agent_to_mapping(agent: Agent, vector_bytes: bytes) -> dict:
         "tools": json.dumps(agent.tools),
         "reputation": str(agent.reputation),
         "credits": str(agent.credits),
-        "price": str(agent.price),
+        "margin": str(agent.margin),
         "hires": str(agent.hires),
         "wins": str(agent.wins),
         "service_url": agent.service_url or "",
@@ -80,14 +71,12 @@ def mapping_to_agent(mapping: dict) -> Agent:
         tools=json.loads(d["tools"]),
         reputation=float(d["reputation"]),
         credits=float(d["credits"]),
-        price=float(d["price"]),
+        margin=float(d["margin"]),
         hires=int(d["hires"]),
         wins=int(d["wins"]),
         service_url=(d.get("service_url") or None),
     )
 
-
-# ----- index lifecycle -----
 
 async def create_index(r) -> None:
     schema = (
@@ -105,35 +94,49 @@ async def drop_index(r) -> None:
     try:
         await r.ft(INDEX_NAME).dropindex(delete_documents=False)
     except Exception:
-        pass  # index did not exist
+        pass
 
 
 async def reset_redis(r) -> None:
-    """Clear the Redis projection so a reseed is a clean slate. The durable data
-    in Postgres is cleared separately by repo.clear_market."""
     await drop_index(r)
     async for key in r.scan_iter(match=f"{AGENT_PREFIX}*"):
+        await r.delete(key)
+    async for key in r.scan_iter(match=f"{MODEL_PREFIX}*"):
         await r.delete(key)
     async for key in r.scan_iter(match=f"{TASK_PREFIX}*"):
         await r.delete(key)
     await r.delete(LEADERBOARD_KEY)
+    await r.delete(MODEL_PRICES_KEY)
     await r.delete(STREAM_KEY)
 
 
-# ----- projection (Postgres -> Redis) -----
-
 async def project_agent(r, agent: Agent, vector_bytes: bytes) -> None:
-    """Write the agent hash and set its leaderboard score to its reputation."""
     await r.hset(agent_key(agent.agent_id), mapping=agent_to_mapping(agent, vector_bytes))
     await r.zadd(LEADERBOARD_KEY, {agent.agent_id: agent.reputation})
 
 
+async def project_model(r, m: ModelORM) -> None:
+    price = float(m.pool_credits) / float(m.pool_shares)
+    await r.hset(
+        model_key(m.model_id),
+        mapping={
+            "model_id": m.model_id,
+            "name": m.name,
+            "provider": m.provider,
+            "tier": m.tier,
+            "executable": "1" if m.executable else "0",
+            "shares": str(float(m.pool_shares)),
+            "credits": str(float(m.pool_credits)),
+            "price": str(price),
+            "ipo_price": str(float(m.ipo_price)),
+        },
+    )
+    await r.zadd(MODEL_PRICES_KEY, {m.model_id: price})
+
+
 async def update_leaderboard(r, agent_id: str, reputation: float) -> None:
-    """Called by the ledger when reputation changes."""
     await r.zadd(LEADERBOARD_KEY, {agent_id: reputation})
 
-
-# ----- hot reads (from the Redis projection) -----
 
 async def get_agent_cached(r, agent_id: str) -> Agent | None:
     mapping = await r.hgetall(agent_key(agent_id))
@@ -142,10 +145,19 @@ async def get_agent_cached(r, agent_id: str) -> Agent | None:
     return mapping_to_agent(mapping)
 
 
+async def get_model_cached(r, model_id: str) -> dict | None:
+    mapping = await r.hgetall(model_key(model_id))
+    if not mapping:
+        return None
+    return {to_str(k): to_str(v) for k, v in mapping.items()}
+
+
+async def get_model_price(r, model_id: str) -> float | None:
+    p = await r.hget(model_key(model_id), "price")
+    return float(to_str(p)) if p is not None else None
+
+
 async def search(r, query_vector_bytes: bytes, k: int = 5) -> list[tuple[str, float]]:
-    """KNN over the capability vectors. Returns (agent_id, match_score) best
-    first; match_score is 1 minus cosine distance, already in 0 to 1. This is the
-    hiring primitive the broker calls in B2."""
     query = (
         Query(f"*=>[KNN {k} @{VECTOR_FIELD} $vec AS score]")
         .sort_by("score")
