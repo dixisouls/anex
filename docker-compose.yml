@@ -1,0 +1,72 @@
+# Redis 8 ships the query engine and vector search in core (no redis-stack image
+# needed). Postgres 16 is the durable system of record. Redis holds projections
+# (vector index, leaderboard, the market:feed stream) rebuildable from Postgres.
+#
+#   docker compose up -d postgres redis           # start the datastores
+#   docker compose run --rm migrate               # alembic upgrade head
+#   docker compose run --rm seeder                # load the market
+#   docker compose run --rm seeder python -m tests.smoke_test
+#
+# migrate and seeder are under a profile so "docker compose up" only starts the
+# datastores. B4 will add an "api" service that reuses the same image with a
+# uvicorn command and depends on both datastores.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bazaar
+      POSTGRES_PASSWORD: bazaar
+      POSTGRES_DB: bazaar
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bazaar"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "no", "--save", "60", "1"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  migrate:
+    build: .
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://bazaar:bazaar@postgres:5432/bazaar
+    command: ["alembic", "upgrade", "head"]
+
+  seeder:
+    build: .
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://bazaar:bazaar@postgres:5432/bazaar
+      REDIS_URL: redis://redis:6379
+      EMBED_BACKEND: local
+    command: ["python", "-m", "backend.market.seeder"]
+
+volumes:
+  pg-data:
+  redis-data:
