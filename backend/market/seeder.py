@@ -10,7 +10,7 @@ from contracts.events import ModelListed
 from backend.config import IPO_SHARES, SIM_INVESTORS, SIM_POSTERS, TIER_IPO_PRICE, USER_START_CREDITS
 from backend.db import repo
 from backend.infra.db import session_scope
-from backend.infra.embeddings import embed_bytes
+from backend.ports.factory import get_embeddings
 from backend.infra.redis_client import close_redis, get_redis
 from backend.market import registry
 from backend.market.feed import emit
@@ -80,8 +80,9 @@ async def seed() -> dict[str, int]:
             ),
         )
 
+    emb = get_embeddings()
     for agent in SEED_AGENTS:
-        await registry.project_agent(r, agent, embed_bytes(agent.capability_text))
+        await registry.project_agent(r, agent, emb.embed_bytes(agent.capability_text))
 
     return {"agents": len(SEED_AGENTS), "models": len(models), "users": user_count}
 
