@@ -6,36 +6,33 @@ Seeder (async). Lists model stocks, seed agents, and sim users; projects to Redi
 
 import asyncio
 
-from contracts.events import ModelListed
-from backend.config import IPO_SHARES, SIM_INVESTORS, SIM_POSTERS, TIER_IPO_PRICE, USER_START_CREDITS
+from backend.config import SIM_INVESTORS, SIM_POSTERS, USER_START_CREDITS
 from backend.db import repo
 from backend.infra.db import session_scope
 from backend.ports.factory import get_embeddings
 from backend.infra.redis_client import close_redis, get_redis
-from backend.market import registry
-from backend.market.feed import emit
+from backend.market import exchange, registry
 from backend.market.seed_agents import SEED_AGENTS
 from backend.market.seed_models import SEED_MODELS
 
 
 async def seed() -> dict[str, int]:
     """Fresh market. Returns counts {agents, models, users}."""
+    r = get_redis()
+    await registry.reset_redis(r)
+    await registry.create_index(r)
+
     async with session_scope() as session:
         await repo.clear_market(session)
 
         for spec in SEED_MODELS:
-            price0 = TIER_IPO_PRICE[spec["tier"]]
-            shares = IPO_SHARES
-            credits = price0 * shares
-            await repo.upsert_model(
+            await exchange.list_model(
                 session,
+                r,
                 model_id=spec["model_id"],
                 name=spec["name"],
                 provider=spec["provider"],
                 tier=spec["tier"],
-                shares=shares,
-                credits=credits,
-                ipo_price=price0,
             )
 
         for agent in SEED_AGENTS:
@@ -61,30 +58,11 @@ async def seed() -> dict[str, int]:
             )
             user_count += 1
 
-        models = await repo.list_models(session)
-
-    r = get_redis()
-    await registry.reset_redis(r)
-    await registry.create_index(r)
-
-    for m in models:
-        await registry.project_model(r, m)
-        await emit(
-            r,
-            ModelListed(
-                model_id=m.model_id,
-                name=m.name,
-                provider=m.provider,
-                tier=m.tier,
-                ipo_price=float(m.ipo_price),
-            ),
-        )
-
     emb = get_embeddings()
     for agent in SEED_AGENTS:
         await registry.project_agent(r, agent, emb.embed_bytes(agent.capability_text))
 
-    return {"agents": len(SEED_AGENTS), "models": len(models), "users": user_count}
+    return {"agents": len(SEED_AGENTS), "models": len(SEED_MODELS), "users": user_count}
 
 
 async def _main() -> None:
