@@ -19,6 +19,7 @@ from backend.config import (
     LEADERBOARD_KEY,
     MODEL_PREFIX,
     MODEL_PRICES_KEY,
+    PRICE_HISTORY_KEY,
     SCORED_PREFIX,
     STREAM_KEY,
     TASK_PREFIX,
@@ -26,6 +27,7 @@ from backend.config import (
     VECTOR_FIELD,
     VECTOR_METRIC,
 )
+from backend.db import repo
 from backend.db.models import Model as ModelORM
 from backend.infra.util import to_str
 
@@ -108,6 +110,7 @@ async def reset_redis(r) -> None:
         await r.delete(key)
     await r.delete(LEADERBOARD_KEY)
     await r.delete(MODEL_PRICES_KEY)
+    await r.delete(PRICE_HISTORY_KEY)
     await r.delete(STREAM_KEY)
 
 
@@ -137,6 +140,17 @@ async def project_model(r, m: ModelORM) -> None:
 
 async def update_leaderboard(r, agent_id: str, reputation: float) -> None:
     await r.zadd(LEADERBOARD_KEY, {agent_id: reputation})
+
+
+async def reproject_agent(r, session, agent_id: str) -> None:
+    """Rebuild agent hash from Postgres, preserving the existing capability vector."""
+    a = await repo.get_agent(session, agent_id)
+    if a is None:
+        return
+    vector_bytes = await r.hget(agent_key(agent_id), VECTOR_FIELD)
+    if vector_bytes is None:
+        return
+    await project_agent(r, a, vector_bytes)
 
 
 async def get_agent_cached(r, agent_id: str) -> Agent | None:

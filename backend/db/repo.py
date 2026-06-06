@@ -65,6 +65,54 @@ async def get_agent(session, agent_id: str) -> AgentSchema | None:
     return _to_schema(a) if a else None
 
 
+async def update_agent_stats(
+    session,
+    agent_id: str,
+    *,
+    reputation: float,
+    credits: float,
+    inc_hires: int = 0,
+    inc_wins: int = 0,
+) -> None:
+    a = await session.get(Agent, agent_id)
+    if a is None:
+        raise KeyError(agent_id)
+    a.reputation = reputation
+    a.credits = credits
+    a.hires += inc_hires
+    a.wins += inc_wins
+
+
+async def add_ledger_entry(
+    session,
+    *,
+    agent_id: str,
+    task_id: str | uuid.UUID | None,
+    kind: str,
+    credits_delta: float,
+    reputation_before: float | None = None,
+    reputation_after: float | None = None,
+    model_id: str | None = None,
+    amount: float | None = None,
+) -> LedgerEntry:
+    task_uuid = None
+    if task_id is not None:
+        task_uuid = task_id if isinstance(task_id, uuid.UUID) else uuid.UUID(str(task_id))
+    entry = LedgerEntry(
+        agent_id=agent_id,
+        task_id=task_uuid,
+        kind=kind,
+        credits_delta=credits_delta,
+        reputation_before=reputation_before,
+        reputation_after=reputation_after,
+        model_id=model_id,
+        amount=amount,
+    )
+    session.add(entry)
+    await session.flush()
+    return entry
+
+
 async def list_agents(session) -> list[AgentSchema]:
     res = await session.execute(select(Agent).order_by(Agent.agent_id))
     return [_to_schema(a) for a in res.scalars().all()]
@@ -96,7 +144,7 @@ async def upsert_model(
     credits: float,
     ipo_price: float,
     executable: bool = True,
-) -> None:
+) -> ModelORM:
     values = dict(
         model_id=model_id,
         name=name,
@@ -113,6 +161,11 @@ async def upsert_model(
         set_={k: v for k, v in values.items() if k != "model_id"},
     )
     await session.execute(stmt)
+    await session.flush()
+    m = await session.get(ModelORM, model_id)
+    if m is None:
+        raise KeyError(model_id)
+    return m
 
 
 async def get_model(session, model_id: str) -> ModelORM | None:
