@@ -6,7 +6,7 @@ to end.
     docker compose up -d postgres redis
     pip install -r requirements.txt
     alembic upgrade head
-    export GCP_PROJECT=anex-498616 GCP_LOCATION=global
+    export GCP_PROJECT=your-gcp-project-id GCP_LOCATION=global
     python -m backend.market.seeder
     python -m tests.0001_init
 

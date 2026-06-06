@@ -7,7 +7,7 @@
 #
 # Seeding uses real GCP embeddings by default (gemini-embedding-001 @ 768 dims).
 # The container has no ADC unless you mount credentials — prefer host seeding:
-#   export GCP_PROJECT=anex-498616 GCP_LOCATION=global
+#   export GCP_PROJECT=your-gcp-project-id GCP_LOCATION=global
 #   alembic upgrade head
 #   python -m backend.market.seeder
 #   python -m tests.0001_init
@@ -75,7 +75,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://bazaar:bazaar@postgres:5432/bazaar
       REDIS_URL: redis://redis:6379
-      GCP_PROJECT: ${GCP_PROJECT:-anex-498616}
+      GCP_PROJECT: ${GCP_PROJECT}
       GCP_LOCATION: ${GCP_LOCATION:-global}
       GCP_EMBED_MODEL: ${GCP_EMBED_MODEL:-gemini-embedding-001}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/adc.json
@@ -98,7 +98,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://bazaar:bazaar@postgres:5432/bazaar
       REDIS_URL: redis://redis:6379
       RUNTIME_ENV: local
-      GCP_PROJECT: ${GCP_PROJECT:-anex-498616}
+      GCP_PROJECT: ${GCP_PROJECT}
       GCP_LOCATION: ${GCP_LOCATION:-global}
       GCP_EMBED_MODEL: ${GCP_EMBED_MODEL:-gemini-embedding-001}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/adc.json
