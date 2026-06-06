@@ -8,40 +8,44 @@ import os
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # Postgres connection
-# SQLAlchemy async URL form, asyncpg driver. The same driver backs Alembic, so
-# there is only one Postgres driver in the project.
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
+    "DATABASE_URL",
     "postgresql+asyncpg://bazaar:bazaar@localhost:5432/bazaar",
 )
 
-# Echo SQL to stdout when debugging. Off by default.
 SQL_ECHO = os.getenv("SQL_ECHO", "0") == "1"
 
-# Redis keys and index names (must match contracts/CONTRACTS.md)
+# Redis keys and index names
 AGENT_PREFIX = "agent:"
+MODEL_PREFIX = "model:"
 TASK_PREFIX = "task:"
 LEADERBOARD_KEY = "leaderboard"
+MODEL_PRICES_KEY = "model_prices"
 STREAM_KEY = "market:feed"
 INDEX_NAME = os.getenv("INDEX_NAME", "agents_idx")
 VECTOR_FIELD = "embedding"
 
-# Vector index. DIM must be equal to embedding model's output dimension.
-# 768 is the text-embedding-005 default and local fallback dimension.
-# If changing the model, change this 
+# Vector index. DIM must match the embedding model output dimension.
 VECTOR_DIM = int(os.getenv("VECTOR_DIM", "768"))
 VECTOR_METRIC = "COSINE"
 
-# Embeddings. "local" is a deterministic offline fallback so initial dev runs without GCP.
-# "vertex" calls vertex ai (now agent platform but we still use old naming)
-EMBED_BACKEND = os.getenv("EMBED_BACKEND", "local")
-VERTEX_PROJECT = os.getenv("VERTEX_PROJECT", "")
-VERTEX_LOCATION = os.getenv("VERTEX_LOCATION", "us-central1")
-VERTEX_EMBED_MODEL = os.getenv("VERTEX_EMBED_MODEL", "text-embedding-005")
+# GCP Gemini Enterprise Agent Platform (google-genai)
+GCP_PROJECT = os.getenv("GCP_PROJECT", os.getenv("VERTEX_PROJECT", ""))
+GCP_LOCATION = os.getenv("GCP_LOCATION", os.getenv("VERTEX_LOCATION", "us-central1"))
+GCP_EMBED_MODEL = os.getenv("GCP_EMBED_MODEL", "gemini-embedding-001")
 
-# Broker rank weights. Defined as a single source of truth
-# the frontend formula note and the broker agree. final = w_match * match + 
-# w_reputation * reputation - w_price * price. Keep them as fixed constants
+# Broker rank weights
 W_MATCH = float(os.getenv("W_MATCH", "1.0"))
 W_REP = float(os.getenv("W_REP", "0.5"))
 W_PRICE = float(os.getenv("W_PRICE", "0.05"))
+
+# Model exchange IPO defaults (fixed constants)
+IPO_SHARES = float(os.getenv("IPO_SHARES", "1000"))
+TIER_IPO_PRICE = {
+    "pro": float(os.getenv("IPO_PRICE_PRO", "50")),
+    "flash": float(os.getenv("IPO_PRICE_FLASH", "20")),
+    "lite": float(os.getenv("IPO_PRICE_LITE", "8")),
+}
+USER_START_CREDITS = float(os.getenv("USER_START_CREDITS", "1000"))
+SIM_POSTERS = int(os.getenv("SIM_POSTERS", "2"))
+SIM_INVESTORS = int(os.getenv("SIM_INVESTORS", "3"))
