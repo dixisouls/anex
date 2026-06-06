@@ -6,9 +6,9 @@ to end.
     docker compose up -d postgres redis
     pip install -r requirements.txt
     alembic upgrade head
-    python -m tests.smoke_test
+    python -m tests.0001_init
 
-With EMBED_BACKEND=local (the default) this needs no GCP.
+Set EMBEDDINGS_FAKE=1 for offline embeddings (no GCP credentials).
 """
 
 import asyncio
@@ -24,13 +24,17 @@ from backend.market.seeder import seed
 
 
 async def main() -> None:
-    count = await seed()
-    print(f"seeded {count} agents")
+    counts = await seed()
+    print(
+        f"seeded {counts['agents']} agents, {counts['models']} models, "
+        f"{counts['users']} users"
+    )
 
     async with session_scope() as session:
         durable = await repo.list_agents(session)
-    print(f"Postgres has {len(durable)} agents (source of truth): "
-          f"{sorted(a.agent_id for a in durable)}")
+        models = await repo.list_models(session)
+    print(f"Postgres has {len(durable)} agents: {sorted(a.agent_id for a in durable)}")
+    print(f"Postgres has {len(models)} models: {sorted(m.model_id for m in models)}")
 
     r = get_redis()
 
@@ -47,7 +51,10 @@ async def main() -> None:
     entry_id = await emit(r, TaskScored(subtask_id="s-001", agent_id="writer-01", judge_score=0.86))
     print(f"  emitted entry {entry_id}")
     for eid, event in await read_new(r, last_id="0-0"):
+        if event.type != "task_scored":
+            continue
         print(f"  read entry {eid}: type={event.type} agent={event.agent_id} score={event.judge_score}")
+        break
 
     await close_redis()
     print("\nsmoke test passed.")
