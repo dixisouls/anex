@@ -16,7 +16,7 @@ from backend.api import task_pool
 from backend.sim import runner as sim_runner
 from backend.db import repo
 from backend.db.models import Model as ModelORM
-from backend.infra.db import get_session, session_scope
+from backend.infra.db import get_session
 from backend.infra.redis_client import close_redis, get_redis
 from backend.infra.weave_init import init_weave
 from backend.market import broker, portfolio, pricing, registry, seeder, trading
@@ -115,9 +115,7 @@ async def _list_public_models(session) -> list[dict]:
 
 async def _run_task(task_id: str, goal: str) -> None:
     async with task_pool.get_task_semaphore():
-        async with session_scope() as session:
-            r = get_redis()
-            await broker.run_task(r, session, task_id, goal)
+        await broker.run_task(task_id, goal)
 
 
 @app.get("/agents")
