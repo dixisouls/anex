@@ -4,12 +4,23 @@
 #
 #   docker compose up -d postgres redis           # start the datastores
 #   docker compose run --rm migrate               # alembic upgrade head
-#   docker compose run --rm seeder                # load the market
+#
+# Seeding uses real GCP embeddings by default (gemini-embedding-001 @ 768 dims).
+# The container has no ADC unless you mount credentials — prefer host seeding:
+#   export GCP_PROJECT=your-gcp-project-id GCP_LOCATION=global
+#   alembic upgrade head
+#   python -m backend.market.seeder
+#   python -m tests.0001_init
+#
+# To seed inside compose, mount ADC (see seeder volumes) or set EMBEDDINGS_FAKE=1
+# only for offline smoke runs (vectors will not match a host-seeded index).
+#   docker compose run --rm seeder
 #   docker compose run --rm seeder python -m tests.0001_init
 #
-# migrate and seeder are under a profile so "docker compose up" only starts the
-# datastores. B4 will add an "api" service that reuses the same image with a
-# uvicorn command and depends on both datastores.
+# Offline unit tests only: EMBEDDINGS_FAKE=1 pytest tests/0003_agent_loop.py -v
+#
+# migrate, seeder, and api are under profiles so "docker compose up" only starts
+# the datastores. Start the API with: docker compose --profile api up -d api
 
 services:
   postgres:
@@ -64,8 +75,38 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://bazaar:bazaar@postgres:5432/bazaar
       REDIS_URL: redis://redis:6379
-      EMBEDDINGS_FAKE: "1"
+      GCP_PROJECT: ${GCP_PROJECT}
+      GCP_LOCATION: ${GCP_LOCATION:-global}
+      GCP_EMBED_MODEL: ${GCP_EMBED_MODEL:-gemini-embedding-001}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/adc.json
+    volumes:
+      # Optional: mount host ADC so embed_content works in the container.
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-${HOME}/.config/gcloud/application_default_credentials.json}:/tmp/adc.json:ro
     command: ["python", "-m", "backend.market.seeder"]
+
+  api:
+    build: .
+    profiles: ["api"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://bazaar:bazaar@postgres:5432/bazaar
+      REDIS_URL: redis://redis:6379
+      RUNTIME_ENV: local
+      GCP_PROJECT: ${GCP_PROJECT}
+      GCP_LOCATION: ${GCP_LOCATION:-global}
+      GCP_EMBED_MODEL: ${GCP_EMBED_MODEL:-gemini-embedding-001}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/adc.json
+      WEAVE_DISABLED: "1"
+    volumes:
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-${HOME}/.config/gcloud/application_default_credentials.json}:/tmp/adc.json:ro
+    command: ["uvicorn", "backend.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    restart: unless-stopped
 
 volumes:
   pg-data:

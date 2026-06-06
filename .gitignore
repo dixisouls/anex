@@ -10,6 +10,7 @@ venv/
 # Env and secrets
 .env
 .env.*
+!.env.example
 *.local
 # GCP service account keys, never commit these
 *-key.json

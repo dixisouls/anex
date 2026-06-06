@@ -19,6 +19,7 @@ from backend.config import (
     LEADERBOARD_KEY,
     MODEL_PREFIX,
     MODEL_PRICES_KEY,
+    SCORED_PREFIX,
     STREAM_KEY,
     TASK_PREFIX,
     VECTOR_DIM,
@@ -177,3 +178,9 @@ async def search(r, query_vector_bytes: bytes, k: int = 5) -> list[tuple[str, fl
 async def leaderboard(r, top: int = 10) -> list[tuple[str, float]]:
     rows = await r.zrevrange(LEADERBOARD_KEY, 0, top - 1, withscores=True)
     return [(to_str(member), float(score)) for member, score in rows]
+
+
+async def subtask_already_scored(r, subtask_id: str) -> bool:
+    """True when this subtask was already scored (idempotent guard)."""
+    claimed = await r.setnx(f"{SCORED_PREFIX}{subtask_id}", b"1")
+    return not claimed

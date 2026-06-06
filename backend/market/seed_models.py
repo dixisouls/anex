@@ -20,7 +20,7 @@ SEED_MODELS: list[dict] = [
         "tier": "lite",
     },
     {
-        "model_id": "gemma-4-26b-a4b-it",
+        "model_id": "gemma-4-26b-a4b-it-maas",
         "name": "Gemma 4 26B",
         "provider": "gcp",
         "tier": "lite",

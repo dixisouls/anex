@@ -6,9 +6,12 @@ to end.
     docker compose up -d postgres redis
     pip install -r requirements.txt
     alembic upgrade head
+    export GCP_PROJECT=your-gcp-project-id GCP_LOCATION=global
+    python -m backend.market.seeder
     python -m tests.0001_init
 
-Set EMBEDDINGS_FAKE=1 for offline embeddings (no GCP credentials).
+Uses real GCP embeddings by default (ADC + GCP_PROJECT). For offline smoke only,
+set EMBEDDINGS_FAKE=1 before seeding (rebuild index after switching back to GCP).
 """
 
 import asyncio

@@ -22,7 +22,8 @@ _client: redis.Redis | None = None
 def get_redis() -> redis.Redis:
     global _client
     if _client is None:
-        _client = redis.from_url(REDIS_URL, decode_responses=False)
+        # RESP2: redis-py FT.SEARCH does not parse Redis 8's RESP3 dict replies.
+        _client = redis.from_url(REDIS_URL, decode_responses=False, protocol=2, socket_timeout=None)
     return _client
 
 async def close_redis():

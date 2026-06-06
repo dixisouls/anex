@@ -2,6 +2,8 @@
 Repository: async query helpers over the ORM models.
 """
 
+import uuid
+
 from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
@@ -219,3 +221,56 @@ async def record_trade(
     session.add(trade)
     await session.flush()
     return trade
+
+
+# ----- tasks / subtasks -----
+
+
+def _parse_subtask_id(subtask_id: str) -> tuple[uuid.UUID, int]:
+    sep = subtask_id.rfind("-")
+    if sep < 0:
+        raise ValueError(f"invalid subtask_id: {subtask_id!r}")
+    return uuid.UUID(subtask_id[:sep]), int(subtask_id[sep + 1 :])
+
+
+async def create_task(session, *, goal: str, user_id: uuid.UUID | None = None) -> Task:
+    task = Task(goal=goal, user_id=user_id, status="running")
+    session.add(task)
+    await session.flush()
+    return task
+
+
+async def create_subtask(
+    session, *, task_id: uuid.UUID, order_index: int, text: str
+) -> Subtask:
+    subtask = Subtask(task_id=task_id, order_index=order_index, text=text)
+    session.add(subtask)
+    await session.flush()
+    return subtask
+
+
+async def get_subtask(session, subtask_id: str) -> Subtask | None:
+    task_id, order_index = _parse_subtask_id(subtask_id)
+    res = await session.execute(
+        select(Subtask).where(
+            Subtask.task_id == task_id,
+            Subtask.order_index == order_index,
+        )
+    )
+    return res.scalar_one_or_none()
+
+
+async def save_subtask_result(
+    session,
+    *,
+    subtask_id: str,
+    agent_id: str,
+    output_preview: str,
+    judge_score: float,
+) -> None:
+    subtask = await get_subtask(session, subtask_id)
+    if subtask is None:
+        return
+    subtask.assigned_agent_id = agent_id
+    subtask.output_preview = output_preview
+    subtask.judge_score = judge_score
