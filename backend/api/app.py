@@ -12,6 +12,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from contracts.schemas import UserPublic
 from backend.config import API_URL, USER_START_CREDITS
+from backend.api import task_pool
 from backend.sim import runner as sim_runner
 from backend.db import repo
 from backend.db.models import Model as ModelORM
@@ -113,9 +114,10 @@ async def _list_public_models(session) -> list[dict]:
 
 
 async def _run_task(task_id: str, goal: str) -> None:
-    async with session_scope() as session:
-        r = get_redis()
-        await broker.run_task(r, session, task_id, goal)
+    async with task_pool.get_task_semaphore():
+        async with session_scope() as session:
+            r = get_redis()
+            await broker.run_task(r, session, task_id, goal)
 
 
 @app.get("/agents")
@@ -174,11 +176,18 @@ async def healthz():
     return {"ok": True}
 
 
+@app.get("/task/slots")
+async def task_slots():
+    """How many broker pipelines can start now (backpressure for sim posters)."""
+    return task_pool.task_slots_status()
+
+
 @app.post("/sim/start")
 async def sim_start(body: SimStartBody | None = None):
+    """Light demos only; for heavy load use `python -m backend.sim.main` or scripts/run_sim.sh."""
     params = body.model_dump(exclude_none=True) if body else {}
     await sim_runner.start(API_URL, **params)
-    return {"ok": True}
+    return {"ok": True, "note": "For many sims, prefer the external runner: scripts/run_sim.sh"}
 
 
 @app.post("/sim/stop")

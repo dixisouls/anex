@@ -1,5 +1,6 @@
 """Broker: decompose → match → rank → dispatch → judge."""
 
+import asyncio
 import json
 import uuid
 
@@ -96,7 +97,7 @@ async def rank(r, subtask_text: str, k: int = 5) -> list[Candidate]:
 
 async def run_task(r, session, task_id: str, goal: str) -> None:
     queue = get_queue()
-    subtask_texts = decompose(goal)
+    subtask_texts = await asyncio.to_thread(decompose, goal)
     subtasks = [
         Subtask(subtask_id=f"{task_id}-{i}", text=t)
         for i, t in enumerate(subtask_texts)
@@ -169,7 +170,7 @@ async def handle_run_result(
             output_preview=output[:280],
         )
     )
-    score, _reason = judge(subtask_text, output)
+    score, _reason = await asyncio.to_thread(judge, subtask_text, output)
     await bus.publish(
         TaskScored(subtask_id=subtask_id, agent_id=agent_id, judge_score=score)
     )

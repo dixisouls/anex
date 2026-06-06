@@ -23,7 +23,14 @@ def get_redis() -> redis.Redis:
     global _client
     if _client is None:
         # RESP2: redis-py FT.SEARCH does not parse Redis 8's RESP3 dict replies.
-        _client = redis.from_url(REDIS_URL, decode_responses=False, protocol=2, socket_timeout=None)
+        _client = redis.from_url(
+            REDIS_URL,
+            decode_responses=False,
+            protocol=2,
+            socket_timeout=None,
+            socket_connect_timeout=5,
+            max_connections=32,
+        )
     return _client
 
 async def close_redis():

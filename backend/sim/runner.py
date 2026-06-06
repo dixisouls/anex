@@ -18,6 +18,7 @@ from backend.config import (
     SIM_POSTERS,
     TRADE_CAP,
 )
+from backend.infra.retry import httpx_request_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -110,10 +111,28 @@ def trade_from_decision(decision: dict, *, trade_cap: float = TRADE_CAP) -> dict
     }
 
 
+async def _api_get(client: httpx.AsyncClient, path: str):
+    return await httpx_request_with_retry(lambda: client.get(path))
+
+
+async def _api_post(client: httpx.AsyncClient, path: str, *, json: dict | None = None):
+    return await httpx_request_with_retry(lambda: client.post(path, json=json))
+
+
+async def _wait_for_task_slot(client: httpx.AsyncClient, poll_s: float = 1.0) -> None:
+    """Block until the API reports a free broker pipeline slot."""
+    while True:
+        resp = await _api_get(client, "/task/slots")
+        resp.raise_for_status()
+        if resp.json().get("available", 0) > 0:
+            return
+        await asyncio.sleep(poll_s)
+
+
 async def _ensure_sim_users(
     client: httpx.AsyncClient, n_posters: int, n_investors: int
 ) -> tuple[list[str], list[str]]:
-    resp = await client.get("/users")
+    resp = await _api_get(client, "/users")
     resp.raise_for_status()
     sim_users = [u for u in resp.json() if u.get("is_sim")]
 
@@ -124,7 +143,8 @@ async def _ensure_sim_users(
 
     while len(posters) < n_posters:
         i = len(posters) + 1
-        r = await client.post(
+        r = await _api_post(
+            client,
             "/users",
             json={"name": f"sim-poster-{i}", "email": f"sim-poster-{i}@bazaar.local", "is_sim": True},
         )
@@ -133,7 +153,8 @@ async def _ensure_sim_users(
 
     while len(investors) < n_investors:
         i = len(investors) + 1
-        r = await client.post(
+        r = await _api_post(
+            client,
             "/users",
             json={
                 "name": f"sim-investor-{i}",
@@ -151,7 +172,9 @@ async def _poster_loop(base_url: str, user_id: str, cadence_s: float) -> None:
     async with httpx.AsyncClient(base_url=base_url, timeout=120) as client:
         while True:
             try:
-                await client.post("/task", json={"goal": gen_goal(), "user_id": user_id})
+                await _wait_for_task_slot(client)
+                goal = await asyncio.to_thread(gen_goal)
+                await _api_post(client, "/task", json={"goal": goal, "user_id": user_id})
             except asyncio.CancelledError:
                 raise
             except Exception:
@@ -163,13 +186,13 @@ async def _investor_loop(base_url: str, user_id: str, cadence_s: float) -> None:
     async with httpx.AsyncClient(base_url=base_url, timeout=120) as client:
         while True:
             try:
-                market = (await client.get("/market")).json()
-                pf = (await client.get(f"/portfolio/{user_id}")).json()
-                decision = investor_decision(market, pf)
+                market = (await _api_get(client, "/market")).json()
+                pf = (await _api_get(client, f"/portfolio/{user_id}")).json()
+                decision = await asyncio.to_thread(investor_decision, market, pf)
                 trade = trade_from_decision(decision)
                 if trade is not None:
                     trade["user_id"] = user_id
-                    await client.post("/trade", json=trade)
+                    await _api_post(client, "/trade", json=trade)
             except asyncio.CancelledError:
                 raise
             except Exception:

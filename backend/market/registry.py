@@ -29,6 +29,7 @@ from backend.config import (
 )
 from backend.db import repo
 from backend.db.models import Model as ModelORM
+from backend.infra.retry import with_redis_retry
 from backend.infra.util import to_str
 
 
@@ -154,14 +155,20 @@ async def reproject_agent(r, session, agent_id: str) -> None:
 
 
 async def get_agent_cached(r, agent_id: str) -> Agent | None:
-    mapping = await r.hgetall(agent_key(agent_id))
+    async def _read():
+        return await r.hgetall(agent_key(agent_id))
+
+    mapping = await with_redis_retry(_read)
     if not mapping:
         return None
     return mapping_to_agent(mapping)
 
 
 async def get_model_cached(r, model_id: str) -> dict | None:
-    mapping = await r.hgetall(model_key(model_id))
+    async def _read():
+        return await r.hgetall(model_key(model_id))
+
+    mapping = await with_redis_retry(_read)
     if not mapping:
         return None
     return {to_str(k): to_str(v) for k, v in mapping.items()}
@@ -194,7 +201,11 @@ async def search(r, query_vector_bytes: bytes, k: int = 5) -> list[tuple[str, fl
         .paging(0, k)
         .dialect(2)
     )
-    res = await r.ft(INDEX_NAME).search(query, query_params={"vec": query_vector_bytes})
+
+    async def _search():
+        return await r.ft(INDEX_NAME).search(query, query_params={"vec": query_vector_bytes})
+
+    res = await with_redis_retry(_search)
     out = []
     for doc in res.docs:
         agent_id = to_str(doc.id).split(":", 1)[1]
@@ -210,5 +221,10 @@ async def leaderboard(r, top: int = 10) -> list[tuple[str, float]]:
 
 async def subtask_already_scored(r, subtask_id: str) -> bool:
     """True when this subtask was already scored (idempotent guard)."""
-    claimed = await r.setnx(f"{SCORED_PREFIX}{subtask_id}", b"1")
+    key = f"{SCORED_PREFIX}{subtask_id}"
+
+    async def _claim():
+        return await r.setnx(key, b"1")
+
+    claimed = await with_redis_retry(_claim)
     return not claimed

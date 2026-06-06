@@ -80,6 +80,7 @@ SIM_POSTERS = int(os.getenv("SIM_POSTERS", "2"))
 SIM_INVESTORS = int(os.getenv("SIM_INVESTORS", "3"))
 SIM_CADENCE_S = float(os.getenv("SIM_CADENCE_S", "8.0"))
 TRADE_CAP = float(os.getenv("TRADE_CAP", "100"))
+MAX_CONCURRENT_TASKS = int(os.getenv("MAX_CONCURRENT_TASKS", "2"))
 
 # Model exchange AMM tuning
 EARN_RATE = float(os.getenv("EARN_RATE", "20.0"))
