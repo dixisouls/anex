@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Env and secrets
+.env
+.env.*
+*.local
+# GCP service account keys, never commit these
+*-key.json
+service-account*.json
+gcp-credentials*.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Build / logs
+dist/
+build/
+*.log
