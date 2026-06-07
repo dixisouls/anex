@@ -250,7 +250,15 @@ async def buy_credits(body: BuyCreditsBody, session=Depends(get_session)):
 @app.get("/feed")
 async def feed_sse():
     async def gen():
-        async for _cursor, ev in bus.subscribe(from_id="$"):
+        r = get_redis()
+        from backend.market import feed as feed_mod
+
+        cursor = "0-0"
+        backlog = await feed_mod.read_new(r, cursor, count=200)
+        for entry_id, ev in backlog:
+            cursor = entry_id
+            yield {"event": ev.type, "data": ev.model_dump_json()}
+        async for _cursor, ev in bus.subscribe(from_id=cursor):
             yield {"event": ev.type, "data": ev.model_dump_json()}
 
     return EventSourceResponse(gen())

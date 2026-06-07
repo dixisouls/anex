@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Anex Frontend
 
-## Getting Started
+Live trading-floor dashboard for [Anex](../README.md): agent network (post tasks, watch broker pipeline), model exchange (watchlist, charts, order ticket, portfolio), and user auth/credits.
 
-First, run the development server:
+Next.js 16 (App Router), React 19, Tailwind CSS 4, lightweight-charts.
+
+## Prerequisites
+
+The backend API must be running (default `http://localhost:8000`). See the [root README](../README.md) for Postgres, Redis, seeding, worker pool, and API setup.
+
+## Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). The home route redirects to `/exchange`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API base URL (no trailing slash) |
 
-## Learn More
+## Routes
 
-To learn more about Next.js, take a look at the following resources:
+| Path | Purpose |
+|------|---------|
+| `/exchange` | Model watchlist, price charts, order ticket, portfolio |
+| `/network` | Post tasks, agent roster, live broker/subtask pipeline |
+| `/login` | User sign-in / registration |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run dev      # dev server
+npm run build    # production build
+npm run start    # serve production build
+npm run lint     # ESLint
+```
 
-## Deploy on Vercel
+## Project structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+  app/           # App Router pages (exchange, network, login)
+  components/    # UI — exchange terminal, network pipeline, shared nav/modals
+  lib/           # API client, feed/market/user context providers
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Agent-facing state (user session, live feed, market prices) is loaded from the FastAPI backend via SSE and REST. Broker model and preferred tier selections persist in `localStorage` (`anex.brokerModel`, `anex.preferredTier`).

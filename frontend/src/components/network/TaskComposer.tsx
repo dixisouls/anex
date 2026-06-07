@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "@/lib/api";
 import { useUser } from "@/lib/user";
 import { useMarket } from "@/lib/market";
@@ -9,8 +9,6 @@ import { useNetwork } from "@/lib/networkContext";
 import { SUGGESTED_GOALS } from "@/lib/agents";
 import { fmtPrice } from "@/lib/format";
 import { cn } from "@/lib/cn";
-import type { TaskSlots } from "@/lib/types";
-
 export function TaskComposer() {
   const { userId } = useUser();
   const { portfolio } = useMarket();
@@ -21,7 +19,6 @@ export function TaskComposer() {
   const [budget, setBudget] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const [slots, setSlots] = useState<TaskSlots | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const budgetNum = budget.trim() === "" ? null : Number(budget);
@@ -30,24 +27,6 @@ export function TaskComposer() {
     (Number.isNaN(budgetNum) ||
       budgetNum <= 0 ||
       (cash !== null && budgetNum > cash));
-
-  useEffect(() => {
-    let alive = true;
-    const poll = async () => {
-      try {
-        const s = await api.getTaskSlots();
-        if (alive) setSlots(s);
-      } catch {
-        /* ignore */
-      }
-    };
-    poll();
-    const id = setInterval(poll, 4000);
-    return () => {
-      alive = false;
-      clearInterval(id);
-    };
-  }, []);
 
   async function submit() {
     const g = goal.trim();
@@ -76,8 +55,6 @@ export function TaskComposer() {
       setBusy(false);
     }
   }
-
-  const full = slots ? slots.available <= 0 : false;
 
   return (
     <div className="shrink-0 border-t border-line/60 bg-panel/40 px-4 py-4 backdrop-blur-md">
@@ -116,10 +93,10 @@ export function TaskComposer() {
           <button
             type="button"
             onClick={submit}
-            disabled={busy || !goal.trim() || budgetInvalid || full}
+            disabled={busy || !goal.trim() || budgetInvalid}
             className={cn(
               "mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all",
-              goal.trim() && !busy && !budgetInvalid && !full
+              goal.trim() && !busy && !budgetInvalid
                 ? "bg-gold text-base hover:bg-gold/90"
                 : "bg-line text-dim",
             )}
@@ -147,17 +124,6 @@ export function TaskComposer() {
               )}
             />
           </label>
-          {slots && (
-            <span className="flex items-center gap-1">
-              <span
-                className={cn(
-                  "inline-block h-1.5 w-1.5 rounded-full",
-                  full ? "bg-down" : "bg-up",
-                )}
-              />
-              {slots.available}/{slots.max}
-            </span>
-          )}
           {budgetInvalid && (
             <span className="flex items-center gap-1.5 text-down">
               over budget
