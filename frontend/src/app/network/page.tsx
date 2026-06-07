@@ -4,6 +4,7 @@ import { useAgents } from "@/lib/useAgents";
 import { NetworkProvider } from "@/lib/networkContext";
 import { TaskComposer } from "@/components/network/TaskComposer";
 import { TaskThread } from "@/components/network/TaskThread";
+import { TaskHistorySidebar } from "@/components/network/TaskHistorySidebar";
 import { NetworkHeader } from "@/components/network/NetworkHeader";
 import { AgentNetworkDrawer } from "@/components/network/AgentNetworkDrawer";
 
@@ -20,8 +21,13 @@ export default function NetworkPage() {
           </div>
         )}
         <NetworkHeader agentCount={list.length} />
-        <TaskThread agents={agents} />
-        <TaskComposer />
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <TaskHistorySidebar />
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            <TaskThread agents={agents} />
+            <TaskComposer />
+          </div>
+        </div>
         <AgentNetworkDrawer list={list} loading={loading} />
       </div>
     </NetworkProvider>

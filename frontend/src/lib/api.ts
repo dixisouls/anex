@@ -9,6 +9,7 @@ import type {
   Portfolio,
   PriceTick,
   Side,
+  TaskListResponse,
   TaskSlots,
   Tier,
   TradeResult,
@@ -117,6 +118,17 @@ export const api = {
 
   getPortfolio: (user_id: string) =>
     req<Portfolio>(`/portfolio/${user_id}`),
+
+  getUserTasks: (user_id: string, limit = 50, offset = 0) =>
+    req<TaskListResponse>(
+      `/users/${encodeURIComponent(user_id)}/tasks?limit=${limit}&offset=${offset}`,
+    ),
+
+  hideUserTask: (user_id: string, task_id: string) =>
+    req<{ ok: boolean }>(
+      `/users/${encodeURIComponent(user_id)}/tasks/${encodeURIComponent(task_id)}`,
+      { method: "DELETE" },
+    ),
 
   createUser: (name: string, email?: string, is_sim = false) =>
     req<{ user_id: string }>("/users", {

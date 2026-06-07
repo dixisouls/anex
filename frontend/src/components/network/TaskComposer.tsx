@@ -12,7 +12,8 @@ import { cn } from "@/lib/cn";
 export function TaskComposer() {
   const { userId } = useUser();
   const { portfolio } = useMarket();
-  const { addPendingTask, brokerModel, preferredTier } = useNetwork();
+  const { addPendingTask, hydrateTasks, brokerModel, preferredTier } =
+    useNetwork();
   const { openBuyCredits } = useBuyCredits();
   const cash = portfolio?.credits ?? null;
   const [goal, setGoal] = useState("");
@@ -47,6 +48,7 @@ export function TaskComposer() {
         budget: res.budget,
         postedAt: new Date().toISOString(),
       });
+      void hydrateTasks();
       setGoal("");
       setShowSuggestions(false);
     } catch (e) {

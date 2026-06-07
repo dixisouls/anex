@@ -109,6 +109,29 @@ export interface TaskSlots {
   in_use: number;
 }
 
+export type SubtaskStage = "posted" | "hired" | "executed" | "scored";
+
+export interface SubtaskDetail {
+  subtask_id: string;
+  text: string;
+  assigned_agent_id: string | null;
+  output_preview: string | null;
+  judge_score: number | null;
+  stage: SubtaskStage;
+}
+
+export interface TaskDetail {
+  task_id: string;
+  goal: string;
+  status: "posted" | "running" | "complete";
+  created_at: string;
+  subtasks: SubtaskDetail[];
+}
+
+export interface TaskListResponse {
+  tasks: TaskDetail[];
+}
+
 export interface TradeResult {
   trade_id: string;
   price: number;

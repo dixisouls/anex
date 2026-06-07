@@ -26,3 +26,37 @@ export function savePreferredTier(tier: Tier): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(PREFERRED_TIER_KEY, tier);
 }
+
+const SELECTED_TASK_KEY = "anex.networkSelectedTask";
+
+export function loadSelectedTaskId(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(SELECTED_TASK_KEY);
+}
+
+export function saveSelectedTaskId(taskId: string | null): void {
+  if (typeof window === "undefined") return;
+  if (taskId) localStorage.setItem(SELECTED_TASK_KEY, taskId);
+  else localStorage.removeItem(SELECTED_TASK_KEY);
+}
+
+function hiddenTasksKey(userId: string): string {
+  return `anex.hiddenTasks.${userId}`;
+}
+
+export function loadHiddenTaskIds(userId: string): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = localStorage.getItem(hiddenTasksKey(userId));
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as string[];
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export function saveHiddenTaskIds(userId: string, ids: Set<string>): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(hiddenTasksKey(userId), JSON.stringify([...ids]));
+}

@@ -6,24 +6,41 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { api } from "./api";
 import {
   DEFAULT_PREFERRED_TIER,
   loadBrokerModel,
+  loadHiddenTaskIds,
   loadPreferredTier,
+  loadSelectedTaskId,
   saveBrokerModel,
+  saveHiddenTaskIds,
   savePreferredTier,
+  saveSelectedTaskId,
 } from "./networkPrefs";
+import { taskDetailToState, type PendingTask } from "./taskThread";
+import { useUser } from "./user";
+import type { TaskState } from "./pipeline";
 import type { Tier } from "./types";
-import type { PendingTask } from "./taskThread";
 
 interface NetworkContextValue {
   pendingTasks: PendingTask[];
   taskBudgets: Record<string, number>;
+  dbTasks: Record<string, TaskState>;
+  hiddenTaskIds: Set<string>;
+  selectedTaskId: string | null;
+  isNewChat: boolean;
+  tasksLoading: boolean;
   addPendingTask: (task: PendingTask) => void;
   removePendingTask: (taskId: string) => void;
+  setSelectedTaskId: (taskId: string | null) => void;
+  startNewChat: () => void;
+  hideTask: (taskId: string) => Promise<void>;
+  hydrateTasks: () => Promise<void>;
   brokerModel: string;
   setBrokerModel: (modelId: string) => void;
   preferredTier: Tier;
@@ -37,23 +54,119 @@ interface NetworkContextValue {
 const NetworkContext = createContext<NetworkContextValue | null>(null);
 
 export function NetworkProvider({ children }: { children: ReactNode }) {
+  const { userId } = useUser();
   const [pendingTasks, setPendingTasks] = useState<PendingTask[]>([]);
   const [taskBudgets, setTaskBudgets] = useState<Record<string, number>>({});
+  const [dbTasks, setDbTasks] = useState<Record<string, TaskState>>({});
+  const [hiddenTaskIds, setHiddenTaskIds] = useState<Set<string>>(new Set());
+  const [selectedTaskId, setSelectedTaskIdState] = useState<string | null>(null);
+  const [isNewChat, setIsNewChat] = useState(false);
+  const [tasksLoading, setTasksLoading] = useState(false);
   const [brokerModel, setBrokerModelState] = useState(loadBrokerModel);
   const [preferredTier, setPreferredTierState] = useState<Tier>(
     DEFAULT_PREFERRED_TIER,
   );
   const [agentsOpen, setAgentsOpen] = useState(false);
   const [scrollNonce, setScrollNonce] = useState(0);
+  const hydrateRef = useRef(0);
 
   useEffect(() => {
     setBrokerModelState(loadBrokerModel());
     setPreferredTierState(loadPreferredTier());
+    setSelectedTaskIdState(loadSelectedTaskId());
+    if (userId) setHiddenTaskIds(loadHiddenTaskIds(userId));
+  }, [userId]);
+
+  const hydrateTasks = useCallback(async () => {
+    if (!userId) return;
+    const seq = ++hydrateRef.current;
+    setTasksLoading(true);
+    try {
+      const res = await api.getUserTasks(userId);
+      if (seq !== hydrateRef.current) return;
+      const hidden = loadHiddenTaskIds(userId);
+      const next: Record<string, TaskState> = {};
+      for (const t of res.tasks) {
+        if (!hidden.has(t.task_id)) next[t.task_id] = taskDetailToState(t);
+      }
+      setDbTasks(next);
+    } catch {
+      /* user may be stale after DB reset */
+    } finally {
+      if (seq === hydrateRef.current) setTasksLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    void hydrateTasks();
+  }, [hydrateTasks]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const hasRunning = Object.values(dbTasks).some((t) => {
+      const subs = Object.values(t.subtasks);
+      if (subs.length === 0) return true;
+      return subs.some((s) => !s.skipped && s.stage !== "scored");
+    });
+    if (!hasRunning && pendingTasks.length === 0) return;
+    const id = window.setInterval(() => void hydrateTasks(), 30_000);
+    return () => window.clearInterval(id);
+  }, [userId, dbTasks, pendingTasks.length, hydrateTasks]);
+
+  const setSelectedTaskId = useCallback((taskId: string | null) => {
+    saveSelectedTaskId(taskId);
+    setSelectedTaskIdState(taskId);
+    if (taskId) setIsNewChat(false);
   }, []);
 
+  const startNewChat = useCallback(() => {
+    saveSelectedTaskId(null);
+    setSelectedTaskIdState(null);
+    setIsNewChat(true);
+  }, []);
+
+  const hideTask = useCallback(
+    async (taskId: string) => {
+      if (userId) {
+        const nextHidden = new Set(loadHiddenTaskIds(userId));
+        nextHidden.add(taskId);
+        saveHiddenTaskIds(userId, nextHidden);
+        setHiddenTaskIds(nextHidden);
+        try {
+          await api.hideUserTask(userId, taskId);
+        } catch {
+          /* still hidden locally */
+        }
+      }
+      setPendingTasks((prev) => prev.filter((p) => p.task_id !== taskId));
+      setTaskBudgets((prev) => {
+        const next = { ...prev };
+        delete next[taskId];
+        return next;
+      });
+      setDbTasks((prev) => {
+        const next = { ...prev };
+        delete next[taskId];
+        return next;
+      });
+      if (selectedTaskId === taskId) {
+        saveSelectedTaskId(null);
+        setSelectedTaskIdState(null);
+        setIsNewChat(true);
+      }
+    },
+    [userId, selectedTaskId],
+  );
+
   const addPendingTask = useCallback((task: PendingTask) => {
-    setPendingTasks((prev) => [...prev.filter((p) => p.task_id !== task.task_id), task]);
+    setIsNewChat(false);
+    setPendingTasks((prev) => [
+      ...prev.filter((p) => p.task_id !== task.task_id),
+      task,
+    ]);
     setTaskBudgets((prev) => ({ ...prev, [task.task_id]: task.budget }));
+    saveSelectedTaskId(task.task_id);
+    setSelectedTaskIdState(task.task_id);
     setScrollNonce((n) => n + 1);
   }, []);
 
@@ -79,8 +192,17 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
     () => ({
       pendingTasks,
       taskBudgets,
+      dbTasks,
+      hiddenTaskIds,
+      selectedTaskId,
+      isNewChat,
+      tasksLoading,
       addPendingTask,
       removePendingTask,
+      setSelectedTaskId,
+      startNewChat,
+      hideTask,
+      hydrateTasks,
       brokerModel,
       setBrokerModel,
       preferredTier,
@@ -93,8 +215,17 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
     [
       pendingTasks,
       taskBudgets,
+      dbTasks,
+      hiddenTaskIds,
+      selectedTaskId,
+      isNewChat,
+      tasksLoading,
       addPendingTask,
       removePendingTask,
+      setSelectedTaskId,
+      startNewChat,
+      hideTask,
+      hydrateTasks,
       brokerModel,
       setBrokerModel,
       preferredTier,

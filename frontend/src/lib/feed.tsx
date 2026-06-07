@@ -28,6 +28,15 @@ const ALL_EVENT_TYPES: FeedEventType[] = [
   "portfolio_changed",
 ];
 
+const TASK_EVENT_TYPES: Set<FeedEventType> = new Set([
+  "task_posted",
+  "candidates_ranked",
+  "agent_hired",
+  "subtask_skipped",
+  "task_executed",
+  "task_scored",
+]);
+
 export type FeedStatus = "connecting" | "open" | "closed";
 
 type Listener = (e: FeedEvent) => void;
@@ -40,6 +49,7 @@ interface Subscription {
 interface FeedContextValue {
   status: FeedStatus;
   events: FeedEvent[];
+  taskEvents: FeedEvent[];
   subscribe: (
     types: FeedEventType | FeedEventType[] | null,
     fn: Listener,
@@ -49,10 +59,12 @@ interface FeedContextValue {
 const FeedContext = createContext<FeedContextValue | null>(null);
 
 const MAX_LOG = 250;
+const MAX_TASK_LOG = 500;
 
 export function FeedProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<FeedStatus>("connecting");
   const [events, setEvents] = useState<FeedEvent[]>([]);
+  const [taskEvents, setTaskEvents] = useState<FeedEvent[]>([]);
   const listeners = useRef<Set<Subscription>>(new Set());
 
   useEffect(() => {
@@ -65,10 +77,18 @@ export function FeedProvider({ children }: { children: ReactNode }) {
       } catch {
         return;
       }
-      setEvents((prev) => {
-        const next = [data, ...prev];
-        return next.length > MAX_LOG ? next.slice(0, MAX_LOG) : next;
-      });
+      if (TASK_EVENT_TYPES.has(data.type)) {
+        setTaskEvents((prev) => {
+          const filtered = prev.filter((e) => e.event_id !== data.event_id);
+          const next = [data, ...filtered];
+          return next.length > MAX_TASK_LOG ? next.slice(0, MAX_TASK_LOG) : next;
+        });
+      } else {
+        setEvents((prev) => {
+          const next = [data, ...prev];
+          return next.length > MAX_LOG ? next.slice(0, MAX_LOG) : next;
+        });
+      }
       for (const sub of listeners.current) {
         if (sub.types === null || sub.types.has(data.type)) {
           try {
@@ -94,7 +114,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const subscribe = useCallbackShim(listeners);
 
   return (
-    <FeedContext.Provider value={{ status, events, subscribe }}>
+    <FeedContext.Provider value={{ status, events, taskEvents, subscribe }}>
       {children}
     </FeedContext.Provider>
   );
