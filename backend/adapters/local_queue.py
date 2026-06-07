@@ -1,4 +1,4 @@
-"""Local Queue: fire-and-forget HTTP dispatch to agent services."""
+"""Local Queue: A2A task dispatch to agent services."""
 
 import asyncio
 import logging
@@ -26,25 +26,41 @@ class LocalQueue:
         from backend.market import broker
 
         try:
+            task_payload = {
+                "id": dispatch.subtask_id,
+                "message": {
+                    "role": "user",
+                    "parts": [{"type": "text", "text": dispatch.subtask_text}],
+                },
+                "metadata": {"config": dispatch.config},
+            }
             async with httpx.AsyncClient(timeout=120.0) as client:
                 resp = await client.post(
-                    f"{dispatch.service_url}/run",
-                    json={
-                        "subtask_text": dispatch.subtask_text,
-                        "config": dispatch.config,
-                    },
+                    f"{dispatch.service_url}/tasks/send",
+                    json=task_payload,
                 )
                 resp.raise_for_status()
-                output = resp.json()["output"]
-            async with session_scope() as session:
-                await broker.handle_run_result(
-                    get_redis(),
-                    session,
-                    subtask_id=dispatch.subtask_id,
-                    agent_id=dispatch.agent_id,
-                    output=output,
-                    task_id=dispatch.task_id,
+                data = resp.json()
+
+            # extract output from first artifact
+            artifacts = data.get("artifacts") or []
+            output = None
+            if artifacts:
+                parts = artifacts[0].get("parts") or []
+                output = next(
+                    (p["text"] for p in parts if p.get("type") == "text"), None
                 )
+
+            if output:
+                async with session_scope() as session:
+                    await broker.handle_run_result(
+                        get_redis(),
+                        session,
+                        subtask_id=dispatch.subtask_id,
+                        agent_id=dispatch.agent_id,
+                        output=output,
+                        task_id=dispatch.task_id,
+                    )
             return output
         except Exception:
             logger.exception(

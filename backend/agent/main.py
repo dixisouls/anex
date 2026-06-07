@@ -3,7 +3,7 @@ Agent entrypoint. One image, parameterized by env.
 
     AGENT_ID=writer-01 PORT=9001 python -m backend.agent.main
 
-See scripts/run_agents.sh to launch all six seed agents.
+See scripts/run_agents.sh to launch all 30 seed agents.
 """
 
 import os
