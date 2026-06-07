@@ -39,3 +39,13 @@ async def read_new(r, last_id: str = "0-0", count: int = 100, block: int | None 
             raw = fields.get(b"data") or fields.get("data")
             out.append((to_str(entry_id), EVENT_ADAPTER.validate_json(to_str(raw))))
     return out
+
+
+async def read_recent(r, count: int = 200):
+    """Read the newest count entries, returned oldest-first for SSE replay."""
+    entries = await r.xrevrange(STREAM_KEY, count=count)
+    out = []
+    for entry_id, fields in reversed(entries):
+        raw = fields.get(b"data") or fields.get("data")
+        out.append((to_str(entry_id), EVENT_ADAPTER.validate_json(to_str(raw))))
+    return out

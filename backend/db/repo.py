@@ -3,9 +3,11 @@ Repository: async query helpers over the ORM models.
 """
 
 import uuid
+from datetime import datetime, timezone
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.orm import selectinload
 
 from contracts.schemas import Agent as AgentSchema
 from backend.db.models import (
@@ -341,6 +343,20 @@ def _parse_subtask_id(subtask_id: str) -> tuple[uuid.UUID, int]:
     return uuid.UUID(subtask_id[:sep]), int(subtask_id[sep + 1 :])
 
 
+def subtask_public_id(task_id: uuid.UUID, order_index: int) -> str:
+    return f"{task_id}-{order_index}"
+
+
+def derive_subtask_stage(subtask: Subtask) -> str:
+    if subtask.judge_score is not None:
+        return "scored"
+    if subtask.output_preview:
+        return "executed"
+    if subtask.assigned_agent_id:
+        return "hired"
+    return "posted"
+
+
 async def create_task(session, *, goal: str, user_id: uuid.UUID | None = None) -> Task:
     task = Task(goal=goal, user_id=user_id, status="running")
     session.add(task)
@@ -382,3 +398,52 @@ async def save_subtask_result(
     subtask.assigned_agent_id = agent_id
     subtask.output_preview = output_preview
     subtask.judge_score = judge_score
+
+
+async def list_tasks_for_user(
+    session,
+    user_id: uuid.UUID,
+    *,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[Task]:
+    res = await session.execute(
+        select(Task)
+        .where(Task.user_id == user_id, Task.hidden_at.is_(None))
+        .options(selectinload(Task.subtasks))
+        .order_by(Task.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    return list(res.scalars().unique().all())
+
+
+async def get_task(session, task_id: uuid.UUID) -> Task | None:
+    res = await session.execute(
+        select(Task)
+        .where(Task.id == task_id)
+        .options(selectinload(Task.subtasks))
+    )
+    return res.scalar_one_or_none()
+
+
+async def mark_task_complete(session, task_id: uuid.UUID) -> None:
+    await session.execute(
+        update(Task).where(Task.id == task_id).values(status="complete")
+    )
+
+
+async def hide_task_for_user(
+    session, user_id: uuid.UUID, task_id: uuid.UUID
+) -> bool:
+    """Soft-hide a task from the user's history. Market/ledger data unchanged."""
+    res = await session.execute(
+        select(Task).where(Task.id == task_id, Task.user_id == user_id)
+    )
+    task = res.scalar_one_or_none()
+    if task is None:
+        return False
+    if task.hidden_at is None:
+        task.hidden_at = datetime.now(timezone.utc)
+        await session.flush()
+    return True

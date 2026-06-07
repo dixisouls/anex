@@ -135,9 +135,8 @@ export function buildPipelines(events: FeedEvent[], limit = 8): TaskState[] {
     }
   }
 
-  return Object.values(tasks)
-    .sort((a, b) => (a.ts < b.ts ? 1 : -1))
-    .slice(0, limit);
+  const sorted = Object.values(tasks).sort((a, b) => (a.ts < b.ts ? 1 : -1));
+  return limit > 0 ? sorted.slice(0, limit) : sorted;
 }
 
 export type TaskPhase = "posting" | "decomposing" | "running" | "complete";
