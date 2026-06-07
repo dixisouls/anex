@@ -1,10 +1,19 @@
 """
-Seed roster — 30 specialist agents across writing, code, research, language,
-planning, and deep reasoning. margin spreads derived hire cost.
+Seed roster — 30 hand-authored specialist agents across writing, code,
+research, language, planning, and deep reasoning, plus a large generated
+roster loaded from data/generated_agents.json. margin spreads derived hire cost.
 Every model_id must exist in SEED_MODELS.
+
+All agents are assigned a service_url from a shared generic worker pool
+(AGENT_WORKERS); the broker passes per-dispatch model config, so any worker
+can execute any agent's task.
 """
 
+import json
+from pathlib import Path
+
 from contracts.schemas import Agent
+from backend.config import AGENT_WORKER_BASE_PORT, AGENT_WORKERS
 
 SEED_AGENTS: list[Agent] = [
 
@@ -634,3 +643,43 @@ SUGGESTED_PROMPTS: dict[str, str] = {
         "produce a robust prompt with clear instructions, constraints, and output format."
     ),
 }
+
+
+_GENERATED_PATH = Path(__file__).resolve().parent / "data" / "generated_agents.json"
+
+
+def _load_generated_agents() -> list[Agent]:
+    """Load the AI-generated roster from JSON (empty if not yet generated)."""
+    if not _GENERATED_PATH.exists():
+        return []
+    try:
+        raw = json.loads(_GENERATED_PATH.read_text())
+    except Exception:
+        return []
+    agents: list[Agent] = []
+    for d in raw:
+        try:
+            agents.append(
+                Agent(
+                    agent_id=d["agent_id"],
+                    name=d["name"],
+                    skills=list(d["skills"]),
+                    capability_text=d["capability_text"],
+                    model=d["model"],
+                    tools=list(d.get("tools", [])),
+                    margin=float(d.get("margin", 0.2)),
+                )
+            )
+        except (KeyError, TypeError, ValueError):
+            continue
+    return agents
+
+
+SEED_AGENTS.extend(_load_generated_agents())
+
+# Assign every agent a service_url from the shared worker pool (round-robin).
+_WORKER_URLS = [
+    f"http://localhost:{AGENT_WORKER_BASE_PORT + i}" for i in range(max(1, AGENT_WORKERS))
+]
+for _i, _agent in enumerate(SEED_AGENTS):
+    _agent.service_url = _WORKER_URLS[_i % len(_WORKER_URLS)]

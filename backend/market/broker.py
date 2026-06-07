@@ -21,12 +21,32 @@ from backend.infra.redis_client import get_redis
 from backend.market import pricing, registry
 from backend.market.judge import judge
 from backend.market.ledger import settle
-from backend.market.seed_agents import SUGGESTED_PROMPTS
+from backend.market.seed_agents import SEED_AGENTS, SUGGESTED_PROMPTS
 from backend.ports.factory import get_embeddings, get_event_bus, get_queue
 from backend.ports.queue import RunDispatch
 
 bus = get_event_bus()
 emb = get_embeddings()
+
+
+def _build_skill_catalog(limit: int = 64) -> str:
+    """Deduplicated, evenly-sampled skill list advertised to the decomposer so
+    subtasks are worded to match capabilities the roster actually has."""
+    seen: dict[str, str] = {}
+    for a in SEED_AGENTS:
+        for s in a.skills:
+            norm = " ".join(str(s).split())
+            key = norm.lower()
+            if norm and key not in seen:
+                seen[key] = norm
+    skills = list(seen.values())
+    if len(skills) > limit:
+        step = len(skills) / limit
+        skills = [skills[int(i * step)] for i in range(limit)]
+    return ", ".join(sorted(skills))
+
+
+_SKILL_CATALOG = _build_skill_catalog()
 
 
 def _build_subtask_prompt(
@@ -55,6 +75,10 @@ def decompose(goal: str) -> list[str]:
         "Each subtask string MUST be self-contained: include concrete content "
         "from GOAL (phrases, names, code, data) so an agent can execute it "
         "without seeing the original goal.\n"
+        "Word each subtask to align with the available agent skills below so it "
+        "can be matched to a specialist. Do not invent capabilities outside this "
+        "list.\n"
+        f"AVAILABLE AGENT SKILLS: {_SKILL_CATALOG}\n"
         "Reply ONLY a JSON list of strings.\n\n"
         f"GOAL: {goal}"
     )
@@ -139,7 +163,7 @@ async def _run_task_body(r, session, task_id: str, goal: str) -> None:
         config = {
             "model": a.model,
             "provider": model["provider"],
-            "system": SUGGESTED_PROMPTS.get(top.agent_id),
+            "system": SUGGESTED_PROMPTS.get(top.agent_id) or a.capability_text,
             "tools": a.tools,
         }
         agent_input = _build_subtask_prompt(goal, st.text, prior_results)

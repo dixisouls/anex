@@ -83,6 +83,11 @@ SIM_CADENCE_JITTER = float(os.getenv("SIM_CADENCE_JITTER", "0.5"))
 TRADE_CAP = float(os.getenv("TRADE_CAP", "100"))
 MAX_CONCURRENT_TASKS = int(os.getenv("MAX_CONCURRENT_TASKS", "2"))
 
+# Shared agent worker pool: all agents route to one of these generic workers
+# (the broker passes model config per dispatch, so any worker can run any agent).
+AGENT_WORKERS = int(os.getenv("AGENT_WORKERS", "16"))
+AGENT_WORKER_BASE_PORT = int(os.getenv("AGENT_WORKER_BASE_PORT", "9001"))
+
 # Model exchange AMM tuning
 EARN_RATE = float(os.getenv("EARN_RATE", "20.0"))
 EARN_CLAMP = float(os.getenv("EARN_CLAMP", "200.0"))

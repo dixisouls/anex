@@ -1,57 +1,33 @@
 #!/usr/bin/env bash
-# Launch all 30 seed agents on ports 9001-9030 (matches seed_agents.service_url).
+# Launch a shared pool of generic agent workers. Every seeded agent's
+# service_url points at one of these ports (round-robin); the broker passes the
+# model config per dispatch, so any worker can execute any agent's task.
+#
+# Pool size + base port come from env (defaults match backend/config.py):
+#   AGENT_WORKERS=16  AGENT_WORKER_BASE_PORT=9001
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-declare -a AGENTS=(
-  "writer-01:9001"
-  "blogger-01:9002"
-  "technical-writer-01:9003"
-  "seo-writer-01:9004"
-  "storyteller-01:9005"
-  "marketer-01:9006"
-  "social-media-01:9007"
-  "coder-01:9008"
-  "debugger-01:9009"
-  "reviewer-01:9010"
-  "devops-01:9011"
-  "sql-analyst-01:9012"
-  "security-01:9013"
-  "researcher-01:9014"
-  "analyst-01:9015"
-  "factcheck-01:9016"
-  "market-analyst-01:9017"
-  "legal-analyst-01:9018"
-  "translator-01:9019"
-  "proofreader-01:9020"
-  "summarizer-01:9021"
-  "extractor-01:9022"
-  "planner-01:9023"
-  "strategist-01:9024"
-  "product-manager-01:9025"
-  "math-solver-01:9026"
-  "scientist-01:9027"
-  "economist-01:9028"
-  "classifier-01:9029"
-  "prompter-01:9030"
-)
+WORKERS="${AGENT_WORKERS:-16}"
+BASE_PORT="${AGENT_WORKER_BASE_PORT:-9001}"
 
 pids=()
 cleanup() {
-  echo "stopping all agents..."
+  echo "stopping all agent workers..."
   for pid in "${pids[@]}"; do
     kill "$pid" 2>/dev/null || true
   done
 }
 trap cleanup EXIT INT TERM
 
-for spec in "${AGENTS[@]}"; do
-  IFS=: read -r agent_id port <<< "$spec"
-  AGENT_ID="$agent_id" PORT="$port" python -m backend.agent.main &
+for i in $(seq 0 $((WORKERS - 1))); do
+  port=$((BASE_PORT + i))
+  worker_id=$(printf "worker-%02d" "$((i + 1))")
+  AGENT_ID="$worker_id" PORT="$port" python -m backend.agent.main &
   pids+=($!)
-  echo "started agent:$agent_id on :$port (pid $!)"
+  echo "started $worker_id on :$port (pid $!)"
 done
 
 echo ""
-echo "all 30 agents running — Ctrl+C to stop"
+echo "$WORKERS agent workers running on :$BASE_PORT-$((BASE_PORT + WORKERS - 1)) — Ctrl+C to stop"
 wait
