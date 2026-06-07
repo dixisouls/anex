@@ -1,26 +1,289 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─────────────────────────────────────────────────────────────────────────
+   ANEX — Terminal Noir
+   Near-black trading terminal. Amber-gold brand, phosphor green / red ticks,
+   monospace numerics, hairline grid, subtle CRT grain.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  --color-base: #0a0b0d;
+  --color-panel: #111418;
+  --color-raised: #161a20;
+  --color-line: #1e232b;
+  --color-line-bright: #2a3038;
+
+  --color-ink: #e6e9ed;
+  --color-muted: #8a93a0;
+  --color-dim: #5a626d;
+  --color-faint: #353b44;
+
+  --color-gold: #e8b339;
+  --color-gold-dim: #8a6e29;
+  --color-amber: #ff8b1f;
+  --color-amber-dim: #b35e10;
+  --color-up: #3dd68c;
+  --color-up-dim: #1c7d52;
+  --color-down: #ff5c66;
+  --color-down-dim: #8f3138;
+  --color-info: #5aa9e6;
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --animate-marquee: marquee 60s linear infinite;
+  --animate-flash-up: flash-up 0.7s ease-out;
+  --animate-flash-down: flash-down 0.7s ease-out;
+  --animate-pulse-dot: pulse-dot 2s ease-in-out infinite;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }
 
+@keyframes flash-up {
+  0% {
+    background-color: color-mix(in srgb, var(--color-up) 28%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes flash-down {
+  0% {
+    background-color: color-mix(in srgb, var(--color-down) 28%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-up) 50%, transparent);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-base);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv01";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* CRT grain + faint scanlines, fixed over everything, non-interactive */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.012) 0px,
+      rgba(255, 255, 255, 0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  mix-blend-mode: overlay;
+}
+
+/* Tabular, slashed-zero numerics everywhere we opt in */
+.tabular {
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-feature-settings: "tnum", "zero";
+}
+
+.wordmark {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  font-stretch: expanded;
+}
+
+/* Scrollbars — thin, terminal-like */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-bright);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-dim);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-bright) transparent;
+}
+
+/* Hide native number-input spinners in the order ticket */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(var(--color-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+}
+
+/* Rendered LLM markdown output — tuned for the dark terminal theme */
+.md {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-muted);
+  word-break: break-word;
+}
+.md > :first-child {
+  margin-top: 0;
+}
+.md > :last-child {
+  margin-bottom: 0;
+}
+.md p {
+  margin: 0.5em 0;
+}
+.md h1,
+.md h2,
+.md h3,
+.md h4,
+.md h5,
+.md h6 {
+  margin: 1em 0 0.4em;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-ink);
+}
+.md h1 {
+  font-size: 1.3em;
+}
+.md h2 {
+  font-size: 1.15em;
+}
+.md h3 {
+  font-size: 1.05em;
+}
+.md h4,
+.md h5,
+.md h6 {
+  font-size: 1em;
+}
+.md strong {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.md em {
+  font-style: italic;
+}
+.md a {
+  color: var(--color-info);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.md ul,
+.md ol {
+  margin: 0.5em 0;
+  padding-left: 1.4em;
+}
+.md ul {
+  list-style: disc;
+}
+.md ol {
+  list-style: decimal;
+}
+.md li {
+  margin: 0.2em 0;
+}
+.md li::marker {
+  color: var(--color-dim);
+}
+.md blockquote {
+  margin: 0.6em 0;
+  padding-left: 0.8em;
+  border-left: 2px solid var(--color-line-bright);
+  color: var(--color-dim);
+}
+.md code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  background: var(--color-base);
+  border: 1px solid var(--color-line);
+  border-radius: 2px;
+  color: var(--color-gold);
+}
+.md pre {
+  margin: 0.6em 0;
+  padding: 0.7em 0.8em;
+  overflow-x: auto;
+  background: var(--color-base);
+  border: 1px solid var(--color-line);
+  border-radius: 2px;
+}
+.md pre code {
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--color-ink);
+}
+.md hr {
+  margin: 0.9em 0;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+}
+.md table {
+  margin: 0.6em 0;
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+.md th,
+.md td {
+  padding: 0.3em 0.6em;
+  border: 1px solid var(--color-line);
+  text-align: left;
+}
+.md th {
+  background: var(--color-base);
+  color: var(--color-ink);
+  font-weight: 600;
 }

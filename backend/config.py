@@ -51,7 +51,7 @@ GCP_EMBED_MODEL = os.getenv(
 
 # OpenAI (worker variety + simulation)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-4.1-mini")
+OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-5.4-mini")
 
 # Cloud-only names (read by GCP adapters in Branch 7; harmless defaults locally)
 API_URL = os.getenv("API_URL", "http://localhost:8000")
@@ -77,14 +77,18 @@ TIER_IPO_PRICE = {
 }
 USER_START_CREDITS = float(os.getenv("USER_START_CREDITS", "1000"))
 SIM_POSTERS = int(os.getenv("SIM_POSTERS", "2"))
-SIM_INVESTORS = int(os.getenv("SIM_INVESTORS", "3"))
-SIM_CADENCE_S = float(os.getenv("SIM_CADENCE_S", "8.0"))
+SIM_INVESTORS = int(os.getenv("SIM_INVESTORS", "8"))
+SIM_CADENCE_S = float(os.getenv("SIM_CADENCE_S", "4.0"))
+SIM_CADENCE_JITTER = float(os.getenv("SIM_CADENCE_JITTER", "0.5"))
 TRADE_CAP = float(os.getenv("TRADE_CAP", "100"))
 MAX_CONCURRENT_TASKS = int(os.getenv("MAX_CONCURRENT_TASKS", "2"))
 
 # Model exchange AMM tuning
 EARN_RATE = float(os.getenv("EARN_RATE", "20.0"))
 EARN_CLAMP = float(os.getenv("EARN_CLAMP", "200.0"))
+# Earnings break-even: scores above push price up, below push it down. Set near
+# the typical judge score so mediocre work is bearish (two-sided fundamentals).
+EARN_BASELINE = float(os.getenv("EARN_BASELINE", "0.7"))
 MIN_POOL_SHARES = 1.0
 MIN_POOL_CREDITS = 1.0
 

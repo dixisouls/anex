@@ -176,7 +176,7 @@ async def handle_run_result(
         TaskExecuted(
             subtask_id=subtask_id,
             agent_id=agent_id,
-            output_preview=output[:280],
+            output_preview=output,
         )
     )
     score, _reason = judge(subtask_text, output)
