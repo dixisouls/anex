@@ -12,7 +12,7 @@ import {
   fmtTime,
 } from "@/lib/format";
 import { cn } from "@/lib/cn";
-import { PriceChart } from "./PriceChart";
+import { ChartModeToggle, PriceChart, type ChartMode } from "./PriceChart";
 import type { TradeExecutedEvent } from "@/lib/types";
 
 function deltaClass(n: number) {
@@ -32,6 +32,7 @@ export function BloombergTerminal({
   const { events } = useFeed();
   const [query, setQuery] = useState("");
   const [filterBySelected, setFilterBySelected] = useState(false);
+  const [chartMode, setChartMode] = useState<ChartMode>("line");
 
   const active = selected ? modelMap[selected] : undefined;
 
@@ -205,9 +206,23 @@ export function BloombergTerminal({
           </div>
 
           {/* Chart */}
-          <div className="h-48 shrink-0 border-b border-amber-dim/40 px-1 py-1 lg:h-56">
+          <div className="relative h-48 shrink-0 border-b border-amber-dim/40 px-1 py-1 lg:h-56">
+            {active && (
+              <div className="absolute right-2 top-1.5 z-10">
+                <ChartModeToggle
+                  mode={chartMode}
+                  onChange={setChartMode}
+                  className="border-amber-dim/60 bg-black/60"
+                />
+              </div>
+            )}
             {active ? (
-              <PriceChart modelId={active.model_id} />
+              <PriceChart
+                modelId={active.model_id}
+                mode={chartMode}
+                onModeChange={setChartMode}
+                showToggle={false}
+              />
             ) : (
               <div className="grid h-full place-items-center text-[11px] text-amber/40">
                 No chart

@@ -15,12 +15,13 @@ from backend.config import (
     POSTER_BUDGET_CAP,
     SIM_CADENCE_JITTER,
     SIM_CADENCE_S,
+    SIM_INVESTOR_MODE,
     SIM_INVESTORS,
     SIM_POSTERS,
     TRADE_CAP,
 )
 from backend.infra.retry import httpx_request_with_retry
-from backend.sim import strategies
+from backend.sim import llm_investor, strategies
 
 logger = logging.getLogger(__name__)
 
@@ -167,9 +168,19 @@ async def _investor_loop(
             try:
                 market = (await _api_get(client, "/market")).json()
                 pf = (await _api_get(client, f"/portfolio/{user_id}")).json()
-                decision = strategies.decide(
-                    strategy, market, pf, rng, trade_cap=TRADE_CAP
-                )
+                if SIM_INVESTOR_MODE == "math":
+                    decision = strategies.decide(
+                        strategy, market, pf, rng, trade_cap=TRADE_CAP
+                    )
+                else:
+                    snapshot = llm_investor.build_snapshot(market, pf, rng=rng)
+                    snapshot = await llm_investor.enrich_snapshot(client, snapshot)
+                    raw = await asyncio.to_thread(
+                        llm_investor.llm_decide, strategy, snapshot, rng=rng
+                    )
+                    decision = llm_investor.validate_decision(
+                        raw, market, pf, trade_cap=TRADE_CAP
+                    )
                 trade = trade_from_decision(decision)
                 if trade is not None:
                     trade["user_id"] = user_id
@@ -202,7 +213,9 @@ async def start(
     for i, uid in enumerate(investor_ids):
         strategy = strategies.STRATEGIES[i % len(strategies.STRATEGIES)]
         rng = random.Random(f"{uid}:{strategy}")
-        logger.info("investor %s -> strategy=%s", uid, strategy)
+        logger.info(
+            "investor %s -> mode=%s strategy=%s", uid, SIM_INVESTOR_MODE, strategy
+        )
         _tasks.append(
             asyncio.create_task(
                 _investor_loop(base_url, uid, cadence_s, strategy, rng)

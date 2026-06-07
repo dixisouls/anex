@@ -55,7 +55,8 @@ export function TaskBlock({
   }, [activeIdx, subs]);
 
   const isStepExpanded = (subtaskId: string, index: number) => {
-    if (index === activeIdx && !complete) return true;
+    if (complete) return true;
+    if (index === activeIdx) return true;
     if (pinnedOpen.has(subtaskId)) return true;
     return false;
   };

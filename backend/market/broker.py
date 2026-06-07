@@ -1,9 +1,12 @@
 """Broker: decompose → match → rank → dispatch → judge."""
 
 import json
+import logging
 import uuid
 
 import weave
+
+logger = logging.getLogger(__name__)
 
 from contracts.events import (
     AgentHired,
@@ -312,6 +315,12 @@ async def _live_credits(user_uuid) -> float:
         return float(user.credits)
 
 
+async def _persist_subtask(subtask_id: str, **fields) -> None:
+    """Commit subtask pipeline state in its own session (visible across workers)."""
+    async with session_scope() as session:
+        await repo.update_subtask(session, subtask_id, **fields)
+
+
 async def _run_task_body(
     r,
     session,
@@ -347,6 +356,10 @@ async def _run_task_body(
         )
     )
 
+    # Subtasks must be committed before agent dispatch: local_queue persists
+    # results in a separate DB session that cannot see uncommitted rows.
+    await session.commit()
+
     user_uuid = uuid.UUID(user_id)
     remaining_budget = float(budget)
     prior_results: list[tuple[str, str]] = []
@@ -363,6 +376,12 @@ async def _run_task_body(
                     message=_SKIP_BUDGET_MSG,
                 )
             )
+            await _persist_subtask(
+                st.subtask_id,
+                skipped=True,
+                skip_reason="budget",
+                skip_message=_SKIP_BUDGET_MSG,
+            )
             continue
         affordable = [c for c in cands if c.price <= ceiling]
         if not affordable:
@@ -372,6 +391,12 @@ async def _run_task_body(
                     reason="budget",
                     message=_SKIP_BUDGET_MSG,
                 )
+            )
+            await _persist_subtask(
+                st.subtask_id,
+                skipped=True,
+                skip_reason="budget",
+                skip_message=_SKIP_BUDGET_MSG,
             )
             continue
         top = await select_best(
@@ -391,6 +416,12 @@ async def _run_task_body(
                     message=_SKIP_UNAVAILABLE_MSG,
                 )
             )
+            await _persist_subtask(
+                st.subtask_id,
+                skipped=True,
+                skip_reason="unavailable",
+                skip_message=_SKIP_UNAVAILABLE_MSG,
+            )
             continue
         model = await registry.get_model_cached(r, a.model)
         if model is None:
@@ -400,6 +431,12 @@ async def _run_task_body(
                     reason="unavailable",
                     message=_SKIP_UNAVAILABLE_MSG,
                 )
+            )
+            await _persist_subtask(
+                st.subtask_id,
+                skipped=True,
+                skip_reason="unavailable",
+                skip_message=_SKIP_UNAVAILABLE_MSG,
             )
             continue
 
@@ -418,6 +455,10 @@ async def _run_task_body(
         await bus.publish(
             CandidatesRanked(subtask_id=st.subtask_id, candidates=ranked)
         )
+        await _persist_subtask(
+            st.subtask_id,
+            candidates_json=[c.model_dump() for c in ranked],
+        )
         await bus.publish(
             AgentHired(
                 subtask_id=st.subtask_id,
@@ -425,6 +466,12 @@ async def _run_task_body(
                 price=top.price,
                 budget_remaining=remaining_budget,
             )
+        )
+        await _persist_subtask(
+            st.subtask_id,
+            assigned_agent_id=top.agent_id,
+            hire_price=top.price,
+            budget_remaining=remaining_budget,
         )
         config = {
             "model": a.model,
@@ -447,6 +494,7 @@ async def _run_task_body(
             prior_results.append((st.text, output))
 
     await repo.mark_task_complete(session, task_uuid)
+    await session.commit()
 
 
 async def handle_run_result(

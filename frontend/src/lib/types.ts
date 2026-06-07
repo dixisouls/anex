@@ -109,7 +109,12 @@ export interface TaskSlots {
   in_use: number;
 }
 
-export type SubtaskStage = "posted" | "hired" | "executed" | "scored";
+export type SubtaskStage =
+  | "posted"
+  | "ranked"
+  | "hired"
+  | "executed"
+  | "scored";
 
 export interface SubtaskDetail {
   subtask_id: string;
@@ -118,6 +123,12 @@ export interface SubtaskDetail {
   output_preview: string | null;
   judge_score: number | null;
   stage: SubtaskStage;
+  candidates?: Candidate[];
+  hire_price?: number | null;
+  budget_remaining?: number | null;
+  skipped?: boolean;
+  skip_reason?: string | null;
+  skip_message?: string | null;
 }
 
 export interface TaskDetail {

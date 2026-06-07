@@ -31,6 +31,7 @@ export function TaskThread({
     scrollNonce,
     removePendingTask,
     bumpScroll,
+    hydrateTasks,
   } = useNetwork();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -76,6 +77,15 @@ export function TaskThread({
       removePendingTask(p.task_id);
     }
   }, [taskEvents, removePendingTask]);
+
+  // Re-hydrate from DB when a subtask finishes so refresh-less history stays accurate.
+  useEffect(() => {
+    if (taskEvents.length === 0) return;
+    const latest = taskEvents[0];
+    if (latest.type === "task_scored" || latest.type === "subtask_skipped") {
+      void hydrateTasks();
+    }
+  }, [taskEvents, hydrateTasks]);
 
   useEffect(() => {
     bumpScroll();

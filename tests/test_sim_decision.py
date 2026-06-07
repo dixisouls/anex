@@ -178,6 +178,7 @@ async def test_investor_loop_iteration_caps_trade(monkeypatch):
         async def __aexit__(self, *args):
             return None
 
+    monkeypatch.setattr(sim_runner, "SIM_INVESTOR_MODE", "math")
     monkeypatch.setattr(
         sim_runner.strategies,
         "decide",
@@ -228,6 +229,7 @@ async def test_investor_loop_hold_posts_nothing(monkeypatch):
         async def __aexit__(self, *args):
             return None
 
+    monkeypatch.setattr(sim_runner, "SIM_INVESTOR_MODE", "math")
     monkeypatch.setattr(
         sim_runner.strategies, "decide", lambda *a, **k: {"action": "hold"}
     )

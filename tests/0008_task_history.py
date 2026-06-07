@@ -33,8 +33,15 @@ def _subtask(**kwargs) -> Subtask:
 def test_derive_subtask_stage_progression():
     assert repo.derive_subtask_stage(_subtask()) == "posted"
     assert (
+        repo.derive_subtask_stage(
+            _subtask(candidates_json=[{"agent_id": "a", "final_score": 1.0}])
+        )
+        == "ranked"
+    )
+    assert (
         repo.derive_subtask_stage(_subtask(assigned_agent_id="writer-01")) == "hired"
     )
+    assert repo.derive_subtask_stage(_subtask(skipped=True)) == "scored"
     assert (
         repo.derive_subtask_stage(
             _subtask(assigned_agent_id="writer-01", output_preview="done")
@@ -131,6 +138,22 @@ async def test_hide_task_for_user_missing_returns_false():
 
     ok = await repo.hide_task_for_user(session, uuid.uuid4(), uuid.uuid4())
     assert ok is False
+
+
+@pytest.mark.asyncio
+async def test_save_subtask_result_raises_when_row_missing():
+    session = AsyncMock()
+    session.execute = AsyncMock(
+        return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None))
+    )
+    with pytest.raises(LookupError, match="subtask not found"):
+        await repo.save_subtask_result(
+            session,
+            subtask_id="00000000-0000-0000-0000-000000000001-0",
+            agent_id="writer-01",
+            output_preview="done",
+            judge_score=0.9,
+        )
 
 
 @pytest.mark.asyncio

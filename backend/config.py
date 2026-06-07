@@ -56,6 +56,8 @@ GCP_EMBED_MODEL = os.getenv(
 # OpenAI (worker variety + simulation)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-5.4-mini")
+OPENAI_INVESTOR_MODEL = os.getenv("OPENAI_INVESTOR_MODEL", "gpt-5.4-nano")
+OPENAI_INVESTOR_TEMPERATURE = float(os.getenv("OPENAI_INVESTOR_TEMPERATURE", "0.85"))
 
 # Cloud-only names (read by GCP adapters in Branch 7; harmless defaults locally)
 API_URL = os.getenv("API_URL", "http://localhost:8000")
@@ -88,6 +90,7 @@ SIM_POSTERS = int(os.getenv("SIM_POSTERS", "2"))
 SIM_INVESTORS = int(os.getenv("SIM_INVESTORS", "8"))
 SIM_CADENCE_S = float(os.getenv("SIM_CADENCE_S", "4.0"))
 SIM_CADENCE_JITTER = float(os.getenv("SIM_CADENCE_JITTER", "0.5"))
+SIM_INVESTOR_MODE = os.getenv("SIM_INVESTOR_MODE", "llm").lower()  # "llm" | "math"
 TRADE_CAP = float(os.getenv("TRADE_CAP", "100"))
 MAX_CONCURRENT_TASKS = int(os.getenv("MAX_CONCURRENT_TASKS", "2"))
 
