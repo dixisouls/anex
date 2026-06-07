@@ -35,6 +35,8 @@ class Agent(BaseModel):
     """The agent record. price is derived at read time when serving GET /agents."""
 
     agent_id: str
+    capability_id: str
+    service_tier: Literal["pro", "flash", "lite"]
     name: str
     skills: list[str]
     capability_text: str
