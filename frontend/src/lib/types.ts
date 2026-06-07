@@ -7,6 +7,8 @@ export type Side = "buy" | "sell";
 
 export interface Agent {
   agent_id: string;
+  capability_id: string;
+  service_tier: Tier;
   name: string;
   skills: string[];
   capability_text: string;

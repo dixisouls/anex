@@ -19,7 +19,9 @@ async def test_settle_reputation_ema_high_score():
     score = 1.0
     expected_rep = REP_ALPHA * score + (1 - REP_ALPHA) * old_rep
     agent = Agent(
-        agent_id="writer-01",
+        agent_id="writer-flash",
+        capability_id="writer",
+        service_tier="flash",
         name="Copywriter",
         skills=["writing"],
         capability_text="writes copy",
@@ -52,7 +54,7 @@ async def test_settle_reputation_ema_high_score():
         await ledger.settle(
             r,
             session,
-            agent_id="writer-01",
+            agent_id="writer-flash",
             model_id="gemini-3.5-flash",
             judge_score=score,
             derived_price=24.0,
@@ -70,7 +72,9 @@ async def test_settle_reputation_ema_low_score():
     score = 0.0
     expected_rep = REP_ALPHA * score + (1 - REP_ALPHA) * old_rep
     agent = Agent(
-        agent_id="writer-01",
+        agent_id="writer-flash",
+        capability_id="writer",
+        service_tier="flash",
         name="Copywriter",
         skills=["writing"],
         capability_text="writes copy",
@@ -98,7 +102,7 @@ async def test_settle_reputation_ema_low_score():
         await ledger.settle(
             r,
             session,
-            agent_id="writer-01",
+            agent_id="writer-flash",
             model_id="gemini-3.5-flash",
             judge_score=score,
             derived_price=24.0,

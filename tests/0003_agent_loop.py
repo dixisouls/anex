@@ -13,18 +13,24 @@ from backend.config import PLACEHOLDER_MODEL_PRICE, W_MATCH, W_PRICE, W_REP
 from backend.market import broker, pricing
 
 
-@pytest.fixture
-def mock_agent():
+def _writer_agent(tier: str = "flash", margin: float = 0.20) -> Agent:
     return Agent(
-        agent_id="writer-01",
+        agent_id=f"writer-{tier}",
+        capability_id="writer",
+        service_tier=tier,  # type: ignore[arg-type]
         name="Copywriter",
         skills=["writing"],
         capability_text="writes copy",
         model="gemini-3.5-flash",
-        margin=0.20,
+        margin=margin,
         reputation=0.5,
         service_url="http://localhost:9001",
     )
+
+
+@pytest.fixture
+def mock_agent():
+    return _writer_agent()
 
 
 @pytest.mark.asyncio
@@ -39,11 +45,11 @@ async def test_rank_final_score_formula(mock_agent):
         ) as mock_get,
         patch.object(broker.pricing, "model_price", new_callable=AsyncMock) as mock_mp,
     ):
-        mock_search.return_value = [("writer-01", match)]
+        mock_search.return_value = [("writer-flash", match)]
         mock_get.return_value = mock_agent
         mock_mp.return_value = PLACEHOLDER_MODEL_PRICE
 
-        cands = await broker.rank(r, "write a blog post", k=1)
+        cands = await broker.rank(r, "write a blog post", ceiling=1000.0, k=1)
 
     assert len(cands) == 1
     c = cands[0]
@@ -59,8 +65,10 @@ async def test_rank_final_score_formula(mock_agent):
 async def test_rank_sorts_descending():
     r = AsyncMock()
     agents = {
-        "a": Agent(
-            agent_id="a",
+        "a-pro": Agent(
+            agent_id="a-pro",
+            capability_id="a",
+            service_tier="pro",
             name="A",
             skills=[],
             capability_text="a",
@@ -68,8 +76,10 @@ async def test_rank_sorts_descending():
             margin=0.1,
             reputation=0.5,
         ),
-        "b": Agent(
-            agent_id="b",
+        "b-pro": Agent(
+            agent_id="b-pro",
+            capability_id="b",
+            service_tier="pro",
             name="B",
             skills=[],
             capability_text="b",
@@ -85,12 +95,17 @@ async def test_rank_sorts_descending():
             broker.registry, "get_agent_cached", new_callable=AsyncMock
         ) as mock_get,
         patch.object(broker.pricing, "model_price", new_callable=AsyncMock) as mock_mp,
+        patch.object(broker, "resolve_tier_variants", new_callable=AsyncMock) as mock_resolve,
     ):
-        mock_search.return_value = [("a", 0.9), ("b", 0.7)]
+        mock_search.return_value = [("a-pro", 0.9), ("b-pro", 0.7)]
         mock_get.side_effect = lambda _r, aid: agents[aid]
         mock_mp.return_value = PLACEHOLDER_MODEL_PRICE
+        mock_resolve.return_value = [
+            (0.9, agents["a-pro"], pricing.derived_price(PLACEHOLDER_MODEL_PRICE, 0.1)),
+            (0.7, agents["b-pro"], pricing.derived_price(PLACEHOLDER_MODEL_PRICE, 0.5)),
+        ]
 
-        cands = await broker.rank(r, "task", k=2)
+        cands = await broker.rank(r, "task", ceiling=1000.0, k=2)
 
     assert len(cands) == 2
     assert cands[0].final_score >= cands[1].final_score
@@ -152,7 +167,7 @@ async def test_run_task_dispatches_sequentially(mock_agent):
     ):
         mock_rank.return_value = [
             Candidate(
-                agent_id="writer-01",
+                agent_id="writer-flash",
                 match_score=0.9,
                 reputation=0.5,
                 price=1.0,
@@ -179,7 +194,6 @@ async def test_run_task_dispatches_sequentially(mock_agent):
         "00000000-0000-0000-0000-000000000001-0",
         "00000000-0000-0000-0000-000000000001-1",
     ]
-    # One charge per hired subtask, each at the candidate price.
     assert mock_charge.await_count == 2
     assert all(c.kwargs["price"] == 1.0 for c in mock_charge.await_args_list)
     calls = mock_queue.enqueue_run_and_wait.call_args_list
@@ -205,15 +219,7 @@ async def test_run_task_skips_unaffordable_subtask(mock_agent):
         patch.object(broker.bus, "publish", new_callable=AsyncMock) as mock_pub,
         patch("backend.market.broker.get_queue") as mock_get_queue,
     ):
-        mock_rank.return_value = [
-            Candidate(
-                agent_id="writer-01",
-                match_score=0.9,
-                reputation=0.5,
-                price=50.0,
-                final_score=1.0,
-            )
-        ]
+        mock_rank.return_value = []
         mock_live.return_value = 1000.0
         mock_queue = AsyncMock()
         mock_get_queue.return_value = mock_queue
@@ -224,7 +230,7 @@ async def test_run_task_skips_unaffordable_subtask(mock_agent):
             "00000000-0000-0000-0000-000000000002",
             "goal",
             user_id="00000000-0000-0000-0000-0000000000bb",
-            budget=10.0,  # below the 50.0 price
+            budget=10.0,
         )
 
     mock_charge.assert_not_awaited()
@@ -304,3 +310,178 @@ async def test_select_best_falls_back_on_bad_json(mock_agent):
 
 def test_derived_price():
     assert pricing.derived_price(10.0, 0.2) == pytest.approx(12.0)
+
+
+def _writer_siblings() -> dict[str, list[Agent]]:
+    pro = _writer_agent("pro", margin=0.20)
+    flash = _writer_agent("flash", margin=0.20)
+    lite = _writer_agent("lite", margin=0.20)
+    return {"writer": [pro, flash, lite]}
+
+
+@pytest.mark.asyncio
+async def test_resolve_tier_prefers_pro_when_affordable():
+    r = AsyncMock()
+    siblings = _writer_siblings()
+    index = {a.agent_id: a for a in siblings["writer"]}
+    with (
+        patch.object(
+            broker.registry, "get_agent_cached", new_callable=AsyncMock
+        ) as mock_get,
+        patch.object(broker.pricing, "model_price", new_callable=AsyncMock) as mock_mp,
+    ):
+        mock_get.side_effect = lambda _r, aid: index[aid]
+        mock_mp.side_effect = [100.0, 50.0, 20.0]
+        resolved = await broker.resolve_tier_variants(
+            r, [("writer-pro", 0.9)], ceiling=200.0, agents_by_capability=siblings
+        )
+    assert len(resolved) == 1
+    assert resolved[0][1].agent_id == "writer-pro"
+
+
+@pytest.mark.asyncio
+async def test_resolve_tier_downgrades_to_flash():
+    r = AsyncMock()
+    siblings = _writer_siblings()
+    index = {a.agent_id: a for a in siblings["writer"]}
+    with (
+        patch.object(
+            broker.registry, "get_agent_cached", new_callable=AsyncMock
+        ) as mock_get,
+        patch.object(broker.pricing, "model_price", new_callable=AsyncMock) as mock_mp,
+    ):
+        mock_get.side_effect = lambda _r, aid: index[aid]
+        mock_mp.side_effect = [100.0, 50.0, 20.0]
+        resolved = await broker.resolve_tier_variants(
+            r, [("writer-pro", 0.9)], ceiling=80.0, agents_by_capability=siblings
+        )
+    assert resolved[0][1].agent_id == "writer-flash"
+
+
+@pytest.mark.asyncio
+async def test_resolve_tier_downgrades_to_lite():
+    r = AsyncMock()
+    siblings = _writer_siblings()
+    index = {a.agent_id: a for a in siblings["writer"]}
+    with (
+        patch.object(
+            broker.registry, "get_agent_cached", new_callable=AsyncMock
+        ) as mock_get,
+        patch.object(broker.pricing, "model_price", new_callable=AsyncMock) as mock_mp,
+    ):
+        mock_get.side_effect = lambda _r, aid: index[aid]
+        mock_mp.side_effect = [100.0, 50.0, 20.0]
+        resolved = await broker.resolve_tier_variants(
+            r, [("writer-pro", 0.9)], ceiling=30.0, agents_by_capability=siblings
+        )
+    assert resolved[0][1].agent_id == "writer-lite"
+
+
+@pytest.mark.asyncio
+async def test_resolve_tier_dedupes_siblings():
+    r = AsyncMock()
+    siblings = _writer_siblings()
+    index = {a.agent_id: a for a in siblings["writer"]}
+    with (
+        patch.object(
+            broker.registry, "get_agent_cached", new_callable=AsyncMock
+        ) as mock_get,
+        patch.object(broker.pricing, "model_price", new_callable=AsyncMock) as mock_mp,
+    ):
+        mock_get.side_effect = lambda _r, aid: index[aid]
+        mock_mp.return_value = 10.0
+        resolved = await broker.resolve_tier_variants(
+            r,
+            [("writer-pro", 0.9), ("writer-flash", 0.95), ("writer-lite", 0.99)],
+            ceiling=1000.0,
+            agents_by_capability=siblings,
+        )
+    assert len(resolved) == 1
+    assert resolved[0][1].agent_id == "writer-pro"
+
+
+@pytest.mark.asyncio
+async def test_single_tier_capability():
+    r = AsyncMock()
+    flash_only = Agent(
+        agent_id="summarizer-flash",
+        capability_id="summarizer",
+        service_tier="flash",
+        name="Summarizer",
+        skills=["summarization"],
+        capability_text="summarizes documents",
+        model="gemini-3.5-flash",
+        margin=0.15,
+    )
+    catalog = {"summarizer": [flash_only]}
+    with (
+        patch.object(
+            broker.registry, "get_agent_cached", new_callable=AsyncMock, return_value=flash_only
+        ),
+        patch.object(broker.pricing, "model_price", new_callable=AsyncMock) as mock_mp,
+    ):
+        mock_mp.return_value = 10.0
+        resolved = await broker.resolve_tier_variants(
+            r,
+            [("summarizer-flash", 0.8)],
+            ceiling=1000.0,
+            agents_by_capability=catalog,
+        )
+    assert resolved[0][1].agent_id == "summarizer-flash"
+
+
+@pytest.mark.asyncio
+async def test_run_task_downgrades_mid_task():
+    r = AsyncMock()
+    session = AsyncMock()
+    hired: list[str] = []
+
+    async def fake_rank(_r, _text, *, ceiling, k=10):
+        tier = "writer-pro" if ceiling >= 100.0 else "writer-lite"
+        return [
+            Candidate(
+                agent_id=tier,
+                match_score=0.9,
+                reputation=0.5,
+                price=10.0 if tier.endswith("pro") else 1.0,
+                final_score=1.0,
+            )
+        ]
+
+    with (
+        patch.object(broker, "decompose", return_value=["step one", "step two"]),
+        patch.object(broker, "rank", side_effect=fake_rank),
+        patch.object(broker, "_live_credits", new_callable=AsyncMock, return_value=1000.0),
+        patch.object(broker, "select_best", new_callable=AsyncMock) as mock_select,
+        patch.object(broker, "charge_hire", new_callable=AsyncMock) as mock_charge,
+        patch.object(
+            broker.registry, "get_agent_cached", new_callable=AsyncMock
+        ) as mock_get_agent,
+        patch.object(
+            broker.registry, "get_model_cached", new_callable=AsyncMock, return_value={"provider": "gcp"}
+        ),
+        patch.object(broker.repo, "create_subtask", new_callable=AsyncMock),
+        patch.object(broker.bus, "publish", new_callable=AsyncMock),
+        patch("backend.market.broker.get_queue") as mock_get_queue,
+    ):
+        mock_select.side_effect = lambda _r, _t, cands: cands[0]
+        mock_get_agent.side_effect = lambda _r, aid: _writer_agent(aid.split("-")[1])
+        mock_queue = AsyncMock()
+        mock_queue.enqueue_run_and_wait.return_value = "done"
+        mock_get_queue.return_value = mock_queue
+
+        def capture_charge(*_a, **kw):
+            hired.append(kw["agent_id"])
+
+        mock_charge.side_effect = capture_charge
+
+        await broker._run_task_body(
+            r,
+            session,
+            "00000000-0000-0000-0000-000000000003",
+            "goal",
+            user_id="00000000-0000-0000-0000-0000000000cc",
+            budget=105.0,
+        )
+
+    assert hired == ["writer-pro", "writer-lite"]
