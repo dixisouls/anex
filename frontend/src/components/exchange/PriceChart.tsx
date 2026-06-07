@@ -10,16 +10,21 @@ import {
   type ISeriesApi,
   type UTCTimestamp,
 } from "lightweight-charts";
-import { useMarket } from "@/lib/market";
+import { ensureMonotonicTimes, useMarket } from "@/lib/market";
 
 export function PriceChart({ modelId }: { modelId: string }) {
-  const { history, open } = useMarket();
+  const { history, open, modelMap } = useMarket();
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
+  const fairLineRef = useRef<ReturnType<ISeriesApi<"Area">["createPriceLine"]> | null>(
+    null,
+  );
 
   const points = history[modelId] ?? [];
-  const openPrice = open[modelId];
+  const model = modelMap[modelId];
+  const openPrice = open[modelId] ?? model?.session_open;
+  const fundamental = model?.fundamental;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -93,11 +98,27 @@ export function PriceChart({ modelId }: { modelId: string }) {
       bottomColor: "rgba(0,0,0,0)",
     });
 
+    const chartPoints = ensureMonotonicTimes(points);
     series.setData(
-      points.map((p) => ({ time: p.time as UTCTimestamp, value: p.value })),
+      chartPoints.map((p) => ({ time: p.time as UTCTimestamp, value: p.value })),
     );
+    if (fairLineRef.current) {
+      series.removePriceLine(fairLineRef.current);
+      fairLineRef.current = null;
+    }
+    if (fundamental != null && points.length > 0) {
+      fairLineRef.current = series.createPriceLine({
+        price: fundamental,
+        color: "#5a626d",
+        lineWidth: 1,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: "Fair",
+      });
+    }
+
     chart.timeScale().fitContent();
-  }, [points, openPrice]);
+  }, [points, openPrice, fundamental]);
 
   return <div ref={containerRef} className="h-full w-full" />;
 }

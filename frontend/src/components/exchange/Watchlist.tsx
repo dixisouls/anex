@@ -1,15 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useMarket, changePct } from "@/lib/market";
+import { useEffect, useMemo, useState } from "react";
+import { useMarket, changePct, sparkSlopePositive, sparkWindow } from "@/lib/market";
 import { tickerSymbol, issuer } from "@/lib/ticker";
-import { fmtPrice, fmtCompact } from "@/lib/format";
+import { fmtPrice, fmtCompact, fmtNum } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { Sparkline } from "@/components/Sparkline";
 import { TierBadge, Delta, useFlash } from "@/components/ui";
 import type { ModelStock } from "@/lib/types";
 
-type SortKey = "price" | "change" | "volume" | "symbol";
+type SortKey = "price" | "change" | "volume" | "symbol" | "spread" | "fair";
 
 export function Watchlist({
   selected,
@@ -18,9 +18,13 @@ export function Watchlist({
   selected: string | null;
   onSelect: (id: string) => void;
 }) {
-  const { models, history, open, volume, loading } = useMarket();
+  const { models, history, open, volume, loading, loadHistory } = useMarket();
   const [sort, setSort] = useState<SortKey>("change");
   const [asc, setAsc] = useState(false);
+
+  useEffect(() => {
+    for (const m of models) loadHistory(m.model_id);
+  }, [models, loadHistory]);
 
   const rows = useMemo(() => {
     const arr = [...models];
@@ -31,11 +35,17 @@ export function Watchlist({
         av = a.price;
         bv = b.price;
       } else if (sort === "change") {
-        av = changePct(a.price, open[a.model_id]);
-        bv = changePct(b.price, open[b.model_id]);
+        av = changePct(a.price, open[a.model_id] ?? a.session_open);
+        bv = changePct(b.price, open[b.model_id] ?? b.session_open);
       } else if (sort === "volume") {
-        av = volume[a.model_id] ?? 0;
-        bv = volume[b.model_id] ?? 0;
+        av = volume[a.model_id] ?? a.volume ?? 0;
+        bv = volume[b.model_id] ?? b.volume ?? 0;
+      } else if (sort === "spread") {
+        av = a.spread_bps ?? 0;
+        bv = b.spread_bps ?? 0;
+      } else if (sort === "fair") {
+        av = a.vs_fair_pct ?? 0;
+        bv = b.vs_fair_pct ?? 0;
       } else {
         av = tickerSymbol(a.model_id);
         bv = tickerSymbol(b.model_id);
@@ -57,10 +67,11 @@ export function Watchlist({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 border-b border-line px-3 py-2 font-mono text-[9px] uppercase tracking-[0.18em] text-dim">
+      <div className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-2 border-b border-line px-3 py-2 font-mono text-[9px] uppercase tracking-[0.18em] text-dim">
         <Th label="Instrument" k="symbol" cur={sort} asc={asc} onClick={toggle} />
         <Th label="Last" k="price" cur={sort} asc={asc} onClick={toggle} align="right" />
         <Th label="Chg" k="change" cur={sort} asc={asc} onClick={toggle} align="right" />
+        <Th label="Sprd" k="spread" cur={sort} asc={asc} onClick={toggle} align="right" />
         <span className="w-[88px] text-right">Trend</span>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -71,17 +82,22 @@ export function Watchlist({
             ))}
           </div>
         )}
-        {rows.map((m) => (
-          <Row
-            key={m.model_id}
-            model={m}
-            pct={changePct(m.price, open[m.model_id])}
-            spark={(history[m.model_id] ?? []).map((p) => p.value)}
-            vol={volume[m.model_id] ?? 0}
-            selected={selected === m.model_id}
-            onSelect={() => onSelect(m.model_id)}
-          />
-        ))}
+        {rows.map((m) => {
+          const sessionOpen = open[m.model_id] ?? m.session_open;
+          const spark = sparkWindow((history[m.model_id] ?? []).map((p) => p.value));
+          return (
+            <Row
+              key={m.model_id}
+              model={m}
+              pct={changePct(m.price, sessionOpen)}
+              spark={spark}
+              sparkUp={sparkSlopePositive(spark)}
+              vol={volume[m.model_id] ?? m.volume ?? 0}
+              selected={selected === m.model_id}
+              onSelect={() => onSelect(m.model_id)}
+            />
+          );
+        })}
       </div>
     </div>
   );
@@ -121,6 +137,7 @@ function Row({
   model,
   pct,
   spark,
+  sparkUp,
   vol,
   selected,
   onSelect,
@@ -128,16 +145,18 @@ function Row({
   model: ModelStock;
   pct: number;
   spark: number[];
+  sparkUp: boolean;
   vol: number;
   selected: boolean;
   onSelect: () => void;
 }) {
   const flash = useFlash(model.price);
+  const vsFair = model.vs_fair_pct ?? 0;
   return (
     <button
       onClick={onSelect}
       className={cn(
-        "grid w-full grid-cols-[1fr_auto_auto_auto] items-center gap-3 border-b border-line/50 px-3 py-2 text-left transition-colors",
+        "grid w-full grid-cols-[1fr_auto_auto_auto_auto] items-center gap-2 border-b border-line/50 px-3 py-2 text-left transition-colors",
         selected ? "bg-gold/[0.06]" : "hover:bg-panel/60",
         flash === "up" && "animate-[flash-up_0.7s_ease-out]",
         flash === "down" && "animate-[flash-down_0.7s_ease-out]",
@@ -157,6 +176,16 @@ function Row({
         </div>
         <div className="truncate font-mono text-[10px] text-dim">
           {model.name} · {issuer(model.provider, model.model_id)}
+          {model.fundamental != null && (
+            <span
+              className={cn(
+                "ml-1",
+                vsFair > 2 ? "text-down" : vsFair < -2 ? "text-up" : "text-dim",
+              )}
+            >
+              · {fmtNum(vsFair, 1)}% vs fair
+            </span>
+          )}
         </div>
       </div>
       <div className="text-right">
@@ -167,11 +196,14 @@ function Row({
           V {fmtCompact(vol)}
         </div>
       </div>
-      <div className="w-16 text-right">
+      <div className="w-14 text-right">
         <Delta pct={pct} className="text-xs" />
       </div>
+      <div className="tabular w-10 text-right font-mono text-[9px] text-dim">
+        {model.spread_bps != null ? `${fmtNum(model.spread_bps, 0)}` : "—"}
+      </div>
       <div className="flex w-[88px] justify-end">
-        <Sparkline data={spark} positive={pct >= 0} />
+        <Sparkline data={spark} positive={sparkUp} />
       </div>
     </button>
   );

@@ -40,7 +40,7 @@ export function Sparkline({
   const y = (v: number) =>
     height - pad - ((v - min) / range) * (height - pad * 2);
 
-  const up = positive ?? data[n - 1] >= data[0];
+  const up = positive ?? (data[n - 1] >= data[0]);
   const color = up ? "var(--color-up)" : "var(--color-down)";
 
   const line = data.map((v, i) => `${x(i).toFixed(2)},${y(v).toFixed(2)}`).join(" ");

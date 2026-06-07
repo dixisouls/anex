@@ -10,17 +10,18 @@ import { PriceChart } from "./PriceChart";
 import type { ModelStock } from "@/lib/types";
 
 export function StockDetail({ model }: { model: ModelStock }) {
-  const { open, volume, earnings: earningsMap, loadEarnings } = useMarket();
+  const { open, volume, earnings: earningsMap, loadEarnings, loadHistory } = useMarket();
   const flash = useFlash(model.price);
 
-  const openPrice = open[model.model_id];
+  const openPrice = open[model.model_id] ?? model.session_open;
   const pct = changePct(model.price, openPrice);
   const abs = openPrice != null ? model.price - openPrice : 0;
   const k = model.shares * model.credits;
 
   useEffect(() => {
     loadEarnings(model.model_id);
-  }, [model.model_id, loadEarnings]);
+    loadHistory(model.model_id);
+  }, [model.model_id, loadEarnings, loadHistory]);
 
   const earnings = (earningsMap[model.model_id] ?? []).slice(0, 8);
 
@@ -61,6 +62,27 @@ export function StockDetail({ model }: { model: ModelStock }) {
             </span>
             <Delta pct={pct} className="text-sm" />
             <span className="font-mono text-[10px] text-dim">session</span>
+          </div>
+          <div className="mt-2 grid grid-cols-4 gap-2 font-mono text-[10px]">
+            <div>
+              <span className="text-dim">BID </span>
+              <span className="text-up">{fmtPrice(model.bid ?? model.price)}</span>
+            </div>
+            <div>
+              <span className="text-dim">ASK </span>
+              <span className="text-down">{fmtPrice(model.ask ?? model.price)}</span>
+            </div>
+            <div>
+              <span className="text-dim">FAIR </span>
+              <span>{fmtPrice(model.fundamental ?? model.price)}</span>
+            </div>
+            <div>
+              <span className="text-dim">HI/LO </span>
+              <span>
+                {fmtPrice(model.day_high ?? model.price)}/
+                {fmtPrice(model.day_low ?? model.price)}
+              </span>
+            </div>
           </div>
         </div>
       </div>

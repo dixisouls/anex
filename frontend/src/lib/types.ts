@@ -31,17 +31,37 @@ export interface ModelStock {
   shares: number;
   credits: number;
   executable: boolean;
+  bid?: number;
+  ask?: number;
+  spread_bps?: number;
+  depth?: number;
+  fundamental?: number;
+  session_open?: number;
+  day_high?: number;
+  day_low?: number;
+  volume?: number;
+  vs_fair_pct?: number;
 }
 
 export interface PriceTick {
   id?: string;
-  model_id: string;
+  model_id?: string;
   price: number;
+  ts?: string;
+  reason?: string;
+}
+
+export interface OhlcBar {
+  t: number;
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+  v: number;
 }
 
 export interface MarketResponse {
   models: ModelStock[];
-  history: PriceTick[];
 }
 
 export interface Holding {

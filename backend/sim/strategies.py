@@ -15,14 +15,27 @@ import math
 import random
 from dataclasses import dataclass
 
+from backend.config import DEPTH_FRACTION
+
 # Strategy identifiers
 VALUE = "value"
 MOMENTUM = "momentum"
 CONTRARIAN = "contrarian"
 NOISE = "noise"
 MARKET_MAKER = "market_maker"
+STAT_ARB = "stat_arb"
 
-STRATEGIES: tuple[str, ...] = (VALUE, MOMENTUM, CONTRARIAN, NOISE, MARKET_MAKER)
+STRATEGIES: tuple[str, ...] = (
+    MOMENTUM,
+    MOMENTUM,
+    VALUE,
+    VALUE,
+    STAT_ARB,
+    STAT_ARB,
+    CONTRARIAN,
+    MARKET_MAKER,
+    NOISE,
+)
 
 # Tuning constants
 _MA_WINDOW = 20
@@ -31,16 +44,22 @@ _MIN_TRADE = 5.0  # don't bother with dust trades
 _EPSILON = 1e-3  # tie-break / exploration noise
 _SOFTMAX_TEMP = 0.6
 _TARGET_INVESTED = 0.6  # fraction of net worth investors aim to keep deployed
+_PF_RICH = 1.08
+_PF_CHEAP = 0.92
 
 
 @dataclass
 class Signal:
     model_id: str
     price: float
+    fundamental: float
     ma: float
     momentum: float  # fractional return over the recent window
     zscore: float  # (price - ma) / std, how rich/cheap vs its own mean
     vol: float  # stddev of recent prices (absolute)
+    depth: float
+    pf_ratio: float  # price / fundamental
+    spread_bps: float
 
 
 def _series_by_model(market: dict) -> dict[str, list[float]]:
@@ -75,8 +94,12 @@ def build_signals(market: dict) -> dict[str, Signal]:
         if price <= 0:
             continue
 
+        fundamental = float(m.get("fundamental", price) or price)
+        depth = float(m.get("depth", 0.0) or 0.0)
+        spread_bps = float(m.get("spread_bps", 0.0) or 0.0)
+        pf_ratio = price / fundamental if fundamental > 0 else 1.0
+
         hist = series.get(mid, [])
-        # Include the current price as the latest observation.
         recent = (hist + [price])[-_MA_WINDOW:]
         ma = sum(recent) / len(recent) if recent else price
         vol = _stddev(recent, ma)
@@ -92,10 +115,14 @@ def build_signals(market: dict) -> dict[str, Signal]:
         signals[mid] = Signal(
             model_id=mid,
             price=price,
+            fundamental=fundamental,
             ma=ma,
             momentum=momentum,
             zscore=zscore,
             vol=vol,
+            depth=depth,
+            pf_ratio=pf_ratio,
+            spread_bps=spread_bps,
         )
 
     return signals
@@ -110,10 +137,12 @@ def _buy_score(strategy: str, sig: Signal, rng: random.Random) -> float:
         return sig.momentum * 10.0 + jitter
     if strategy == CONTRARIAN:
         return -sig.momentum * 10.0 + jitter
+    if strategy == STAT_ARB:
+        # Buy when market trades below fair value.
+        mispricing = (sig.fundamental - sig.price) / max(sig.fundamental, 1e-9)
+        return mispricing * 12.0 - sig.spread_bps * 0.001 + jitter
     if strategy == MARKET_MAKER:
-        # Likes liquid, slightly-cheap names; mostly indifferent -> broad spread.
         return -sig.zscore * 0.3 + jitter
-    # NOISE and any unknown strategy: uniform random interest.
     return rng.random()
 
 
@@ -155,6 +184,12 @@ def _holdings_map(portfolio: dict) -> dict[str, float]:
     return out
 
 
+def _depth_cap(sig: Signal | None, trade_cap: float) -> float:
+    if sig is None or sig.depth <= 0:
+        return trade_cap
+    return min(trade_cap, sig.depth * DEPTH_FRACTION)
+
+
 def decide(
     strategy: str,
     market: dict,
@@ -182,10 +217,6 @@ def decide(
     if not can_buy and not can_sell:
         return {"action": "hold"}
 
-    # Net-exposure control: investors rotate capital toward a target invested
-    # fraction instead of endlessly accumulating. Overinvested -> sell bias,
-    # underinvested -> buy bias. Without this the sim is a structural net buyer
-    # (fresh cash floods the AMM) and every price only ever drifts up.
     holdings_value = sum(
         sh * signals[mid].price for mid, sh in holdings.items() if mid in signals
     )
@@ -193,24 +224,40 @@ def decide(
     invested = (holdings_value / total_value) if total_value > 0 else 0.0
     pull = 1.0 if strategy == MARKET_MAKER else 1.5
     prefer_sell_prob = 0.5 + (invested - _TARGET_INVESTED) * pull
-    # Valuation overlay: extra eager to shed "rich" names (price >> own mean).
+
     held_rich = any(
         (sig := signals.get(mid)) is not None and sig.zscore > 0.5
         for mid in holdings
     )
     if held_rich:
         prefer_sell_prob += 0.15
+
+    # Price vs fundamental overlay: shed rich names, buy cheap ones.
+    pf_sells = [
+        mid
+        for mid in holdings
+        if (sig := signals.get(mid)) is not None and sig.pf_ratio > _PF_RICH
+    ]
+    pf_buys = [
+        mid
+        for mid, sig in signals.items()
+        if sig.pf_ratio < _PF_CHEAP
+    ]
+    if pf_sells:
+        prefer_sell_prob += 0.12
+    if pf_buys and strategy in (STAT_ARB, VALUE, CONTRARIAN):
+        prefer_sell_prob -= 0.1
+
     prefer_sell_prob = max(0.05, min(0.95, prefer_sell_prob))
     do_sell = can_sell and (not can_buy or rng.random() < prefer_sell_prob)
 
     if do_sell:
-        # Score held models for selling: invert the buy attractiveness so we
-        # shed names this strategy now dislikes (rich for value, falling for
-        # momentum, etc.).
         sell_scores: dict[str, float] = {}
         for mid, shares in holdings.items():
             sig = signals.get(mid)
             base = -_buy_score(strategy, sig, rng) if sig else rng.random()
+            if sig and sig.pf_ratio > _PF_RICH:
+                base += 0.5
             sell_scores[mid] = base
         pick = softmax_pick(sell_scores, rng)
         if pick is None:
@@ -218,11 +265,9 @@ def decide(
         held = holdings[pick]
         sig = signals.get(pick)
         px = sig.price if sig else 0.0
-        # Size sells by NOTIONAL (credits) so their price impact is symmetric
-        # with buys; otherwise share-fraction sells barely move price and the
-        # board only ever drifts up. Capped by trade_cap and the position value.
+        cap = _depth_cap(sig, trade_cap)
         if px > 0:
-            notional = min(trade_cap, held * px) * rng.uniform(0.25, 1.0)
+            notional = min(cap, held * px) * rng.uniform(0.25, 1.0)
             amount = notional / px
         else:
             amount = held * rng.uniform(0.25, 1.0)
@@ -231,13 +276,13 @@ def decide(
             return {"action": "hold"}
         return {"model_id": pick, "side": "sell", "amount": amount}
 
-    # Buy path
     scores = score_models(strategy, signals, rng)
     pick = softmax_pick(scores, rng)
     if pick is None:
         return {"action": "hold"}
-    # Size by conviction: a fraction of available credits, capped by trade_cap.
-    budget = min(trade_cap, credits)
+    sig = signals.get(pick)
+    cap = _depth_cap(sig, trade_cap)
+    budget = min(cap, credits)
     amount = budget * rng.uniform(0.2, 1.0)
     if amount < _MIN_TRADE:
         amount = min(_MIN_TRADE, budget)

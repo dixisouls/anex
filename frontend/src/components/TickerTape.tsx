@@ -30,7 +30,7 @@ export function TickerTape() {
     <div className="group relative flex h-8 items-center overflow-hidden border-b border-line bg-panel">
       <div className="flex shrink-0 animate-[marquee_70s_linear_infinite] whitespace-nowrap group-hover:[animation-play-state:paused]">
         {items.map((m, i) => {
-          const pct = changePct(m.price, open[m.model_id]);
+          const pct = changePct(m.price, open[m.model_id] ?? m.session_open);
           const up = pct > 0;
           const flat = pct === 0;
           return (
@@ -41,7 +41,10 @@ export function TickerTape() {
               <span className="font-semibold text-ink">
                 {tickerSymbol(m.model_id)}
               </span>
-              <span className="tabular text-muted">{fmtPrice(m.price)}</span>
+              <span className="tabular text-muted">{fmtPrice(m.bid ?? m.price)}</span>
+              <span className="text-dim">×</span>
+              <span className="tabular text-muted">{fmtPrice(m.ask ?? m.price)}</span>
+              <span className="tabular text-ink">{fmtPrice(m.price)}</span>
               <span
                 className={cn(
                   "tabular",

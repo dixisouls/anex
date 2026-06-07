@@ -17,11 +17,13 @@ import type {
   FeedEvent,
   ModelStock,
   Portfolio,
+  PriceTick,
 } from "./types";
 
 export interface SeriesPoint {
   time: number;
   value: number;
+  id?: string;
 }
 
 interface MarketContextValue {
@@ -33,6 +35,7 @@ interface MarketContextValue {
   portfolio: Portfolio | null;
   earnings: Record<string, EarningsRow[]>;
   loadEarnings: (modelId: string) => void;
+  loadHistory: (modelId: string) => void;
   loading: boolean;
   error: string | null;
   refreshAll: () => void;
@@ -43,6 +46,49 @@ const MarketContext = createContext<MarketContextValue | null>(null);
 const POLL_MS = 20_000;
 const MAX_POINTS = 400;
 const MAX_EARNINGS = 30;
+const SPARK_WINDOW = 60;
+
+function tickToPoint(tick: PriceTick, fallbackTime: number): SeriesPoint {
+  let time = fallbackTime;
+  if (tick.ts) {
+    const ms = Date.parse(tick.ts);
+    if (!Number.isNaN(ms)) time = Math.floor(ms / 1000);
+  }
+  return { time, value: tick.price, id: tick.id };
+}
+
+/** lightweight-charts requires strictly ascending unique times (seconds). */
+export function ensureMonotonicTimes(points: SeriesPoint[]): SeriesPoint[] {
+  if (points.length <= 1) return points;
+  const out: SeriesPoint[] = [{ ...points[0] }];
+  for (let i = 1; i < points.length; i++) {
+    const prevTime = out[i - 1]!.time;
+    const time = points[i]!.time <= prevTime ? prevTime + 1 : points[i]!.time;
+    out.push({ ...points[i]!, time });
+  }
+  return out;
+}
+
+function mergeSeries(
+  prev: SeriesPoint[],
+  incoming: SeriesPoint[],
+  replace: boolean,
+): SeriesPoint[] {
+  let merged: SeriesPoint[];
+  if (replace) {
+    merged = incoming.slice(-MAX_POINTS);
+  } else {
+    const seen = new Set(prev.map((p) => p.id).filter(Boolean));
+    merged = [...prev];
+    for (const p of incoming) {
+      if (p.id && seen.has(p.id)) continue;
+      if (p.id) seen.add(p.id);
+      merged.push(p);
+    }
+    if (merged.length > MAX_POINTS) merged = merged.slice(-MAX_POINTS);
+  }
+  return ensureMonotonicTimes(merged);
+}
 
 export function MarketProvider({ children }: { children: ReactNode }) {
   const { subscribe } = useFeed();
@@ -59,6 +105,8 @@ export function MarketProvider({ children }: { children: ReactNode }) {
 
   const timeCursor = useRef<Record<string, number>>({});
   const earningsLoaded = useRef<Set<string>>(new Set());
+  const historyLoaded = useRef<Set<string>>(new Set());
+  const seenTickIds = useRef<Set<string>>(new Set());
 
   const loadEarnings = useCallback((modelId: string) => {
     if (earningsLoaded.current.has(modelId)) return;
@@ -67,76 +115,71 @@ export function MarketProvider({ children }: { children: ReactNode }) {
       .getEarnings(modelId)
       .then((rows) => setEarnings((prev) => ({ ...prev, [modelId]: rows })))
       .catch(() => {
-        // allow a later retry if the fetch failed
         earningsLoaded.current.delete(modelId);
       });
   }, []);
 
-  const appendPoint = useCallback((modelId: string, value: number) => {
-    setHistory((prev) => {
-      const series = prev[modelId] ?? [];
-      const last = timeCursor.current[modelId] ?? Math.floor(Date.now() / 1000);
-      const t = Math.max(last + 1, Math.floor(Date.now() / 1000));
-      timeCursor.current[modelId] = t;
-      const next = [...series, { time: t, value }];
-      return {
-        ...prev,
-        [modelId]: next.length > MAX_POINTS ? next.slice(-MAX_POINTS) : next,
-      };
-    });
+  const loadHistory = useCallback((modelId: string) => {
+    if (historyLoaded.current.has(modelId)) return;
+    historyLoaded.current.add(modelId);
+    api
+      .getModelHistory(modelId, SPARK_WINDOW)
+      .then((ticks) => {
+        const base = Math.floor(Date.now() / 1000) - ticks.length;
+        const points = ticks.map((t, i) => tickToPoint(t, base + i));
+        for (const p of points) {
+          if (p.id) seenTickIds.current.add(p.id);
+        }
+        setHistory((prev) => ({
+          ...prev,
+          [modelId]: mergeSeries(prev[modelId] ?? [], points, true),
+        }));
+        if (points.length > 0) {
+          timeCursor.current[modelId] = points[points.length - 1].time;
+        }
+      })
+      .catch(() => {
+        historyLoaded.current.delete(modelId);
+      });
   }, []);
+
+  const appendPoint = useCallback(
+    (modelId: string, value: number, tickId?: string) => {
+      if (tickId && seenTickIds.current.has(tickId)) return;
+      if (tickId) seenTickIds.current.add(tickId);
+      setHistory((prev) => {
+        const series = prev[modelId] ?? [];
+        const last = timeCursor.current[modelId] ?? Math.floor(Date.now() / 1000);
+        const t = Math.max(last + 1, Math.floor(Date.now() / 1000));
+        timeCursor.current[modelId] = t;
+        const next = ensureMonotonicTimes([
+          ...series,
+          { time: t, value, id: tickId },
+        ]);
+        return {
+          ...prev,
+          [modelId]: next.length > MAX_POINTS ? next.slice(-MAX_POINTS) : next,
+        };
+      });
+    },
+    [],
+  );
 
   const hydrate = useCallback(async () => {
     try {
       const market = await api.getMarket();
       const map: Record<string, ModelStock> = {};
-      for (const m of market.models) map[m.model_id] = m;
+      const opens: Record<string, number> = {};
+      const vols: Record<string, number> = {};
+      for (const m of market.models) {
+        map[m.model_id] = m;
+        if (m.session_open != null) opens[m.model_id] = m.session_open;
+        if (m.volume != null) vols[m.model_id] = m.volume;
+      }
       setModelMap(map);
+      setOpen(opens);
+      setVolume((prev) => ({ ...prev, ...vols }));
       setError(null);
-
-      // Seed history from the price stream (synthetic monotonic timestamps).
-      setHistory((prev) => {
-        const next = { ...prev };
-        const base = Math.floor(Date.now() / 1000) - market.history.length;
-        const counter: Record<string, number> = {};
-        for (const m of market.models) {
-          if (!next[m.model_id]) {
-            counter[m.model_id] = 0;
-            next[m.model_id] = [];
-          }
-        }
-        let i = 0;
-        for (const tick of market.history) {
-          if (!next[tick.model_id]) {
-            next[tick.model_id] = [];
-            counter[tick.model_id] = 0;
-          }
-          if (counter[tick.model_id] === undefined) continue;
-          next[tick.model_id].push({ time: base + i, value: tick.price });
-          i += 1;
-        }
-        // Ensure every model has at least one point (its current price).
-        for (const m of market.models) {
-          if (!next[m.model_id] || next[m.model_id].length === 0) {
-            next[m.model_id] = [{ time: base + i, value: m.price }];
-            i += 1;
-          }
-          const arr = next[m.model_id];
-          timeCursor.current[m.model_id] = arr[arr.length - 1].time;
-        }
-        return next;
-      });
-
-      setOpen((prev) => {
-        const next = { ...prev };
-        for (const m of market.models) {
-          if (next[m.model_id] === undefined) {
-            const series = market.history.filter((h) => h.model_id === m.model_id);
-            next[m.model_id] = series.length ? series[0].price : m.price;
-          }
-        }
-        return next;
-      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load market");
     } finally {
@@ -158,12 +201,9 @@ export function MarketProvider({ children }: { children: ReactNode }) {
     refreshPortfolio();
   }, [hydrate, refreshPortfolio]);
 
-  // Initial load + polling reconciliation.
   useEffect(() => {
     hydrate();
-    const id = setInterval(() => {
-      hydrate();
-    }, POLL_MS);
+    const id = setInterval(hydrate, POLL_MS);
     return () => clearInterval(id);
   }, [hydrate]);
 
@@ -171,7 +211,6 @@ export function MarketProvider({ children }: { children: ReactNode }) {
     refreshPortfolio();
   }, [refreshPortfolio]);
 
-  // Live patching from the SSE feed.
   useEffect(() => {
     const unsub = subscribe(
       ["price_changed", "trade_executed", "earnings_injected", "portfolio_changed"],
@@ -182,12 +221,7 @@ export function MarketProvider({ children }: { children: ReactNode }) {
               ? { ...prev, [e.model_id]: { ...prev[e.model_id], price: e.new } }
               : prev,
           );
-          setOpen((prev) =>
-            prev[e.model_id] === undefined
-              ? { ...prev, [e.model_id]: e.old }
-              : prev,
-          );
-          appendPoint(e.model_id, e.new);
+          appendPoint(e.model_id, e.new, e.event_id);
         } else if (e.type === "trade_executed") {
           setVolume((prev) => ({
             ...prev,
@@ -198,6 +232,7 @@ export function MarketProvider({ children }: { children: ReactNode }) {
               ? { ...prev, [e.model_id]: { ...prev[e.model_id], price: e.price } }
               : prev,
           );
+          // price_changed follows trades and carries the pool tick.
         } else if (e.type === "earnings_injected") {
           const row: EarningsRow = {
             event_id: e.event_id,
@@ -246,6 +281,7 @@ export function MarketProvider({ children }: { children: ReactNode }) {
         portfolio,
         earnings,
         loadEarnings,
+        loadHistory,
         loading,
         error,
         refreshAll,
@@ -265,4 +301,13 @@ export function useMarket(): MarketContextValue {
 export function changePct(price: number, open: number | undefined): number {
   if (!open || open === 0) return 0;
   return ((price - open) / open) * 100;
+}
+
+export function sparkWindow(values: number[], window = SPARK_WINDOW): number[] {
+  return values.slice(-window);
+}
+
+export function sparkSlopePositive(values: number[]): boolean {
+  if (values.length < 2) return true;
+  return values[values.length - 1] >= values[0];
 }

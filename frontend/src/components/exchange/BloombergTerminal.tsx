@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMarket, changePct } from "@/lib/market";
 import { useFeed } from "@/lib/feed";
 import { tickerSymbol, issuer } from "@/lib/ticker";
@@ -28,12 +28,17 @@ export function BloombergTerminal({
   selected: string | null;
   onSelect: (id: string) => void;
 }) {
-  const { models, modelMap, open, volume } = useMarket();
+  const { models, modelMap, open, volume, loadHistory } = useMarket();
   const { events } = useFeed();
   const [query, setQuery] = useState("");
   const [filterBySelected, setFilterBySelected] = useState(false);
 
   const active = selected ? modelMap[selected] : undefined;
+
+  useEffect(() => {
+    for (const m of models) loadHistory(m.model_id);
+    if (selected) loadHistory(selected);
+  }, [models, selected, loadHistory]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -62,8 +67,10 @@ export function BloombergTerminal({
     [trades, filterBySelected, selected],
   );
 
-  const activePct = active ? changePct(active.price, open[active.model_id]) : 0;
-  const activeOpen = active ? open[active.model_id] : undefined;
+  const activeOpen = active
+    ? open[active.model_id] ?? active.session_open
+    : undefined;
+  const activePct = active ? changePct(active.price, activeOpen) : 0;
   const activeChange =
     active && activeOpen != null ? active.price - activeOpen : 0;
 
@@ -107,7 +114,7 @@ export function BloombergTerminal({
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
             {filtered.map((m) => {
-              const pct = changePct(m.price, open[m.model_id]);
+              const pct = changePct(m.price, open[m.model_id] ?? m.session_open);
               const sel = m.model_id === selected;
               return (
                 <button
@@ -180,13 +187,14 @@ export function BloombergTerminal({
                   </span>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-[10px] sm:grid-cols-4">
+                  <Field label="BID" value={fmtPrice(active.bid ?? active.price)} />
+                  <Field label="ASK" value={fmtPrice(active.ask ?? active.price)} />
+                  <Field label="FAIR" value={fmtPrice(active.fundamental ?? active.price)} />
                   <Field label="OPEN" value={fmtPrice(activeOpen)} />
-                  <Field label="SHARES" value={fmtNum(active.shares, 0)} />
-                  <Field label="VOL" value={fmtNum(volume[active.model_id] ?? 0, 0)} />
-                  <Field
-                    label="EXEC"
-                    value={active.executable ? "YES" : "NO"}
-                  />
+                  <Field label="HI/LO" value={`${fmtPrice(active.day_high ?? active.price)}/${fmtPrice(active.day_low ?? active.price)}`} />
+                  <Field label="SPRD" value={`${fmtNum(active.spread_bps ?? 0, 0)} bps`} />
+                  <Field label="VOL" value={fmtNum(volume[active.model_id] ?? active.volume ?? 0, 0)} />
+                  <Field label="EXEC" value={active.executable ? "YES" : "NO"} />
                 </div>
               </>
             ) : (

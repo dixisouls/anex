@@ -102,6 +102,12 @@ def _trade_patches(env):
     stack.enter_context(
         patch.object(exchange.registry, "project_model", new_callable=AsyncMock)
     )
+    stack.enter_context(
+        patch.object(exchange.registry, "bump_session_stats", new_callable=AsyncMock)
+    )
+    stack.enter_context(
+        patch.object(exchange.registry, "append_price_tick", new_callable=AsyncMock)
+    )
     stack.enter_context(patch.object(exchange.bus, "publish", new_callable=AsyncMock))
     stack.enter_context(patch.object(trading.repo, "get_user", side_effect=env["get_user"]))
     stack.enter_context(

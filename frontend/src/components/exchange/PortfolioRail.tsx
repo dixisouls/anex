@@ -65,7 +65,9 @@ export function PortfolioRail({
         )}
         {holdings.map((h) => {
           const m = modelMap[h.model_id];
-          const pct = m ? changePct(m.price, open[h.model_id]) : 0;
+          const pct = m
+            ? changePct(m.price, open[h.model_id] ?? m.session_open)
+            : 0;
           return (
             <button
               key={h.model_id}
