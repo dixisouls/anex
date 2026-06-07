@@ -98,7 +98,7 @@ async def test_rank_sorts_descending():
 
 def test_decompose_fallback_on_bad_json(monkeypatch):
     monkeypatch.setattr(
-        "backend.market.broker.generate", lambda *a, **k: "not json"
+        "backend.market.broker.generate", lambda *a, **k: {"output": "not json"}
     )
     assert broker.decompose("single goal") == ["single goal"]
 
