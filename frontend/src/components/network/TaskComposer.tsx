@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useUser } from "@/lib/user";
 import { useMarket } from "@/lib/market";
+import { useNetwork } from "@/lib/networkContext";
 import { SUGGESTED_GOALS } from "@/lib/agents";
 import { fmtPrice } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -12,12 +13,14 @@ import type { TaskSlots } from "@/lib/types";
 export function TaskComposer() {
   const { userId } = useUser();
   const { portfolio } = useMarket();
+  const { addPendingTask } = useNetwork();
   const cash = portfolio?.credits ?? null;
   const [goal, setGoal] = useState("");
   const [budget, setBudget] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [slots, setSlots] = useState<TaskSlots | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const budgetNum = budget.trim() === "" ? null : Number(budget);
   const budgetInvalid =
@@ -55,8 +58,14 @@ export function TaskComposer() {
         userId ?? undefined,
         budgetNum ?? undefined,
       );
-      setMsg(`Task posted with ${fmtPrice(res.budget)} budget — watch below.`);
+      addPendingTask({
+        task_id: res.task_id,
+        goal: g,
+        budget: res.budget,
+        postedAt: new Date().toISOString(),
+      });
       setGoal("");
+      setShowSuggestions(false);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Failed to post task");
     } finally {
@@ -67,77 +76,87 @@ export function TaskComposer() {
   const full = slots ? slots.available <= 0 : false;
 
   return (
-    <div className="flex flex-col gap-3 p-3">
-      <textarea
-        value={goal}
-        onChange={(e) => setGoal(e.target.value)}
-        onKeyDown={(e) => {
-          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit();
-        }}
-        rows={3}
-        placeholder="Describe a goal. The broker will decompose it, auction each subtask to the agent network, and execute it live…"
-        className="resize-none border border-line bg-base px-3 py-2 font-mono text-sm text-ink outline-none placeholder:text-faint focus:border-gold-dim"
-      />
+    <div className="shrink-0 border-t border-line/60 bg-panel/40 px-4 py-4 backdrop-blur-md">
+      <div className="mx-auto flex max-w-3xl flex-col gap-2">
+        {showSuggestions && (
+          <div className="flex flex-wrap gap-1.5 pb-1">
+            {SUGGESTED_GOALS.map((s, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  setGoal(s);
+                  setShowSuggestions(false);
+                }}
+                className="max-w-full truncate rounded-full border border-line/60 bg-base/60 px-3 py-1 text-[11px] text-dim transition-colors hover:border-line-bright hover:text-muted"
+                title={s}
+              >
+                {s.length > 48 ? s.slice(0, 48) + "…" : s}
+              </button>
+            ))}
+          </div>
+        )}
 
-      <div className="flex flex-wrap gap-1.5">
-        {SUGGESTED_GOALS.map((s, i) => (
-          <button
-            key={i}
-            onClick={() => setGoal(s)}
-            className="max-w-full truncate border border-line px-2 py-1 font-mono text-[10px] text-dim transition-colors hover:border-line-bright hover:text-muted"
-            title={s}
-          >
-            {s.length > 46 ? s.slice(0, 46) + "…" : s}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between gap-3">
-        <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-dim">
-          <span>Budget</span>
-          <input
-            type="number"
-            min={0}
-            step="any"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
-            placeholder={cash !== null ? fmtPrice(cash) : "all cash"}
-            className={cn(
-              "w-28 border bg-base px-2 py-1 text-right font-mono text-xs tabular text-ink outline-none focus:border-gold-dim",
-              budgetInvalid ? "border-down" : "border-line",
-            )}
+        <div className="flex items-end gap-2 rounded-2xl border border-line/80 bg-base/90 p-2 shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.4)] focus-within:border-gold/30">
+          <textarea
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
+            onFocus={() => setShowSuggestions(true)}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit();
+            }}
+            rows={1}
+            placeholder="Message the agent network…"
+            className="max-h-32 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[14px] leading-relaxed text-ink outline-none placeholder:text-faint"
           />
-          <span className="text-faint normal-case tracking-normal">
-            cash {cash !== null ? fmtPrice(cash) : "—"}
-          </span>
-        </label>
-        <button
-          onClick={submit}
-          disabled={busy || !goal.trim() || budgetInvalid}
-          className="bg-gold/20 px-4 py-2 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold/30 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {busy ? "Posting…" : "Post task ⌘↵"}
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={busy || !goal.trim() || budgetInvalid || full}
+            className={cn(
+              "mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all",
+              goal.trim() && !busy && !budgetInvalid && !full
+                ? "bg-gold text-base hover:bg-gold/90"
+                : "bg-line text-dim",
+            )}
+            aria-label="Send"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8.5 2.5L14 8l-5.5 5.5V9.5H2V6.5h6.5V2.5z" />
+            </svg>
+          </button>
+        </div>
 
-      <div className="flex items-center gap-2 font-mono text-[10px] text-dim">
-        {slots && (
-          <>
-            <span
+        <div className="flex flex-wrap items-center gap-3 px-1 font-mono text-[10px] text-dim">
+          <label className="flex items-center gap-1.5">
+            <span>Budget</span>
+            <input
+              type="number"
+              min={0}
+              step="any"
+              value={budget}
+              onChange={(e) => setBudget(e.target.value)}
+              placeholder={cash !== null ? fmtPrice(cash) : "all"}
               className={cn(
-                "inline-block h-1.5 w-1.5 rounded-full",
-                full ? "bg-down" : "bg-up",
+                "w-20 rounded-md border bg-base/60 px-2 py-0.5 text-right text-[10px] tabular text-ink outline-none focus:border-gold/40",
+                budgetInvalid ? "border-down" : "border-line/60",
               )}
             />
-            <span>
-              {slots.available}/{slots.max} broker slots
+          </label>
+          {slots && (
+            <span className="flex items-center gap-1">
+              <span
+                className={cn(
+                  "inline-block h-1.5 w-1.5 rounded-full",
+                  full ? "bg-down" : "bg-up",
+                )}
+              />
+              {slots.available}/{slots.max}
             </span>
-          </>
-        )}
-        {budgetInvalid && (
-          <span className="text-down">· budget must be 0–{cash !== null ? fmtPrice(cash) : "cash"}</span>
-        )}
-        {msg && <span className="text-muted">· {msg}</span>}
+          )}
+          {budgetInvalid && <span className="text-down">over budget</span>}
+          {msg && <span className="text-down">{msg}</span>}
+        </div>
       </div>
     </div>
   );
