@@ -15,7 +15,7 @@ def judge(subtask_text: str, output: str) -> tuple[float, str]:
         'Reply ONLY JSON: {"score": <float>, "reason": "<one line>"}.\n\n'
         f"TASK:\n{subtask_text}\n\nOUTPUT:\n{output}\n"
     )
-    raw = generate(GCP_CHAT_MODEL, "gcp", prompt)
+    raw = generate(GCP_CHAT_MODEL, "gcp", prompt)["output"]
     try:
         data = json.loads(raw[raw.find("{") : raw.rfind("}") + 1])
         return max(0.0, min(1.0, float(data["score"]))), str(data.get("reason", ""))

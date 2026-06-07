@@ -25,12 +25,13 @@ def build_app(agent_id: str) -> FastAPI:
     app = FastAPI(title=f"agent:{agent_id}")
 
     @weave.op
-    def execute(subtask_text: str, config: RunConfig) -> str:
+    def execute(subtask_text: str, config: RunConfig) -> dict:
         return generate(config.model, config.provider, subtask_text, config.system)
 
     @app.post("/run")
     async def run(req: RunRequest):
-        return {"output": execute(req.subtask_text, req.config)}
+        result = execute(req.subtask_text, req.config)
+        return {"output": result["output"]}
 
     @app.get("/healthz")
     async def healthz():

@@ -58,7 +58,7 @@ def decompose(goal: str) -> list[str]:
         "Reply ONLY a JSON list of strings.\n\n"
         f"GOAL: {goal}"
     )
-    raw = generate(GCP_CHAT_MODEL, "gcp", prompt)
+    raw = generate(GCP_CHAT_MODEL, "gcp", prompt)["output"]
     try:
         start = raw.find("[")
         end = raw.rfind("]") + 1
