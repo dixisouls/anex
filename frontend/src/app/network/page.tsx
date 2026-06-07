@@ -7,6 +7,7 @@ import { TaskThread } from "@/components/network/TaskThread";
 import { TaskHistorySidebar } from "@/components/network/TaskHistorySidebar";
 import { NetworkHeader } from "@/components/network/NetworkHeader";
 import { AgentNetworkDrawer } from "@/components/network/AgentNetworkDrawer";
+import { TasksErrorBanner } from "@/components/network/TasksErrorBanner";
 
 export default function NetworkPage() {
   const { agents, list, loading, error } = useAgents();
@@ -20,6 +21,7 @@ export default function NetworkPage() {
             market.
           </div>
         )}
+        <TasksErrorBanner />
         <NetworkHeader agentCount={list.length} />
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <TaskHistorySidebar />

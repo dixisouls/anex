@@ -116,6 +116,7 @@ class SimStartBody(BaseModel):
     n_posters: int | None = None
     n_investors: int | None = None
     cadence_s: float | None = None
+    use_cohorts: bool | None = None
 
 
 class MarketResponse(BaseModel):
@@ -256,17 +257,33 @@ async def buy_credits(body: BuyCreditsBody, session=Depends(get_session)):
 
 
 def _task_to_detail(task: TaskORM) -> TaskDetail:
-    subtasks = [
-        SubtaskDetail(
-            subtask_id=repo.subtask_public_id(task.id, st.order_index),
-            text=st.text,
-            assigned_agent_id=st.assigned_agent_id,
-            output_preview=st.output_preview,
-            judge_score=float(st.judge_score) if st.judge_score is not None else None,
-            stage=repo.derive_subtask_stage(st),  # type: ignore[arg-type]
+    from contracts.schemas import Candidate
+
+    subtasks = []
+    for st in task.subtasks:
+        candidates = []
+        if st.candidates_json:
+            candidates = [Candidate.model_validate(c) for c in st.candidates_json]
+        subtasks.append(
+            SubtaskDetail(
+                subtask_id=repo.subtask_public_id(task.id, st.order_index),
+                text=st.text,
+                assigned_agent_id=st.assigned_agent_id,
+                output_preview=st.output_preview,
+                judge_score=float(st.judge_score) if st.judge_score is not None else None,
+                stage=repo.derive_subtask_stage(st),  # type: ignore[arg-type]
+                candidates=candidates,
+                hire_price=float(st.hire_price) if st.hire_price is not None else None,
+                budget_remaining=(
+                    float(st.budget_remaining)
+                    if st.budget_remaining is not None
+                    else None
+                ),
+                skipped=bool(st.skipped),
+                skip_reason=st.skip_reason,
+                skip_message=st.skip_message,
+            )
         )
-        for st in task.subtasks
-    ]
     status = task.status
     if status not in ("posted", "running", "complete"):
         status = "running"

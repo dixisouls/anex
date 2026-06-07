@@ -62,6 +62,12 @@ class LocalQueue:
                         task_id=dispatch.task_id,
                     )
             return output
+        except LookupError:
+            logger.exception(
+                "subtask missing when saving result subtask=%s",
+                dispatch.subtask_id,
+            )
+            return None
         except Exception:
             logger.exception(
                 "local queue dispatch failed subtask=%s agent=%s",

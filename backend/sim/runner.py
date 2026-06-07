@@ -15,12 +15,13 @@ from backend.config import (
     POSTER_BUDGET_CAP,
     SIM_CADENCE_JITTER,
     SIM_CADENCE_S,
+    SIM_INVESTOR_MODE,
     SIM_INVESTORS,
     SIM_POSTERS,
     TRADE_CAP,
 )
 from backend.infra.retry import httpx_request_with_retry
-from backend.sim import strategies
+from backend.sim import cohorts, llm_investor, strategies
 
 logger = logging.getLogger(__name__)
 
@@ -158,27 +159,110 @@ async def _investor_loop(
     base_url: str,
     user_id: str,
     cadence_s: float,
+    *,
+    mode: str = "math",
     strategy: str = strategies.NOISE,
+    trade_cap: float = TRADE_CAP,
+    start_delay_s: float = 0.0,
+    cohort: str = "legacy",
     rng: random.Random | None = None,
 ) -> None:
     rng = rng or random.Random(user_id)
+    if start_delay_s > 0:
+        await asyncio.sleep(start_delay_s)
     async with httpx.AsyncClient(base_url=base_url, timeout=120) as client:
         while True:
             try:
                 market = (await _api_get(client, "/market")).json()
                 pf = (await _api_get(client, f"/portfolio/{user_id}")).json()
-                decision = strategies.decide(
-                    strategy, market, pf, rng, trade_cap=TRADE_CAP
-                )
-                trade = trade_from_decision(decision)
+                if mode == "math":
+                    decision = strategies.decide(
+                        strategy, market, pf, rng, trade_cap=trade_cap
+                    )
+                else:
+                    snapshot = llm_investor.build_snapshot(market, pf, rng=rng)
+                    snapshot = await llm_investor.enrich_snapshot(client, snapshot)
+                    raw = await asyncio.to_thread(
+                        llm_investor.llm_decide, strategy, snapshot, rng=rng
+                    )
+                    decision = llm_investor.validate_decision(
+                        raw, market, pf, trade_cap=trade_cap
+                    )
+                trade = trade_from_decision(decision, trade_cap=trade_cap)
                 if trade is not None:
                     trade["user_id"] = user_id
                     await _api_post(client, "/trade", json=trade)
             except asyncio.CancelledError:
                 raise
             except Exception:
-                logger.exception("investor loop error user=%s", user_id)
+                logger.exception(
+                    "investor loop error user=%s cohort=%s", user_id, cohort
+                )
             await asyncio.sleep(_jittered(cadence_s, rng))
+
+
+def _spawn_legacy_investors(
+    base_url: str,
+    investor_ids: list[str],
+    cadence_s: float,
+) -> None:
+    for i, uid in enumerate(investor_ids):
+        strategy = strategies.STRATEGIES[i % len(strategies.STRATEGIES)]
+        mode = SIM_INVESTOR_MODE if SIM_INVESTOR_MODE in ("math", "llm") else "llm"
+        rng = random.Random(f"{uid}:{strategy}")
+        logger.info(
+            "investor %s -> cohort=legacy mode=%s strategy=%s cadence_s=%s",
+            uid,
+            mode,
+            strategy,
+            cadence_s,
+        )
+        _tasks.append(
+            asyncio.create_task(
+                _investor_loop(
+                    base_url,
+                    uid,
+                    cadence_s,
+                    mode=mode,
+                    strategy=strategy,
+                    cohort="legacy",
+                    rng=rng,
+                )
+            )
+        )
+
+
+def _spawn_cohort_investors(
+    base_url: str,
+    investor_ids: list[str],
+    assignments: list[cohorts.InvestorAssignment],
+) -> None:
+    for uid, spec in zip(investor_ids, assignments):
+        rng = random.Random(f"{uid}:{spec.cohort}:{spec.strategy}")
+        logger.info(
+            "investor %s -> cohort=%s mode=%s strategy=%s cadence_s=%s trade_cap=%s",
+            uid,
+            spec.cohort,
+            spec.mode,
+            spec.strategy,
+            spec.cadence_s,
+            spec.trade_cap,
+        )
+        _tasks.append(
+            asyncio.create_task(
+                _investor_loop(
+                    base_url,
+                    uid,
+                    spec.cadence_s,
+                    mode=spec.mode,
+                    strategy=spec.strategy,
+                    trade_cap=spec.trade_cap,
+                    start_delay_s=spec.start_delay_s,
+                    cohort=spec.cohort,
+                    rng=rng,
+                )
+            )
+        )
 
 
 async def start(
@@ -187,27 +271,38 @@ async def start(
     n_posters: int | None = None,
     n_investors: int | None = None,
     cadence_s: float | None = None,
+    use_cohorts: bool | None = None,
 ) -> None:
     """Spawn poster and investor loops; track tasks for stop()."""
     await stop()
     n_posters = SIM_POSTERS if n_posters is None else n_posters
-    n_investors = SIM_INVESTORS if n_investors is None else n_investors
     cadence_s = SIM_CADENCE_S if cadence_s is None else cadence_s
+    cohort_mode = cohorts.cohorts_enabled() if use_cohorts is None else use_cohorts
+
+    if cohort_mode:
+        cohort_list = cohorts.default_cohorts()
+        assignments = cohorts.expand_assignments(cohort_list)
+        n_investors = len(assignments)
+        logger.info(
+            "sim cohorts enabled: %s investors (%s math, %s llm)",
+            n_investors,
+            sum(1 for a in assignments if a.mode == "math"),
+            sum(1 for a in assignments if a.mode == "llm"),
+        )
+    else:
+        n_investors = SIM_INVESTORS if n_investors is None else n_investors
+        assignments = []
 
     async with httpx.AsyncClient(base_url=base_url, timeout=120) as client:
         poster_ids, investor_ids = await _ensure_sim_users(client, n_posters, n_investors)
 
     for uid in poster_ids:
         _tasks.append(asyncio.create_task(_poster_loop(base_url, uid, cadence_s)))
-    for i, uid in enumerate(investor_ids):
-        strategy = strategies.STRATEGIES[i % len(strategies.STRATEGIES)]
-        rng = random.Random(f"{uid}:{strategy}")
-        logger.info("investor %s -> strategy=%s", uid, strategy)
-        _tasks.append(
-            asyncio.create_task(
-                _investor_loop(base_url, uid, cadence_s, strategy, rng)
-            )
-        )
+
+    if cohort_mode:
+        _spawn_cohort_investors(base_url, investor_ids, assignments)
+    else:
+        _spawn_legacy_investors(base_url, investor_ids, cadence_s)
 
 
 async def stop() -> None:

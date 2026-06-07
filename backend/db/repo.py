@@ -348,13 +348,31 @@ def subtask_public_id(task_id: uuid.UUID, order_index: int) -> str:
 
 
 def derive_subtask_stage(subtask: Subtask) -> str:
+    if subtask.skipped:
+        return "scored"
     if subtask.judge_score is not None:
         return "scored"
     if subtask.output_preview:
         return "executed"
     if subtask.assigned_agent_id:
         return "hired"
+    if subtask.candidates_json:
+        return "ranked"
     return "posted"
+
+
+async def update_subtask(
+    session,
+    subtask_id: str,
+    **fields,
+) -> Subtask:
+    subtask = await get_subtask(session, subtask_id)
+    if subtask is None:
+        raise LookupError(f"subtask not found: {subtask_id}")
+    for key, value in fields.items():
+        setattr(subtask, key, value)
+    await session.flush()
+    return subtask
 
 
 async def create_task(session, *, goal: str, user_id: uuid.UUID | None = None) -> Task:
@@ -392,12 +410,13 @@ async def save_subtask_result(
     output_preview: str,
     judge_score: float,
 ) -> None:
-    subtask = await get_subtask(session, subtask_id)
-    if subtask is None:
-        return
-    subtask.assigned_agent_id = agent_id
-    subtask.output_preview = output_preview
-    subtask.judge_score = judge_score
+    await update_subtask(
+        session,
+        subtask_id,
+        assigned_agent_id=agent_id,
+        output_preview=output_preview,
+        judge_score=judge_score,
+    )
 
 
 async def list_tasks_for_user(

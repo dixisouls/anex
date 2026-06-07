@@ -102,7 +102,13 @@ class SubtaskDetail(BaseModel):
     assigned_agent_id: str | None = None
     output_preview: str | None = None
     judge_score: float | None = None
-    stage: Literal["posted", "hired", "executed", "scored"] = "posted"
+    stage: Literal["posted", "ranked", "hired", "executed", "scored"] = "posted"
+    candidates: list[Candidate] = Field(default_factory=list)
+    hire_price: float | None = None
+    budget_remaining: float | None = None
+    skipped: bool = False
+    skip_reason: str | None = None
+    skip_message: str | None = None
 
 
 class TaskDetail(BaseModel):

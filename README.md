@@ -119,9 +119,16 @@ The runner calls the same HTTP API (`API_URL`, default `http://localhost:8000`),
 | `RANK_RECALL_K` | `10` | Vector recall breadth before LLM re-rank |
 | `RERANK_FINALISTS` | `6` | Finalists passed to the hiring LLM |
 | `SIM_POSTERS` | `2` | Default poster sim users |
-| `SIM_INVESTORS` | `8` | Default investor sim users |
-| `SIM_CADENCE_S` | `4.0` | Seconds between each sim user's loop iteration |
-| `TRADE_CAP` | `100` | Max credits/shares per sim trade |
+| `SIM_USE_COHORTS` | `1` | Role-based hybrid investors (math mm/quant + LLM retail/whale) |
+| `SIM_MM_COUNT` / `SIM_MM_CADENCE_S` | `8` / `3` | Market-maker cohort (math) |
+| `SIM_QUANT_COUNT` / `SIM_QUANT_CADENCE_S` | `6` / `6` | Quant cohort (math) |
+| `SIM_RETAIL_COUNT` / `SIM_RETAIL_CADENCE_S` | `20` / `12` | Retail cohort (LLM) |
+| `SIM_WHALE_COUNT` / `SIM_WHALE_CADENCE_S` | `4` / `30` | Whale cohort (LLM, larger trades) |
+| `SIM_WHALE_TRADE_CAP` | `250` | Max trade size for whale investors |
+| `SIM_INVESTORS` | `8` | Legacy mode only (`SIM_USE_COHORTS=0`) |
+| `SIM_INVESTOR_MODE` | `llm` | Legacy mode only: `llm` or `math` for all investors |
+| `SIM_CADENCE_S` | `4.0` | Poster loop cadence; legacy investor cadence |
+| `TRADE_CAP` | `100` | Max credits/shares per sim trade (non-whale) |
 | `POSTER_BUDGET_CAP` | `150` | Sim poster task budget cap |
 | `API_URL` | `http://localhost:8000` | Base URL for sim runner and agents |
 

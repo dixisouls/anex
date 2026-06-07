@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { api } from "./api";
+import { api, ApiError } from "./api";
 import {
   DEFAULT_PREFERRED_TIER,
   loadBrokerModel,
@@ -27,6 +27,11 @@ import { useUser } from "./user";
 import type { TaskState } from "./pipeline";
 import type { Tier } from "./types";
 
+export interface TasksError {
+  message: string;
+  status?: number;
+}
+
 interface NetworkContextValue {
   pendingTasks: PendingTask[];
   taskBudgets: Record<string, number>;
@@ -35,6 +40,7 @@ interface NetworkContextValue {
   selectedTaskId: string | null;
   isNewChat: boolean;
   tasksLoading: boolean;
+  tasksError: TasksError | null;
   addPendingTask: (task: PendingTask) => void;
   removePendingTask: (taskId: string) => void;
   setSelectedTaskId: (taskId: string | null) => void;
@@ -62,6 +68,7 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
   const [selectedTaskId, setSelectedTaskIdState] = useState<string | null>(null);
   const [isNewChat, setIsNewChat] = useState(false);
   const [tasksLoading, setTasksLoading] = useState(false);
+  const [tasksError, setTasksError] = useState<TasksError | null>(null);
   const [brokerModel, setBrokerModelState] = useState(loadBrokerModel);
   const [preferredTier, setPreferredTierState] = useState<Tier>(
     DEFAULT_PREFERRED_TIER,
@@ -78,7 +85,10 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
   }, [userId]);
 
   const hydrateTasks = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      setTasksError(null);
+      return;
+    }
     const seq = ++hydrateRef.current;
     setTasksLoading(true);
     try {
@@ -90,8 +100,16 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
         if (!hidden.has(t.task_id)) next[t.task_id] = taskDetailToState(t);
       }
       setDbTasks(next);
-    } catch {
-      /* user may be stale after DB reset */
+      setTasksError(null);
+    } catch (e) {
+      if (seq !== hydrateRef.current) return;
+      if (e instanceof ApiError) {
+        setTasksError({ message: String(e.message), status: e.status });
+      } else {
+        setTasksError({
+          message: e instanceof Error ? e.message : "Failed to load task history",
+        });
+      }
     } finally {
       if (seq === hydrateRef.current) setTasksLoading(false);
     }
@@ -197,6 +215,7 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
       selectedTaskId,
       isNewChat,
       tasksLoading,
+      tasksError,
       addPendingTask,
       removePendingTask,
       setSelectedTaskId,
@@ -220,6 +239,7 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
       selectedTaskId,
       isNewChat,
       tasksLoading,
+      tasksError,
       addPendingTask,
       removePendingTask,
       setSelectedTaskId,

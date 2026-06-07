@@ -1,5 +1,7 @@
 import type { TaskDetail } from "./types";
 import {
+  isTaskComplete,
+  sortedSubtasks,
   STAGE_ORDER,
   type Stage,
   type SubtaskState,
@@ -22,22 +24,42 @@ function indexOf(subtaskId: string): number {
   return Number.isNaN(n) ? 0 : n;
 }
 
+function stageIndex(stage: Stage): number {
+  const i = STAGE_ORDER.indexOf(stage);
+  return i < 0 ? 0 : i;
+}
+
 function maxStage(a: Stage, b: Stage): Stage {
-  return STAGE_ORDER.indexOf(b) > STAGE_ORDER.indexOf(a) ? b : a;
+  return stageIndex(b) > stageIndex(a) ? b : a;
+}
+
+function stageFromDetail(st: TaskDetail["subtasks"][number]): Stage {
+  if (st.judge_score != null) return "scored";
+  if (st.output_preview) return "executed";
+  if (st.assigned_agent_id) return "hired";
+  const s = st.stage as Stage;
+  if (s === "scored" || s === "executed" || s === "hired" || s === "ranked") return s;
+  return "posted";
 }
 
 export function taskDetailToState(t: TaskDetail): TaskState {
   const subtasks: Record<string, SubtaskState> = {};
   for (const st of t.subtasks) {
+    const stage = stageFromDetail(st);
     subtasks[st.subtask_id] = {
       subtask_id: st.subtask_id,
       index: indexOf(st.subtask_id),
       text: st.text,
-      candidates: [],
-      stage: st.stage as Stage,
+      candidates: st.candidates ?? [],
+      stage,
       hiredAgentId: st.assigned_agent_id ?? undefined,
       output: st.output_preview ?? undefined,
       score: st.judge_score ?? undefined,
+      hirePrice: st.hire_price ?? undefined,
+      budgetRemaining: st.budget_remaining ?? undefined,
+      skipped: st.skipped ?? undefined,
+      skipReason: st.skip_reason ?? undefined,
+      skipMessage: st.skip_message ?? undefined,
     };
   }
   return {
@@ -49,14 +71,15 @@ export function taskDetailToState(t: TaskDetail): TaskState {
 }
 
 function overlaySubtask(base: SubtaskState, live: SubtaskState): SubtaskState {
+  const stage = maxStage(base.stage, live.stage);
   return {
     ...base,
     text: live.text || base.text,
     candidates: live.candidates.length ? live.candidates : base.candidates,
     hiredAgentId: live.hiredAgentId ?? base.hiredAgentId,
-    output: live.output ?? base.output,
-    score: live.score ?? base.score,
-    stage: maxStage(base.stage, live.stage),
+    output: base.output ?? live.output,
+    score: base.score ?? live.score,
+    stage,
     hirePrice: live.hirePrice ?? base.hirePrice,
     budgetRemaining: live.budgetRemaining ?? base.budgetRemaining,
     skipped: live.skipped ?? base.skipped,
@@ -86,9 +109,16 @@ export function mergeTaskStates(
 ): Record<string, TaskState> {
   const merged = { ...dbTasks };
   for (const live of livePipelines) {
-    merged[live.task_id] = merged[live.task_id]
-      ? overlayTaskState(merged[live.task_id], live)
-      : live;
+    const existing = merged[live.task_id];
+    if (!existing) {
+      merged[live.task_id] = live;
+      continue;
+    }
+    // Completed tasks: DB is source of truth (full persisted pipeline).
+    if (isTaskComplete(sortedSubtasks(existing))) {
+      continue;
+    }
+    merged[live.task_id] = overlayTaskState(existing, live);
   }
   return merged;
 }

@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMarket, changePct } from "@/lib/market";
 import { tickerSymbol, issuer } from "@/lib/ticker";
 import { fmtPrice, fmtCompact, fmtNum, fmtSignedPrice, fmtTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { Delta, TierBadge, Panel, PanelHeader, useFlash } from "@/components/ui";
-import { PriceChart } from "./PriceChart";
+import { ChartModeToggle, PriceChart, type ChartMode } from "./PriceChart";
 import type { ModelStock } from "@/lib/types";
 
 export function StockDetail({ model }: { model: ModelStock }) {
   const { open, volume, earnings: earningsMap, loadEarnings, loadHistory } = useMarket();
   const flash = useFlash(model.price);
+  const [chartMode, setChartMode] = useState<ChartMode>("line");
 
   const openPrice = open[model.model_id] ?? model.session_open;
   const pct = changePct(model.price, openPrice);
@@ -92,13 +93,21 @@ export function StockDetail({ model }: { model: ModelStock }) {
         <PanelHeader
           title="Price"
           right={
-            <span className="font-mono text-[10px] text-dim">
-              AMM · constant-product
-            </span>
+            <div className="flex items-center gap-2">
+              <ChartModeToggle mode={chartMode} onChange={setChartMode} />
+              <span className="font-mono text-[10px] text-dim">
+                AMM · constant-product
+              </span>
+            </div>
           }
         />
         <div className="h-[calc(100%-33px)] min-h-[220px] p-1">
-          <PriceChart modelId={model.model_id} />
+          <PriceChart
+            modelId={model.model_id}
+            mode={chartMode}
+            onModeChange={setChartMode}
+            showToggle={false}
+          />
         </div>
       </Panel>
 

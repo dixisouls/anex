@@ -112,6 +112,14 @@ class Subtask(Base):
     )
     output_preview: Mapped[str | None] = mapped_column(Text, nullable=True)
     judge_score: Mapped[float | None] = mapped_column(Numeric(5, 4), nullable=True)
+    candidates_json: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    hire_price: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+    budget_remaining: Mapped[float | None] = mapped_column(
+        Numeric(12, 2), nullable=True
+    )
+    skipped: Mapped[bool] = mapped_column(Boolean, default=False)
+    skip_reason: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    skip_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     task: Mapped["Task"] = relationship(back_populates="subtasks")
 
 
