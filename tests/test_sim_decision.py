@@ -34,10 +34,10 @@ CANNED_PORTFOLIO = {
 
 def _market_with_history():
     models = [
-        {"model_id": "AAA", "price": 30.0},
-        {"model_id": "BBB", "price": 10.0},
-        {"model_id": "CCC", "price": 50.0},
-        {"model_id": "DDD", "price": 8.0},
+        {"model_id": "AAA", "price": 30.0, "fundamental": 28.0, "depth": 500.0},
+        {"model_id": "BBB", "price": 10.0, "fundamental": 11.0, "depth": 300.0},
+        {"model_id": "CCC", "price": 50.0, "fundamental": 48.0, "depth": 800.0},
+        {"model_id": "DDD", "price": 8.0, "fundamental": 9.0, "depth": 200.0},
     ]
     # Build some history so momentum / zscore are non-trivial.
     history = []
@@ -70,6 +70,8 @@ def test_build_signals_covers_all_models():
     for sig in signals.values():
         assert sig.price > 0
         assert sig.ma > 0
+        assert sig.fundamental > 0
+        assert sig.pf_ratio > 0
 
 
 def test_build_signals_skips_zero_price():

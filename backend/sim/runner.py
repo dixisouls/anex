@@ -12,6 +12,7 @@ import weave
 from backend.config import (
     API_URL,
     OPENAI_CHAT_MODEL,
+    POSTER_BUDGET_CAP,
     SIM_CADENCE_JITTER,
     SIM_CADENCE_S,
     SIM_INVESTORS,
@@ -130,7 +131,16 @@ async def _poster_loop(base_url: str, user_id: str, cadence_s: float) -> None:
             try:
                 await _wait_for_task_slot(client)
                 goal = await asyncio.to_thread(gen_goal)
-                await _api_post(client, "/task", json={"goal": goal, "user_id": user_id})
+                pf = (await _api_get(client, f"/portfolio/{user_id}")).json()
+                budget = min(float(pf.get("credits", 0)), POSTER_BUDGET_CAP)
+                if budget < 5:
+                    await asyncio.sleep(cadence_s)
+                    continue
+                await _api_post(
+                    client,
+                    "/task",
+                    json={"goal": goal, "user_id": user_id, "budget": budget},
+                )
             except asyncio.CancelledError:
                 raise
             except Exception:

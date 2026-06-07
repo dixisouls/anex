@@ -410,6 +410,7 @@ async def _run_task_body(
             agent_id=top.agent_id,
             price=top.price,
             task_id=task_id,
+            subtask_id=st.subtask_id,
         )
         remaining_budget -= top.price
 
@@ -490,4 +491,5 @@ async def handle_run_result(
             judge_score=score,
             derived_price=pricing.derived_price(mp, a.margin),
             task_id=task_id,
+            subtask_id=subtask_id,
         )

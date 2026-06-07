@@ -5,7 +5,9 @@ import type {
   EarningsRow,
   MarketResponse,
   ModelStock,
+  OhlcBar,
   Portfolio,
+  PriceTick,
   Side,
   TaskSlots,
   Tier,
@@ -52,6 +54,14 @@ export const api = {
   getAgents: () => req<Agent[]>("/agents"),
   getModels: () => req<ModelStock[]>("/models"),
   getMarket: () => req<MarketResponse>("/market"),
+  getModelHistory: (modelId: string, limit = 120) =>
+    req<PriceTick[]>(
+      `/models/${encodeURIComponent(modelId)}/history?limit=${limit}`,
+    ),
+  getModelBars: (modelId: string, interval = 60, limit = 60) =>
+    req<OhlcBar[]>(
+      `/models/${encodeURIComponent(modelId)}/bars?interval=${interval}&limit=${limit}`,
+    ),
   getTaskSlots: () => req<TaskSlots>("/task/slots"),
   getEarnings: (modelId: string, limit = 20) =>
     req<EarningsRow[]>(

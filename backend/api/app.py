@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from contracts.schemas import UserPublic
-from backend.config import API_URL, USER_START_CREDITS
+from backend.config import API_URL, POSTER_BUDGET_CAP, USER_START_CREDITS
 from backend.api import task_pool
 from backend.sim import runner as sim_runner
 from backend.db import repo
@@ -20,7 +20,7 @@ from backend.infra.db import get_session
 from backend.infra.passwords import hash_password, verify_password
 from backend.infra.redis_client import close_redis, get_redis
 from backend.infra.weave_init import init_weave
-from backend.market import broker, credits, portfolio, pricing, registry, seeder, trading
+from backend.market import arb_runner, broker, credits, portfolio, pricing, registry, seeder, trading
 from backend.config import GCP_CHAT_MODEL
 from backend.ports.factory import get_event_bus
 
@@ -30,7 +30,9 @@ bus = get_event_bus()
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     init_weave()
+    await arb_runner.start()
     yield
+    await arb_runner.stop()
     await close_redis()
 
 
@@ -118,11 +120,10 @@ class SimStartBody(BaseModel):
 
 class MarketResponse(BaseModel):
     models: list[dict]
-    history: list[dict]
 
 
-def model_to_public(m: ModelORM, price: float) -> dict:
-    return {
+def model_to_public(m: ModelORM, price: float, extras: dict | None = None) -> dict:
+    row = {
         "model_id": m.model_id,
         "name": m.name,
         "provider": m.provider,
@@ -132,6 +133,9 @@ def model_to_public(m: ModelORM, price: float) -> dict:
         "credits": float(m.pool_credits),
         "executable": m.executable,
     }
+    if extras:
+        row.update(extras)
+    return row
 
 
 async def _list_public_models(session) -> list[dict]:
@@ -141,7 +145,8 @@ async def _list_public_models(session) -> list[dict]:
         price = await registry.get_model_price(r, m.model_id)
         if price is None:
             price = float(m.pool_credits) / float(m.pool_shares)
-        out.append(model_to_public(m, price))
+        extras = await registry.model_market_extras(r, m.model_id)
+        out.append(model_to_public(m, price, extras))
     return out
 
 
@@ -196,7 +201,10 @@ async def post_task(body: TaskBody, session=Depends(get_session)):
     except (KeyError, ValueError) as exc:
         raise HTTPException(status_code=404, detail="user not found") from exc
     credits = float(user.credits)
-    budget = credits if body.budget is None else float(body.budget)
+    if body.budget is None:
+        budget = min(credits, POSTER_BUDGET_CAP) if user.is_sim else credits
+    else:
+        budget = float(body.budget)
     if budget <= 0:
         raise HTTPException(status_code=400, detail="budget must be positive")
     if budget > credits:
@@ -315,7 +323,7 @@ async def get_models(session=Depends(get_session)):
     return await _list_public_models(session)
 
 
-@app.get("/models/{model_id}/earnings")
+@app.get("/models/{model_id:path}/earnings")
 async def get_model_earnings(
     model_id: str, limit: int = 20, session=Depends(get_session)
 ):
@@ -333,10 +341,32 @@ async def get_model_earnings(
 
 @app.get("/market", response_model=MarketResponse)
 async def get_market(session=Depends(get_session)):
-    r = get_redis()
     models = await _list_public_models(session)
-    hist = await registry.read_price_history(r, count=500)
-    return MarketResponse(models=models, history=hist)
+    return MarketResponse(models=models)
+
+
+@app.get("/models/{model_id:path}/history")
+async def get_model_history(model_id: str, limit: int = 120, session=Depends(get_session)):
+    m = await repo.get_model(session, model_id)
+    if m is None:
+        raise HTTPException(status_code=404, detail="model not found")
+    r = get_redis()
+    return await registry.read_model_history(r, model_id, count=limit)
+
+
+@app.get("/models/{model_id:path}/bars")
+async def get_model_bars(
+    model_id: str,
+    interval: int = 60,
+    limit: int = 60,
+    session=Depends(get_session),
+):
+    m = await repo.get_model(session, model_id)
+    if m is None:
+        raise HTTPException(status_code=404, detail="model not found")
+    r = get_redis()
+    ticks = await registry.read_model_history(r, model_id, count=limit * interval)
+    return registry.aggregate_bars(ticks, interval_s=interval, limit=limit)
 
 
 @app.post("/trade", response_model=TradeResponse)

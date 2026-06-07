@@ -28,11 +28,11 @@ from contracts.events import (
     TaskScored,
 )
 from contracts.schemas import Candidate, Subtask
-from backend.config import PRICE_HISTORY_KEY, TIER_IPO_PRICE
+from backend.config import MARKET_SESSION_KEY, TIER_IPO_PRICE
 from backend.db import repo
 from backend.infra.db import session_scope
 from backend.infra.redis_client import close_redis, get_redis
-from backend.market import exchange, feed, registry, trading
+from backend.market import dynamics, feed, registry, trading
 from backend.market.seed_agents import SEED_AGENTS
 from backend.market.seed_models import SEED_MODELS
 
@@ -89,24 +89,34 @@ async def _backfill_price_path(
     session,
     *,
     model_id: str,
+    tier: str,
     ipo: float,
     target: float,
     rng: random.Random,
-    ticks: int = 40,
+    ticks: int = 120,
 ) -> None:
     m = await repo.get_model(session, model_id)
     if m is None:
         return
     shares = float(m.pool_shares)
-    prices: list[float] = []
-    for i in range(ticks):
-        t = i / max(ticks - 1, 1)
-        wobble = rng.uniform(-0.015, 0.015) * ipo
-        prices.append(max(ipo * 0.55, ipo + (target - ipo) * t + wobble))
-    prices[-1] = target
+    prices = dynamics.generate_gbm_path(ipo, target, steps=ticks, tier=tier, rng=rng)
     for p in prices:
-        await r.xadd(PRICE_HISTORY_KEY, {"model_id": model_id, "price": str(round(p, 4))})
+        await registry.append_price_tick(
+            r, model_id=model_id, price=round(p, 4), reason="snapshot"
+        )
     await repo.update_model_pool(session, model_id, shares=shares, credits=shares * target)
+    await registry.init_market_fields(r, model_id, ipo)
+    await r.hset(
+        registry.model_key(model_id),
+        mapping={
+            "fundamental": str(target),
+            "session_open": str(ipo),
+            "day_high": str(max(prices)),
+            "day_low": str(min(prices)),
+            "volume_24h": str(rng.uniform(50, 400)),
+        },
+    )
+    await r.hset(MARKET_SESSION_KEY, model_id, str(ipo))
     m = await repo.get_model(session, model_id)
     await registry.project_model(r, m)
 
@@ -289,7 +299,15 @@ async def apply_snapshot() -> None:
             ipo = TIER_IPO_PRICE[tier]
             drift = MODEL_DRIFT.get(mid, rng.uniform(0.85, 1.15))
             target = round(ipo * drift, 4)
-            await _backfill_price_path(r, session, model_id=mid, ipo=ipo, target=target, rng=rng)
+            await _backfill_price_path(
+                r,
+                session,
+                model_id=mid,
+                tier=tier,
+                ipo=ipo,
+                target=target,
+                rng=rng,
+            )
             old = ipo
             await feed.emit(
                 r,

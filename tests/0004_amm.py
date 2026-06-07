@@ -57,6 +57,8 @@ async def test_buy_raises_price_preserves_k(pool_state):
         patch.object(exchange.repo, "get_model", side_effect=get_model),
         patch.object(exchange.repo, "update_model_pool", side_effect=update_pool),
         patch.object(exchange.registry, "project_model", new_callable=AsyncMock),
+        patch.object(exchange.registry, "bump_session_stats", new_callable=AsyncMock),
+        patch.object(exchange.registry, "append_price_tick", new_callable=AsyncMock),
         patch.object(exchange.bus, "publish", new_callable=AsyncMock),
     ):
         shares_out, new_price = await exchange.buy(
@@ -80,6 +82,8 @@ async def test_inject_earnings_raises_price_unchanged_shares(pool_state):
         patch.object(exchange.repo, "get_model", side_effect=get_model),
         patch.object(exchange.repo, "update_model_pool", side_effect=update_pool),
         patch.object(exchange.registry, "project_model", new_callable=AsyncMock),
+        patch.object(exchange.registry, "bump_session_stats", new_callable=AsyncMock),
+        patch.object(exchange.registry, "append_price_tick", new_callable=AsyncMock),
         patch.object(exchange.bus, "publish", new_callable=AsyncMock),
     ):
         await exchange.inject_earnings(

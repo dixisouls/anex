@@ -33,6 +33,8 @@ TASK_PREFIX = "task:"
 LEADERBOARD_KEY = "leaderboard"
 MODEL_PRICES_KEY = "model_prices"
 PRICE_HISTORY_KEY = "price:history"
+PRICE_HISTORY_PREFIX = "price:history:"
+MARKET_SESSION_KEY = "market:session"
 STREAM_KEY = "market:feed"
 INDEX_NAME = os.getenv("INDEX_NAME", "agents_idx")
 VECTOR_FIELD = "embedding"
@@ -95,17 +97,36 @@ AGENT_WORKERS = int(os.getenv("AGENT_WORKERS", "16"))
 AGENT_WORKER_BASE_PORT = int(os.getenv("AGENT_WORKER_BASE_PORT", "9001"))
 
 # Model exchange AMM tuning
-EARN_RATE = float(os.getenv("EARN_RATE", "20.0"))
+EARN_RATE = float(os.getenv("EARN_RATE", "8.0"))
 EARN_CLAMP = float(os.getenv("EARN_CLAMP", "200.0"))
-# Earnings break-even: scores above push price up, below push it down. Set near
-# the typical judge score so mediocre work is bearish (two-sided fundamentals).
-EARN_BASELINE = float(os.getenv("EARN_BASELINE", "0.7"))
+# Earnings break-even: scores above push price up, below push it down.
+EARN_BASELINE = float(os.getenv("EARN_BASELINE", "0.62"))
 MIN_POOL_SHARES = 1.0
 MIN_POOL_CREDITS = 1.0
+
+# Market dynamics (fundamental fair value + microstructure)
+FUNDAMENTAL_SCALE = float(os.getenv("FUNDAMENTAL_SCALE", "5000"))
+POOL_PASS_THROUGH = float(os.getenv("POOL_PASS_THROUGH", "0.35"))
+KAPPA_PRO = float(os.getenv("KAPPA_PRO", "0.08"))
+KAPPA_FLASH = float(os.getenv("KAPPA_FLASH", "0.12"))
+KAPPA_LITE = float(os.getenv("KAPPA_LITE", "0.18"))
+SIGMA_PRO = float(os.getenv("SIGMA_PRO", "0.004"))
+SIGMA_FLASH = float(os.getenv("SIGMA_FLASH", "0.008"))
+SIGMA_LITE = float(os.getenv("SIGMA_LITE", "0.015"))
+KAPPA_BY_TIER = {"pro": KAPPA_PRO, "flash": KAPPA_FLASH, "lite": KAPPA_LITE}
+SIGMA_BY_TIER = {"pro": SIGMA_PRO, "flash": SIGMA_FLASH, "lite": SIGMA_LITE}
+ARB_INTERVAL_S = float(os.getenv("ARB_INTERVAL_S", "2.0"))
+ARB_MAX_BPS = float(os.getenv("ARB_MAX_BPS", "15.0"))
+ARB_ENABLED = os.getenv("ARB_ENABLED", "1") == "1"
+QUOTE_SIZE = float(os.getenv("QUOTE_SIZE", "10.0"))
+HISTORY_PER_MODEL = int(os.getenv("HISTORY_PER_MODEL", "2000"))
+POSTER_BUDGET_CAP = float(os.getenv("POSTER_BUDGET_CAP", "150.0"))
+DEPTH_FRACTION = float(os.getenv("DEPTH_FRACTION", "0.02"))
 
 # Ledger tuning
 REP_ALPHA = float(os.getenv("REP_ALPHA", "0.3"))
 AWARD_RATE = float(os.getenv("AWARD_RATE", "1.0"))
+AWARD_FRACTION = float(os.getenv("AWARD_FRACTION", "0.15"))
 UPGRADE_THRESHOLD = float(os.getenv("UPGRADE_THRESHOLD", "200.0"))
 
 # Placeholder model price before live exchange reads (Branch 2 only)

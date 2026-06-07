@@ -144,7 +144,18 @@ export function OrderTicket({ model }: { model: ModelStock }) {
               ? `${fmtPrice(cash)} cr`
               : `${fmtNum(held, 2)} sh`}
           </Row>
-          <Row label="Mark price">{fmtPrice(model.price)}</Row>
+          <Row label="Bid / Ask">
+            {fmtPrice(model.bid ?? model.price)} / {fmtPrice(model.ask ?? model.price)}
+          </Row>
+          <Row label="Mid / Fair">
+            {fmtPrice(model.price)}
+            {model.fundamental != null && (
+              <span className="text-dim"> · {fmtPrice(model.fundamental)}</span>
+            )}
+          </Row>
+          {model.spread_bps != null && (
+            <Row label="Spread">{fmtNum(model.spread_bps, 1)} bps</Row>
+          )}
           {preview && (
             <>
               <Row label={side === "buy" ? "Est. shares" : "Est. credits"}>
@@ -153,6 +164,11 @@ export function OrderTicket({ model }: { model: ModelStock }) {
                 </span>
               </Row>
               <Row label="Avg fill">{fmtPrice(preview.avg)}</Row>
+              <Row label="Slippage vs mid">
+                {model.price > 0
+                  ? `${fmtNum(((preview.avg - model.price) / model.price) * 10000, 1)} bps`
+                  : "—"}
+              </Row>
               <Row label="New mark">{fmtPrice(preview.newPrice)}</Row>
             </>
           )}

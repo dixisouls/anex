@@ -1,4 +1,6 @@
-"""Constant-product AMM: list, buy, sell, inject earnings."""
+"""Constant-product AMM: list, buy, sell, inject earnings, arb."""
+
+import random
 
 import weave
 
@@ -8,18 +10,17 @@ from backend.config import (
     IPO_SHARES,
     MIN_POOL_CREDITS,
     MIN_POOL_SHARES,
-    PRICE_HISTORY_KEY,
     TIER_IPO_PRICE,
 )
 from backend.db import repo
-from backend.market import registry
+from backend.market import dynamics, registry
 from backend.ports.factory import get_event_bus
 
 bus = get_event_bus()
 
 
 def _price(shares: float, credits: float) -> float:
-    return credits / shares
+    return dynamics.pool_mid(shares, credits)
 
 
 async def list_model(
@@ -38,7 +39,9 @@ async def list_model(
         ipo_price=price0,
         executable=executable,
     )
+    await registry.init_market_fields(r, model_id, price0)
     await registry.project_model(r, m)
+    await registry.append_price_tick(r, model_id=model_id, price=price0, reason="ipo")
     await bus.publish(
         ModelListed(
             model_id=model_id,
@@ -57,16 +60,18 @@ async def buy(session, r, *, model_id, dc) -> tuple[float, float]:
     m = await repo.get_model(session, model_id)
     if m is None or dc <= 0:
         raise ValueError("bad buy")
-    S, C = float(m.pool_shares), float(m.pool_credits)
-    k = S * C
-    old = _price(S, C)
-    C2 = C + dc
-    S2 = max(MIN_POOL_SHARES, k / C2)
-    shares_out = S - S2
+    s, c = float(m.pool_shares), float(m.pool_credits)
+    k = s * c
+    old = _price(s, c)
+    c2 = c + dc
+    s2 = max(MIN_POOL_SHARES, k / c2)
+    shares_out = s - s2
     if shares_out <= 0:
         raise ValueError("trade too small / pool floor hit")
-    await _commit_pool(session, r, model_id, S2, C2, old, reason="trade")
-    return shares_out, _price(S2, C2)
+    await _commit_pool(
+        session, r, model_id, s2, c2, old, reason="trade", volume_delta=shares_out
+    )
+    return shares_out, _price(s2, c2)
 
 
 @weave.op
@@ -75,16 +80,18 @@ async def sell(session, r, *, model_id, ds) -> tuple[float, float]:
     m = await repo.get_model(session, model_id)
     if m is None or ds <= 0:
         raise ValueError("bad sell")
-    S, C = float(m.pool_shares), float(m.pool_credits)
-    k = S * C
-    old = _price(S, C)
-    S2 = S + ds
-    C2 = max(MIN_POOL_CREDITS, k / S2)
-    credits_out = C - C2
+    s, c = float(m.pool_shares), float(m.pool_credits)
+    k = s * c
+    old = _price(s, c)
+    s2 = s + ds
+    c2 = max(MIN_POOL_CREDITS, k / s2)
+    credits_out = c - c2
     if credits_out <= 0:
         raise ValueError("trade too small / pool floor hit")
-    await _commit_pool(session, r, model_id, S2, C2, old, reason="trade")
-    return credits_out, _price(S2, C2)
+    await _commit_pool(
+        session, r, model_id, s2, c2, old, reason="trade", volume_delta=ds
+    )
+    return credits_out, _price(s2, c2)
 
 
 @weave.op
@@ -93,11 +100,11 @@ async def inject_earnings(session, r, *, model_id, agent_id, amount, judge_score
     m = await repo.get_model(session, model_id)
     if m is None:
         return
-    S, C = float(m.pool_shares), float(m.pool_credits)
-    old = _price(S, C)
+    s, c = float(m.pool_shares), float(m.pool_credits)
+    old = _price(s, c)
     amount = max(-EARN_CLAMP, min(EARN_CLAMP, amount))
-    C2 = max(MIN_POOL_CREDITS, C + amount)
-    await _commit_pool(session, r, model_id, S, C2, old, reason="earnings")
+    c2 = max(MIN_POOL_CREDITS, c + amount)
+    await _commit_pool(session, r, model_id, s, c2, old, reason="earnings")
     await bus.publish(
         EarningsInjected(
             model_id=model_id,
@@ -108,12 +115,47 @@ async def inject_earnings(session, r, *, model_id, agent_id, amount, judge_score
     )
 
 
-async def _commit_pool(session, r, model_id, S2, C2, old_price, *, reason):
-    await repo.update_model_pool(session, model_id, shares=S2, credits=C2)
+async def inject_arb(
+    session,
+    r,
+    *,
+    model_id: str,
+    dt: float,
+    rng: random.Random | None = None,
+) -> bool:
+    """Mean-reverting OU adjustment toward fundamental fair value."""
     m = await repo.get_model(session, model_id)
+    if m is None:
+        return False
+    s, c = float(m.pool_shares), float(m.pool_credits)
+    old = _price(s, c)
+    fundamental = await registry.get_fundamental(r, model_id, old)
+    rng = rng or random.Random()
+    amount = dynamics.arb_pool_adjustment(s, c, fundamental, m.tier, dt, rng)
+    if abs(amount) < 1e-9:
+        return False
+    c2 = max(MIN_POOL_CREDITS, c + amount)
+    await _commit_pool(session, r, model_id, s, c2, old, reason="arb")
+    return True
+
+
+async def _commit_pool(
+    session,
+    r,
+    model_id,
+    s2,
+    c2,
+    old_price,
+    *,
+    reason,
+    volume_delta: float = 0.0,
+):
+    await repo.update_model_pool(session, model_id, shares=s2, credits=c2)
+    m = await repo.get_model(session, model_id)
+    new = _price(s2, c2)
+    await registry.bump_session_stats(r, model_id, new, volume_delta=volume_delta)
     await registry.project_model(r, m)
-    new = _price(S2, C2)
     await bus.publish(
         PriceChanged(model_id=model_id, old=old_price, new=new, reason=reason)
     )
-    await r.xadd(PRICE_HISTORY_KEY, {"model_id": model_id, "price": str(new)})
+    await registry.append_price_tick(r, model_id=model_id, price=new, reason=reason)

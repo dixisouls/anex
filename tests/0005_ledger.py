@@ -48,6 +48,7 @@ async def test_settle_reputation_ema_high_score():
         patch.object(ledger.repo, "add_ledger_entry", new_callable=AsyncMock),
         patch.object(ledger.registry, "update_leaderboard", new_callable=AsyncMock),
         patch.object(ledger.registry, "reproject_agent", new_callable=AsyncMock),
+        patch.object(ledger.repo, "get_model", new_callable=AsyncMock, return_value=None),
         patch.object(ledger.exchange, "inject_earnings", new_callable=AsyncMock),
         patch.object(ledger.bus, "publish", new_callable=AsyncMock),
     ):
@@ -96,6 +97,7 @@ async def test_settle_reputation_ema_low_score():
         patch.object(ledger.repo, "add_ledger_entry", new_callable=AsyncMock),
         patch.object(ledger.registry, "update_leaderboard", new_callable=AsyncMock),
         patch.object(ledger.registry, "reproject_agent", new_callable=AsyncMock),
+        patch.object(ledger.repo, "get_model", new_callable=AsyncMock, return_value=None),
         patch.object(ledger.exchange, "inject_earnings", new_callable=AsyncMock),
         patch.object(ledger.bus, "publish", new_callable=AsyncMock),
     ):

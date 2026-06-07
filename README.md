@@ -122,7 +122,32 @@ The runner calls the same HTTP API (`API_URL`, default `http://localhost:8000`),
 | `SIM_INVESTORS` | `8` | Default investor sim users |
 | `SIM_CADENCE_S` | `4.0` | Seconds between each sim user's loop iteration |
 | `TRADE_CAP` | `100` | Max credits/shares per sim trade |
+| `POSTER_BUDGET_CAP` | `150` | Sim poster task budget cap |
 | `API_URL` | `http://localhost:8000` | Base URL for sim runner and agents |
+
+### Market dynamics
+
+The exchange keeps a **tradable mid** (`P = credits/shares` on the constant-product AMM) separate from a **fundamental fair value** `F` (moved by judge scores). A background **arb kernel** mean-reverts `P` toward `F` with tier-scaled volatility. Bid/ask quotes are derived from small-trade AMM slippage.
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `EARN_BASELINE` | `0.62` | Judge score break-even for fundamentals |
+| `EARN_RATE` | `8.0` | Earnings sensitivity per scored subtask |
+| `POOL_PASS_THROUGH` | `0.35` | Fraction of earnings that hit the AMM pool |
+| `FUNDAMENTAL_SCALE` | `5000` | Fundamental log-return scaling |
+| `ARB_INTERVAL_S` | `2.0` | Seconds between arb ticks |
+| `ARB_MAX_BPS` | `15` | Max per-tick arb move (basis points) |
+| `KAPPA_PRO/FLASH/LITE` | — | Mean-reversion speed per tier |
+| `SIGMA_PRO/FLASH/LITE` | — | Exogenous volatility per tier |
+| `QUOTE_SIZE` | `10` | Credits notional for bid/ask quotes |
+| `HISTORY_PER_MODEL` | `2000` | Per-model price history cap |
+
+Dev scripts:
+
+```bash
+./scripts/reset_fresh.sh           # wipe + IPO seed
+./scripts/seed_market_snapshot.sh  # GBM history + varied board
+```
 
 Under load, sync LLM calls (decompose, judge, sim goals/trades) run in thread pools; Redis and sim HTTP calls retry transient failures with backoff.
 
@@ -150,6 +175,7 @@ pytest tests/0006_trading.py -v        # user trading
 pytest tests/0006_credits_auth.py -v   # credits + auth
 pytest tests/test_concurrency.py -v    # task cap, retries
 pytest tests/test_sim_decision.py -v   # sim JSON parsing
+pytest tests/0007_market_dynamics.py -v  # fundamentals, quotes, GBM, arb
 ```
 
 ## Further reading
