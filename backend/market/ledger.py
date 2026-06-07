@@ -3,7 +3,7 @@
 import weave
 
 from contracts.events import CreditsChanged, ReputationChanged
-from backend.config import AWARD_RATE, EARN_RATE, REP_ALPHA
+from backend.config import AWARD_RATE, EARN_BASELINE, EARN_RATE, REP_ALPHA
 from backend.db import repo
 from backend.market import exchange, registry
 from backend.ports.factory import get_event_bus
@@ -54,7 +54,7 @@ async def settle(
         reputation_after=new_rep,
     )
     hire_weight = 1.0
-    earnings = EARN_RATE * (judge_score - 0.5) * hire_weight
+    earnings = EARN_RATE * (judge_score - EARN_BASELINE) * hire_weight
     await exchange.inject_earnings(
         session,
         r,

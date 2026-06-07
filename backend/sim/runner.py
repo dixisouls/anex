@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import random
 
@@ -13,12 +12,14 @@ import weave
 from backend.config import (
     API_URL,
     OPENAI_CHAT_MODEL,
+    SIM_CADENCE_JITTER,
     SIM_CADENCE_S,
     SIM_INVESTORS,
     SIM_POSTERS,
     TRADE_CAP,
 )
 from backend.infra.retry import httpx_request_with_retry
+from backend.sim import strategies
 
 logger = logging.getLogger(__name__)
 
@@ -53,51 +54,6 @@ def gen_goal() -> str:
     except Exception:
         logger.exception("gen_goal failed; using fallback")
         return random.choice(_FALLBACK_GOALS)
-
-
-def parse_investor_response(raw: str, valid_model_ids: set[str]) -> dict:
-    """Parse constrained investor JSON; default to hold on failure."""
-    try:
-        start = raw.find("{")
-        end = raw.rfind("}") + 1
-        if start < 0 or end <= start:
-            return {"action": "hold"}
-        data = json.loads(raw[start:end])
-        if data.get("action") == "hold":
-            return {"action": "hold"}
-        model_id = data.get("model_id")
-        side = data.get("side")
-        amount = float(data.get("amount", 0))
-        if model_id not in valid_model_ids or side not in ("buy", "sell") or amount <= 0:
-            return {"action": "hold"}
-        return {"model_id": model_id, "side": side, "amount": amount}
-    except Exception:
-        return {"action": "hold"}
-
-
-@weave.op
-def investor_decision(market_snapshot: dict, portfolio: dict) -> dict:
-    """OpenAI: decide {model_id, side, amount} or {action: hold}."""
-    model_ids = [m["model_id"] for m in market_snapshot.get("models", [])]
-    prompt = (
-        "You are a model-stock investor. Given MARKET and PORTFOLIO, decide one trade or hold.\n"
-        "Reply ONLY JSON, exactly one of:\n"
-        '  {"action":"hold"}\n'
-        '  {"model_id":"<id>","side":"buy"|"sell","amount":<positive number>}\n'
-        "Keep amount modest (under 100 credits/shares).\n"
-        f"Valid model_ids: {model_ids}\n"
-        f"Available credits: {portfolio.get('credits', 0)}\n\n"
-        f"MARKET:\n{json.dumps(market_snapshot)[:4000]}\n\n"
-        f"PORTFOLIO:\n{json.dumps(portfolio)[:2000]}\n"
-    )
-    try:
-        from openai import OpenAI
-
-        raw = OpenAI().responses.create(model=OPENAI_CHAT_MODEL, input=prompt).output_text
-        return parse_investor_response(raw.strip(), set(model_ids))
-    except Exception:
-        logger.exception("investor_decision failed; holding")
-        return {"action": "hold"}
 
 
 def trade_from_decision(decision: dict, *, trade_cap: float = TRADE_CAP) -> dict | None:
@@ -182,13 +138,28 @@ async def _poster_loop(base_url: str, user_id: str, cadence_s: float) -> None:
             await asyncio.sleep(cadence_s)
 
 
-async def _investor_loop(base_url: str, user_id: str, cadence_s: float) -> None:
+def _jittered(cadence_s: float, rng: random.Random) -> float:
+    """Cadence with +/- SIM_CADENCE_JITTER fraction so investors desync."""
+    span = cadence_s * SIM_CADENCE_JITTER
+    return max(0.1, cadence_s + rng.uniform(-span, span))
+
+
+async def _investor_loop(
+    base_url: str,
+    user_id: str,
+    cadence_s: float,
+    strategy: str = strategies.NOISE,
+    rng: random.Random | None = None,
+) -> None:
+    rng = rng or random.Random(user_id)
     async with httpx.AsyncClient(base_url=base_url, timeout=120) as client:
         while True:
             try:
                 market = (await _api_get(client, "/market")).json()
                 pf = (await _api_get(client, f"/portfolio/{user_id}")).json()
-                decision = await asyncio.to_thread(investor_decision, market, pf)
+                decision = strategies.decide(
+                    strategy, market, pf, rng, trade_cap=TRADE_CAP
+                )
                 trade = trade_from_decision(decision)
                 if trade is not None:
                     trade["user_id"] = user_id
@@ -197,7 +168,7 @@ async def _investor_loop(base_url: str, user_id: str, cadence_s: float) -> None:
                 raise
             except Exception:
                 logger.exception("investor loop error user=%s", user_id)
-            await asyncio.sleep(cadence_s)
+            await asyncio.sleep(_jittered(cadence_s, rng))
 
 
 async def start(
@@ -218,8 +189,15 @@ async def start(
 
     for uid in poster_ids:
         _tasks.append(asyncio.create_task(_poster_loop(base_url, uid, cadence_s)))
-    for uid in investor_ids:
-        _tasks.append(asyncio.create_task(_investor_loop(base_url, uid, cadence_s)))
+    for i, uid in enumerate(investor_ids):
+        strategy = strategies.STRATEGIES[i % len(strategies.STRATEGIES)]
+        rng = random.Random(f"{uid}:{strategy}")
+        logger.info("investor %s -> strategy=%s", uid, strategy)
+        _tasks.append(
+            asyncio.create_task(
+                _investor_loop(base_url, uid, cadence_s, strategy, rng)
+            )
+        )
 
 
 async def stop() -> None:
