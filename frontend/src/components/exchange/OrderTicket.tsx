@@ -74,8 +74,14 @@ export function OrderTicket({ model }: { model: ModelStock }) {
     }
   }
 
+  // Floor (never round up) so sell amounts can't exceed the actual holding,
+  // which would trip the client guard and the backend's strict shares check.
+  const floor2 = (v: number) => Math.floor(v * 100) / 100;
+  const floor6 = (v: number) => Math.floor(v * 1e6) / 1e6;
   const quickValues =
-    side === "buy" ? [25, 100, 250] : [held * 0.25, held * 0.5, held];
+    side === "buy"
+      ? [25, 100, 250]
+      : [floor2(held * 0.25), floor2(held * 0.5), floor6(held)];
 
   return (
     <div className="flex flex-col">
@@ -120,7 +126,7 @@ export function OrderTicket({ model }: { model: ModelStock }) {
             <button
               key={i}
               disabled={side === "sell" && held <= 0}
-              onClick={() => setAmount(v > 0 ? String(Number(v.toFixed(2))) : "")}
+              onClick={() => setAmount(v > 0 ? String(v) : "")}
               className="flex-1 border border-line py-1 font-mono text-[10px] text-muted transition-colors hover:border-line-bright hover:text-ink disabled:opacity-40"
             >
               {side === "buy"
