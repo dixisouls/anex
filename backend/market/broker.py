@@ -446,6 +446,8 @@ async def _run_task_body(
         if output is not None:
             prior_results.append((st.text, output))
 
+    await repo.mark_task_complete(session, task_uuid)
+
 
 async def handle_run_result(
     r,

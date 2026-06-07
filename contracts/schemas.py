@@ -94,3 +94,24 @@ class UserPublic(BaseModel):
     credits: float
     is_sim: bool
     net_worth: float | None = None
+
+
+class SubtaskDetail(BaseModel):
+    subtask_id: str
+    text: str
+    assigned_agent_id: str | None = None
+    output_preview: str | None = None
+    judge_score: float | None = None
+    stage: Literal["posted", "hired", "executed", "scored"] = "posted"
+
+
+class TaskDetail(BaseModel):
+    task_id: str
+    goal: str
+    status: Literal["posted", "running", "complete"]
+    created_at: str
+    subtasks: list[SubtaskDetail] = Field(default_factory=list)
+
+
+class TaskListResponse(BaseModel):
+    tasks: list[TaskDetail] = Field(default_factory=list)

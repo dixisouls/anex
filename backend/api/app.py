@@ -10,12 +10,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from contracts.schemas import UserPublic
+from contracts.schemas import SubtaskDetail, TaskDetail, TaskListResponse, UserPublic
 from backend.config import API_URL, POSTER_BUDGET_CAP, USER_START_CREDITS
 from backend.api import task_pool
 from backend.sim import runner as sim_runner
 from backend.db import repo
-from backend.db.models import Model as ModelORM
+from backend.db.models import Model as ModelORM, Task as TaskORM
 from backend.infra.db import get_session
 from backend.infra.passwords import hash_password, verify_password
 from backend.infra.redis_client import close_redis, get_redis
@@ -255,16 +255,78 @@ async def buy_credits(body: BuyCreditsBody, session=Depends(get_session)):
     return BuyCreditsResponse(credits=new_balance)
 
 
+def _task_to_detail(task: TaskORM) -> TaskDetail:
+    subtasks = [
+        SubtaskDetail(
+            subtask_id=repo.subtask_public_id(task.id, st.order_index),
+            text=st.text,
+            assigned_agent_id=st.assigned_agent_id,
+            output_preview=st.output_preview,
+            judge_score=float(st.judge_score) if st.judge_score is not None else None,
+            stage=repo.derive_subtask_stage(st),  # type: ignore[arg-type]
+        )
+        for st in task.subtasks
+    ]
+    status = task.status
+    if status not in ("posted", "running", "complete"):
+        status = "running"
+    return TaskDetail(
+        task_id=str(task.id),
+        goal=task.goal,
+        status=status,  # type: ignore[arg-type]
+        created_at=task.created_at.isoformat(),
+        subtasks=subtasks,
+    )
+
+
+@app.get("/users/{user_id}/tasks", response_model=TaskListResponse)
+async def list_user_tasks(
+    user_id: str,
+    limit: int = 50,
+    offset: int = 0,
+    session=Depends(get_session),
+):
+    try:
+        user = await repo.get_user(session, user_id)
+    except (KeyError, ValueError) as exc:
+        raise HTTPException(status_code=404, detail="user not found") from exc
+    if limit < 1 or limit > 200:
+        raise HTTPException(status_code=400, detail="limit must be between 1 and 200")
+    if offset < 0:
+        raise HTTPException(status_code=400, detail="offset must be non-negative")
+    tasks = await repo.list_tasks_for_user(
+        session, user.id, limit=limit, offset=offset
+    )
+    return TaskListResponse(tasks=[_task_to_detail(t) for t in tasks])
+
+
+@app.delete("/users/{user_id}/tasks/{task_id}")
+async def hide_user_task(
+    user_id: str,
+    task_id: str,
+    session=Depends(get_session),
+):
+    try:
+        user = await repo.get_user(session, user_id)
+        task_uuid = uuid.UUID(task_id)
+    except (KeyError, ValueError) as exc:
+        raise HTTPException(status_code=404, detail="not found") from exc
+    hidden = await repo.hide_task_for_user(session, user.id, task_uuid)
+    if not hidden:
+        raise HTTPException(status_code=404, detail="task not found")
+    await session.commit()
+    return {"ok": True}
+
+
 @app.get("/feed")
 async def feed_sse():
     async def gen():
         r = get_redis()
         from backend.market import feed as feed_mod
 
-        cursor = "0-0"
-        backlog = await feed_mod.read_new(r, cursor, count=200)
+        backlog = await feed_mod.read_recent(r, count=200)
+        cursor = backlog[-1][0] if backlog else "0-0"
         for entry_id, ev in backlog:
-            cursor = entry_id
             yield {"event": ev.type, "data": ev.model_dump_json()}
         async for _cursor, ev in bus.subscribe(from_id=cursor):
             yield {"event": ev.type, "data": ev.model_dump_json()}
