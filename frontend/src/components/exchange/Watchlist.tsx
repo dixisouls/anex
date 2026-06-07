@@ -67,12 +67,20 @@ export function Watchlist({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-2 border-b border-line px-3 py-2 font-mono text-[9px] uppercase tracking-[0.18em] text-dim">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] items-center gap-x-2 gap-y-1 border-b border-line px-3 py-2 font-mono text-[9px] uppercase tracking-[0.18em] text-dim xl:grid-cols-[minmax(0,1fr)_auto_auto]">
         <Th label="Instrument" k="symbol" cur={sort} asc={asc} onClick={toggle} />
         <Th label="Last" k="price" cur={sort} asc={asc} onClick={toggle} align="right" />
         <Th label="Chg" k="change" cur={sort} asc={asc} onClick={toggle} align="right" />
-        <Th label="Sprd" k="spread" cur={sort} asc={asc} onClick={toggle} align="right" />
-        <span className="w-[88px] text-right">Trend</span>
+        <Th
+          label="Sprd"
+          k="spread"
+          cur={sort}
+          asc={asc}
+          onClick={toggle}
+          align="right"
+          className="xl:hidden"
+        />
+        <span className="w-[88px] text-right xl:hidden">Trend</span>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
         {loading && models.length === 0 && (
@@ -110,6 +118,7 @@ function Th({
   asc,
   onClick,
   align = "left",
+  className,
 }: {
   label: string;
   k: SortKey;
@@ -117,6 +126,7 @@ function Th({
   asc: boolean;
   onClick: (k: SortKey) => void;
   align?: "left" | "right";
+  className?: string;
 }) {
   return (
     <button
@@ -125,6 +135,7 @@ function Th({
         "transition-colors hover:text-muted",
         cur === k && "text-gold",
         align === "right" && "text-right",
+        className,
       )}
     >
       {label}
@@ -156,53 +167,53 @@ function Row({
     <button
       onClick={onSelect}
       className={cn(
-        "grid w-full grid-cols-[1fr_auto_auto_auto_auto] items-center gap-2 border-b border-line/50 px-3 py-2 text-left transition-colors",
+        "grid w-full grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] items-center gap-x-2 gap-y-1 border-b border-line/50 px-3 py-2 text-left transition-colors xl:grid-cols-[minmax(0,1fr)_auto_auto]",
         selected ? "bg-gold/[0.06]" : "hover:bg-panel/60",
         flash === "up" && "animate-[flash-up_0.7s_ease-out]",
         flash === "down" && "animate-[flash-down_0.7s_ease-out]",
       )}
     >
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              "font-mono text-sm font-semibold",
-              selected ? "text-gold" : "text-ink",
-            )}
-          >
-            {tickerSymbol(model.model_id)}
-          </span>
-          <TierBadge tier={model.tier} />
-        </div>
-        <div className="truncate font-mono text-[10px] text-dim">
-          {model.name} · {issuer(model.provider, model.model_id)}
-          {model.fundamental != null && (
-            <span
-              className={cn(
-                "ml-1",
-                vsFair > 2 ? "text-down" : vsFair < -2 ? "text-up" : "text-dim",
-              )}
-            >
-              · {fmtNum(vsFair, 1)}% vs fair
-            </span>
+      <div className="min-w-0 overflow-hidden pr-1">
+        <div
+          className={cn(
+            "truncate font-mono text-sm font-semibold",
+            selected ? "text-gold" : "text-ink",
           )}
+        >
+          {tickerSymbol(model.model_id)}
+        </div>
+        <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+          <TierBadge tier={model.tier} />
+          <div className="min-w-0 flex-1 truncate font-mono text-[10px] text-dim">
+            {model.name} · {issuer(model.provider, model.model_id)}
+            {model.fundamental != null && (
+              <span
+                className={cn(
+                  "ml-1",
+                  vsFair > 2 ? "text-down" : vsFair < -2 ? "text-up" : "text-dim",
+                )}
+              >
+                · {fmtNum(vsFair, 1)}% vs fair
+              </span>
+            )}
+          </div>
         </div>
       </div>
-      <div className="text-right">
-        <div className="tabular font-mono text-sm text-ink">
+      <div className="shrink-0 text-right">
+        <div className="whitespace-nowrap tabular-nums font-mono text-sm text-ink">
           {fmtPrice(model.price)}
         </div>
-        <div className="tabular font-mono text-[9px] text-dim">
+        <div className="whitespace-nowrap tabular-nums font-mono text-[9px] text-dim">
           V {fmtCompact(vol)}
         </div>
       </div>
-      <div className="w-14 text-right">
+      <div className="w-14 shrink-0 text-right">
         <Delta pct={pct} className="text-xs" />
       </div>
-      <div className="tabular w-10 text-right font-mono text-[9px] text-dim">
+      <div className="tabular-nums w-10 shrink-0 text-right font-mono text-[9px] text-dim xl:hidden">
         {model.spread_bps != null ? `${fmtNum(model.spread_bps, 0)}` : "—"}
       </div>
-      <div className="flex w-[88px] justify-end">
+      <div className="flex w-[88px] shrink-0 justify-end xl:hidden">
         <Sparkline data={spark} positive={sparkUp} />
       </div>
     </button>
