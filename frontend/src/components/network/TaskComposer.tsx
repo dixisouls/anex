@@ -3,16 +3,28 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useUser } from "@/lib/user";
+import { useMarket } from "@/lib/market";
 import { SUGGESTED_GOALS } from "@/lib/agents";
+import { fmtPrice } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { TaskSlots } from "@/lib/types";
 
 export function TaskComposer() {
   const { userId } = useUser();
+  const { portfolio } = useMarket();
+  const cash = portfolio?.credits ?? null;
   const [goal, setGoal] = useState("");
+  const [budget, setBudget] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [slots, setSlots] = useState<TaskSlots | null>(null);
+
+  const budgetNum = budget.trim() === "" ? null : Number(budget);
+  const budgetInvalid =
+    budgetNum !== null &&
+    (Number.isNaN(budgetNum) ||
+      budgetNum <= 0 ||
+      (cash !== null && budgetNum > cash));
 
   useEffect(() => {
     let alive = true;
@@ -34,12 +46,16 @@ export function TaskComposer() {
 
   async function submit() {
     const g = goal.trim();
-    if (!g || busy) return;
+    if (!g || busy || budgetInvalid) return;
     setBusy(true);
     setMsg(null);
     try {
-      await api.postTask(g, userId ?? undefined);
-      setMsg("Task posted — watch the pipeline below.");
+      const res = await api.postTask(
+        g,
+        userId ?? undefined,
+        budgetNum ?? undefined,
+      );
+      setMsg(`Task posted with ${fmtPrice(res.budget)} budget — watch below.`);
       setGoal("");
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Failed to post task");
@@ -76,30 +92,52 @@ export function TaskComposer() {
         ))}
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 font-mono text-[10px] text-dim">
-          {slots && (
-            <>
-              <span
-                className={cn(
-                  "inline-block h-1.5 w-1.5 rounded-full",
-                  full ? "bg-down" : "bg-up",
-                )}
-              />
-              <span>
-                {slots.available}/{slots.max} broker slots
-              </span>
-            </>
-          )}
-          {msg && <span className="text-muted">· {msg}</span>}
-        </div>
+      <div className="flex items-center justify-between gap-3">
+        <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-dim">
+          <span>Budget</span>
+          <input
+            type="number"
+            min={0}
+            step="any"
+            value={budget}
+            onChange={(e) => setBudget(e.target.value)}
+            placeholder={cash !== null ? fmtPrice(cash) : "all cash"}
+            className={cn(
+              "w-28 border bg-base px-2 py-1 text-right font-mono text-xs tabular text-ink outline-none focus:border-gold-dim",
+              budgetInvalid ? "border-down" : "border-line",
+            )}
+          />
+          <span className="text-faint normal-case tracking-normal">
+            cash {cash !== null ? fmtPrice(cash) : "—"}
+          </span>
+        </label>
         <button
           onClick={submit}
-          disabled={busy || !goal.trim()}
+          disabled={busy || !goal.trim() || budgetInvalid}
           className="bg-gold/20 px-4 py-2 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold/30 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy ? "Posting…" : "Post task ⌘↵"}
         </button>
+      </div>
+
+      <div className="flex items-center gap-2 font-mono text-[10px] text-dim">
+        {slots && (
+          <>
+            <span
+              className={cn(
+                "inline-block h-1.5 w-1.5 rounded-full",
+                full ? "bg-down" : "bg-up",
+              )}
+            />
+            <span>
+              {slots.available}/{slots.max} broker slots
+            </span>
+          </>
+        )}
+        {budgetInvalid && (
+          <span className="text-down">· budget must be 0–{cash !== null ? fmtPrice(cash) : "cash"}</span>
+        )}
+        {msg && <span className="text-muted">· {msg}</span>}
       </div>
     </div>
   );

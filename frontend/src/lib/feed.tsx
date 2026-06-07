@@ -16,6 +16,7 @@ const ALL_EVENT_TYPES: FeedEventType[] = [
   "task_posted",
   "candidates_ranked",
   "agent_hired",
+  "subtask_skipped",
   "task_executed",
   "task_scored",
   "reputation_changed",

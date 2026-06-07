@@ -1,6 +1,8 @@
 // Typed REST client for the ANEX backend (FastAPI on :8000).
 import type {
   Agent,
+  AuthUser,
+  EarningsRow,
   MarketResponse,
   ModelStock,
   Portfolio,
@@ -50,11 +52,27 @@ export const api = {
   getModels: () => req<ModelStock[]>("/models"),
   getMarket: () => req<MarketResponse>("/market"),
   getTaskSlots: () => req<TaskSlots>("/task/slots"),
+  getEarnings: (modelId: string, limit = 20) =>
+    req<EarningsRow[]>(
+      `/models/${encodeURIComponent(modelId)}/earnings?limit=${limit}`,
+    ),
 
-  postTask: (goal: string, user_id?: string) =>
-    req<{ task_id: string }>("/task", {
+  postTask: (goal: string, user_id?: string, budget?: number) =>
+    req<{ task_id: string; budget: number }>("/task", {
       method: "POST",
-      body: JSON.stringify({ goal, user_id }),
+      body: JSON.stringify({ goal, user_id, budget }),
+    }),
+
+  register: (email: string, password: string, name?: string) =>
+    req<AuthUser>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password, name }),
+    }),
+
+  login: (email: string, password: string) =>
+    req<AuthUser>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
     }),
 
   trade: (user_id: string, model_id: string, side: Side, amount: number) =>

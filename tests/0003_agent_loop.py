@@ -138,6 +138,8 @@ async def test_run_task_dispatches_sequentially(mock_agent):
     with (
         patch.object(broker, "decompose", return_value=subtask_texts),
         patch.object(broker, "rank", new_callable=AsyncMock) as mock_rank,
+        patch.object(broker, "_live_credits", new_callable=AsyncMock) as mock_live,
+        patch.object(broker, "charge_hire", new_callable=AsyncMock) as mock_charge,
         patch.object(
             broker.registry, "get_agent_cached", new_callable=AsyncMock
         ) as mock_get_agent,
@@ -157,6 +159,7 @@ async def test_run_task_dispatches_sequentially(mock_agent):
                 final_score=1.0,
             )
         ]
+        mock_live.return_value = 1000.0
         mock_get_agent.return_value = mock_agent
         mock_get_model.return_value = {"provider": "gcp"}
         mock_queue = AsyncMock()
@@ -164,18 +167,71 @@ async def test_run_task_dispatches_sequentially(mock_agent):
         mock_get_queue.return_value = mock_queue
 
         await broker._run_task_body(
-            r, session, "00000000-0000-0000-0000-000000000001", "goal"
+            r,
+            session,
+            "00000000-0000-0000-0000-000000000001",
+            "goal",
+            user_id="00000000-0000-0000-0000-0000000000aa",
+            budget=1000.0,
         )
 
     assert dispatch_order == [
         "00000000-0000-0000-0000-000000000001-0",
         "00000000-0000-0000-0000-000000000001-1",
     ]
+    # One charge per hired subtask, each at the candidate price.
+    assert mock_charge.await_count == 2
+    assert all(c.kwargs["price"] == 1.0 for c in mock_charge.await_args_list)
     calls = mock_queue.enqueue_run_and_wait.call_args_list
     first_input = calls[0].args[0].subtask_text
     second_input = calls[1].args[0].subtask_text
     assert "PRIOR RESULTS" not in first_input
     assert "output-00000000-0000-0000-0000-000000000001-0" in second_input
+
+
+@pytest.mark.asyncio
+async def test_run_task_skips_unaffordable_subtask(mock_agent):
+    """When no candidate fits the budget, the subtask is skipped, not hired."""
+    r = AsyncMock()
+    session = AsyncMock()
+
+    with (
+        patch.object(broker, "decompose", return_value=["only step"]),
+        patch.object(broker, "rank", new_callable=AsyncMock) as mock_rank,
+        patch.object(broker, "_live_credits", new_callable=AsyncMock) as mock_live,
+        patch.object(broker, "charge_hire", new_callable=AsyncMock) as mock_charge,
+        patch.object(broker, "select_best", new_callable=AsyncMock) as mock_select,
+        patch.object(broker.repo, "create_subtask", new_callable=AsyncMock),
+        patch.object(broker.bus, "publish", new_callable=AsyncMock) as mock_pub,
+        patch("backend.market.broker.get_queue") as mock_get_queue,
+    ):
+        mock_rank.return_value = [
+            Candidate(
+                agent_id="writer-01",
+                match_score=0.9,
+                reputation=0.5,
+                price=50.0,
+                final_score=1.0,
+            )
+        ]
+        mock_live.return_value = 1000.0
+        mock_queue = AsyncMock()
+        mock_get_queue.return_value = mock_queue
+
+        await broker._run_task_body(
+            r,
+            session,
+            "00000000-0000-0000-0000-000000000002",
+            "goal",
+            user_id="00000000-0000-0000-0000-0000000000bb",
+            budget=10.0,  # below the 50.0 price
+        )
+
+    mock_charge.assert_not_awaited()
+    mock_select.assert_not_awaited()
+    mock_queue.enqueue_run_and_wait.assert_not_awaited()
+    published = [c.args[0] for c in mock_pub.await_args_list]
+    assert any(getattr(e, "type", "") == "subtask_skipped" for e in published)
 
 
 def _cand(agent_id: str, final: float) -> Candidate:

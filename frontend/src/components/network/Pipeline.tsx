@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useFeed } from "@/lib/feed";
 import { buildPipelines, STAGE_ORDER, type Stage, type SubtaskState } from "@/lib/pipeline";
-import { fmtTime } from "@/lib/format";
+import { fmtPrice, fmtTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { Markdown } from "@/components/Markdown";
 import type { Agent } from "@/lib/types";
@@ -103,6 +103,24 @@ function SubtaskRow({
   const maxScore = Math.max(...sub.candidates.map((c) => c.final_score), 0.0001);
   const minScore = Math.min(...sub.candidates.map((c) => c.final_score), 0);
 
+  if (sub.skipped) {
+    return (
+      <div className="px-3 py-2.5 opacity-70">
+        <div className="flex items-start gap-2">
+          <span className="mt-px shrink-0 border border-line px-1.5 py-px font-mono text-[9px] text-dim">
+            S{sub.index + 1}
+          </span>
+          <p className="line-clamp-2 flex-1 font-mono text-[11px] text-dim line-through">
+            {sub.text || "…"}
+          </p>
+          <span className="shrink-0 border border-down/40 px-1.5 py-px font-mono text-[9px] uppercase tracking-[0.14em] text-down">
+            {sub.skipReason === "budget" ? "Over budget" : "Skipped"}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="px-3 py-2.5">
       <div className="flex items-start gap-2">
@@ -112,6 +130,23 @@ function SubtaskRow({
         <p className="line-clamp-2 flex-1 font-mono text-[11px] text-muted">
           {sub.text || "…"}
         </p>
+        {sub.hirePrice != null && (
+          <span
+            className="shrink-0 font-mono text-[10px] text-gold/80"
+            title={
+              sub.budgetRemaining != null
+                ? `Budget left: ${fmtPrice(sub.budgetRemaining)}`
+                : undefined
+            }
+          >
+            −{fmtPrice(sub.hirePrice)}
+            {sub.budgetRemaining != null && (
+              <span className="ml-1 text-dim">
+                · {fmtPrice(sub.budgetRemaining)} left
+              </span>
+            )}
+          </span>
+        )}
         {sub.score != null && (
           <span className={cn("shrink-0 font-mono text-xs font-semibold", scoreColor(sub.score))}>
             J {sub.score.toFixed(2)}

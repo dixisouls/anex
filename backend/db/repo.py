@@ -83,6 +83,16 @@ async def update_agent_stats(
     a.wins += inc_wins
 
 
+async def adjust_agent_credits(session, agent_id: str, delta: float) -> tuple[float, float]:
+    """Add delta to an agent's treasury. Returns (old_credits, new_credits)."""
+    a = await session.get(Agent, agent_id)
+    if a is None:
+        raise KeyError(agent_id)
+    old = float(a.credits)
+    a.credits = old + delta
+    return old, float(a.credits)
+
+
 async def add_ledger_entry(
     session,
     *,
@@ -111,6 +121,19 @@ async def add_ledger_entry(
     session.add(entry)
     await session.flush()
     return entry
+
+
+async def list_model_earnings(
+    session, model_id: str, *, limit: int = 20
+) -> list[LedgerEntry]:
+    """Recent earnings ledger entries for a model, newest first."""
+    res = await session.execute(
+        select(LedgerEntry)
+        .where(LedgerEntry.kind == "earnings", LedgerEntry.model_id == model_id)
+        .order_by(LedgerEntry.created_at.desc())
+        .limit(limit)
+    )
+    return list(res.scalars().all())
 
 
 async def list_agents(session) -> list[AgentSchema]:

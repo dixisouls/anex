@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -29,74 +30,97 @@ function randomName(): string {
 interface StoredUser {
   user_id: string;
   name: string;
+  email?: string | null;
+  guest?: boolean;
 }
 
 interface UserContextValue {
   userId: string | null;
   name: string | null;
+  email: string | null;
+  isGuest: boolean;
   ready: boolean;
-  error: string | null;
-  retry: () => void;
+  authed: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name?: string) => Promise<void>;
+  continueAsGuest: () => Promise<void>;
+  logout: () => void;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
 
+function persist(u: StoredUser) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+}
+
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<StoredUser | null>(null);
   const [ready, setReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function bootstrap() {
-      setError(null);
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as StoredUser;
-          if (parsed?.user_id) {
-            if (!cancelled) {
-              setUser(parsed);
-              setReady(true);
-            }
-            return;
-          }
-        }
-        const name = randomName();
-        const { user_id } = await api.createUser(name);
-        const created = { user_id, name };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(created));
-        if (!cancelled) {
-          setUser(created);
-          setReady(true);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Failed to create account");
-          setReady(true);
-        }
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as StoredUser;
+        if (parsed?.user_id) setUser(parsed);
       }
+    } catch {
+      /* ignore corrupt storage */
     }
+    setReady(true);
+  }, []);
 
-    bootstrap();
-    return () => {
-      cancelled = true;
+  const login = useCallback(async (email: string, password: string) => {
+    const u = await api.login(email, password);
+    const stored: StoredUser = {
+      user_id: u.user_id,
+      name: u.name,
+      email: u.email,
     };
-  }, [attempt]);
+    persist(stored);
+    setUser(stored);
+  }, []);
+
+  const register = useCallback(
+    async (email: string, password: string, name?: string) => {
+      const u = await api.register(email, password, name);
+      const stored: StoredUser = {
+        user_id: u.user_id,
+        name: u.name,
+        email: u.email,
+      };
+      persist(stored);
+      setUser(stored);
+    },
+    [],
+  );
+
+  const continueAsGuest = useCallback(async () => {
+    const name = randomName();
+    const { user_id } = await api.createUser(name);
+    const stored: StoredUser = { user_id, name, guest: true };
+    persist(stored);
+    setUser(stored);
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setUser(null);
+  }, []);
 
   return (
     <UserContext.Provider
       value={{
         userId: user?.user_id ?? null,
         name: user?.name ?? null,
+        email: user?.email ?? null,
+        isGuest: user?.guest ?? false,
         ready,
-        error,
-        retry: () => {
-          setReady(false);
-          setAttempt((a) => a + 1);
-        },
+        authed: !!user?.user_id,
+        login,
+        register,
+        continueAsGuest,
+        logout,
       }}
     >
       {children}

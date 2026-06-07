@@ -15,8 +15,10 @@ const TABS = [
 
 export function Nav() {
   const pathname = usePathname();
-  const { name } = useUser();
+  const { name, email, isGuest, authed, logout } = useUser();
   const { portfolio } = useMarket();
+
+  if (pathname === "/login" || !authed) return null;
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-base/90 px-4 backdrop-blur-md">
@@ -67,9 +69,28 @@ export function Nav() {
             </span>
           </div>
         </div>
-        <span className="hidden max-w-[10rem] truncate border-l border-line pl-4 font-mono text-xs text-muted lg:inline">
-          {name ?? "…"}
-        </span>
+        <div className="hidden flex-col items-end border-l border-line pl-4 leading-none lg:flex">
+          <span className="max-w-[12rem] truncate font-mono text-xs text-muted">
+            {name ?? "…"}
+            {isGuest && (
+              <span className="ml-1 text-[9px] uppercase tracking-[0.2em] text-dim">
+                guest
+              </span>
+            )}
+          </span>
+          {email && (
+            <span className="max-w-[12rem] truncate font-mono text-[9px] text-dim">
+              {email}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={logout}
+          title="Sign out"
+          className="border border-line px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dim transition-colors hover:border-line-bright hover:text-muted"
+        >
+          Logout
+        </button>
         <DemoControls />
       </div>
     </header>

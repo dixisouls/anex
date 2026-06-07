@@ -6,6 +6,7 @@ import { UserProvider } from "@/lib/user";
 import { MarketProvider } from "@/lib/market";
 import { Nav } from "@/components/Nav";
 import { TickerTape } from "@/components/TickerTape";
+import { AuthGate } from "@/components/AuthGate";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -41,7 +42,9 @@ export default function RootLayout({
             <MarketProvider>
               <Nav />
               <TickerTape />
-              <main className="flex-1 min-h-0">{children}</main>
+              <main className="flex-1 min-h-0">
+                <AuthGate>{children}</AuthGate>
+              </main>
             </MarketProvider>
           </FeedProvider>
         </UserProvider>

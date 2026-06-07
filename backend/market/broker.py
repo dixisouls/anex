@@ -8,6 +8,7 @@ import weave
 from contracts.events import (
     AgentHired,
     CandidatesRanked,
+    SubtaskSkipped,
     TaskExecuted,
     TaskPosted,
     TaskScored,
@@ -27,7 +28,7 @@ from backend.infra.model_router import generate
 from backend.infra.redis_client import get_redis
 from backend.market import pricing, registry
 from backend.market.judge import judge
-from backend.market.ledger import settle
+from backend.market.ledger import charge_hire, settle
 from backend.market.seed_agents import SEED_AGENTS, SUGGESTED_PROMPTS
 from backend.ports.factory import get_embeddings, get_event_bus, get_queue
 from backend.ports.queue import RunDispatch
@@ -173,14 +174,25 @@ async def select_best(r, subtask_text: str, cands: list[Candidate]) -> Candidate
 
 
 @weave.op
-async def run_task(task_id: str, goal: str) -> None:
+async def run_task(task_id: str, goal: str, *, user_id: str, budget: float) -> None:
     """Root trace for one posted task; decompose/rank/judge/settle nest under this op."""
     async with session_scope() as session:
         r = get_redis()
-        await _run_task_body(r, session, task_id, goal)
+        await _run_task_body(
+            r, session, task_id, goal, user_id=user_id, budget=budget
+        )
 
 
-async def _run_task_body(r, session, task_id: str, goal: str) -> None:
+async def _live_credits(user_uuid) -> float:
+    """Fresh read so concurrent trades / prior hires are reflected in the budget."""
+    async with session_scope() as session:
+        user = await repo.get_user(session, user_uuid)
+        return float(user.credits)
+
+
+async def _run_task_body(
+    r, session, task_id: str, goal: str, *, user_id: str, budget: float
+) -> None:
     queue = get_queue()
     subtask_texts = decompose(goal)
     subtasks = [
@@ -194,25 +206,58 @@ async def _run_task_body(r, session, task_id: str, goal: str) -> None:
 
     await bus.publish(TaskPosted(task_id=task_id, goal=goal, subtasks=subtasks))
 
+    user_uuid = uuid.UUID(user_id)
+    remaining_budget = float(budget)
     prior_results: list[tuple[str, str]] = []
     for st in subtasks:
         cands = await rank(r, st.text)
         if not cands:
             continue
-        top = await select_best(r, st.text, cands)
-        ranked = [top] + [c for c in cands if c.agent_id != top.agent_id]
+        # Only consider agents we can pay for out of the remaining budget and
+        # the user's live balance (which trades may have changed mid-task).
+        ceiling = min(remaining_budget, await _live_credits(user_uuid))
+        affordable = [c for c in cands if c.price <= ceiling]
+        if not affordable:
+            await bus.publish(
+                SubtaskSkipped(subtask_id=st.subtask_id, reason="budget")
+            )
+            continue
+        top = await select_best(r, st.text, affordable)
+        a = await registry.get_agent_cached(r, top.agent_id)
+        if a is None or not a.service_url:
+            await bus.publish(
+                SubtaskSkipped(subtask_id=st.subtask_id, reason="unavailable")
+            )
+            continue
+        model = await registry.get_model_cached(r, a.model)
+        if model is None:
+            await bus.publish(
+                SubtaskSkipped(subtask_id=st.subtask_id, reason="unavailable")
+            )
+            continue
+
+        # Pay the hire (own committed txn) before dispatching the work.
+        await charge_hire(
+            r,
+            user_id=user_uuid,
+            agent_id=top.agent_id,
+            price=top.price,
+            task_id=task_id,
+        )
+        remaining_budget -= top.price
+
+        ranked = [top] + [c for c in affordable if c.agent_id != top.agent_id]
         await bus.publish(
             CandidatesRanked(subtask_id=st.subtask_id, candidates=ranked)
         )
         await bus.publish(
-            AgentHired(subtask_id=st.subtask_id, agent_id=top.agent_id)
+            AgentHired(
+                subtask_id=st.subtask_id,
+                agent_id=top.agent_id,
+                price=top.price,
+                budget_remaining=remaining_budget,
+            )
         )
-        a = await registry.get_agent_cached(r, top.agent_id)
-        if a is None or not a.service_url:
-            continue
-        model = await registry.get_model_cached(r, a.model)
-        if model is None:
-            continue
         config = {
             "model": a.model,
             "provider": model["provider"],
