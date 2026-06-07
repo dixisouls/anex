@@ -13,7 +13,7 @@ from contracts.events import (
     TaskPosted,
     TaskScored,
 )
-from contracts.schemas import Candidate, Subtask
+from contracts.schemas import Agent, Candidate, Subtask
 from backend.config import (
     GCP_CHAT_MODEL,
     RANK_RECALL_K,
@@ -27,9 +27,10 @@ from backend.infra.db import session_scope
 from backend.infra.model_router import generate
 from backend.infra.redis_client import get_redis
 from backend.market import pricing, registry
+from backend.market.capabilities import TIER_RANK
 from backend.market.judge import judge
 from backend.market.ledger import charge_hire, settle
-from backend.market.seed_agents import SEED_AGENTS, SUGGESTED_PROMPTS
+from backend.market.seed_agents import AGENTS_BY_CAPABILITY, SEED_AGENTS, SUGGESTED_PROMPTS
 from backend.ports.factory import get_embeddings, get_event_bus, get_queue
 from backend.ports.queue import RunDispatch
 
@@ -104,23 +105,84 @@ def decompose(goal: str) -> list[str]:
     return [goal]
 
 
+async def resolve_tier_variants(
+    r,
+    hits: list[tuple[str, float]],
+    ceiling: float,
+    *,
+    agents_by_capability: dict[str, list[Agent]] | None = None,
+) -> list[tuple[float, Agent, float]]:
+    """Map vector hits to one affordable tier variant per capability family.
+
+  Picks the highest tier (pro > flash > lite) whose derived hire price fits
+  within ceiling. Dedupes multiple tier siblings returned by vector recall.
+    """
+    catalog = agents_by_capability if agents_by_capability is not None else AGENTS_BY_CAPABILITY
+    seen: set[str] = set()
+    out: list[tuple[float, Agent, float]] = []
+
+    for agent_id, match in hits:
+        hit = await registry.get_agent_cached(r, agent_id)
+        if hit is None:
+            continue
+        cap_id = hit.capability_id
+        if cap_id in seen:
+            continue
+
+        siblings = catalog.get(cap_id)
+        if not siblings:
+            siblings = [hit]
+
+        chosen: Agent | None = None
+        chosen_price: float | None = None
+        for sib in sorted(siblings, key=lambda a: TIER_RANK[a.service_tier], reverse=True):
+            mp = await pricing.model_price(r, sib.model)
+            price = pricing.derived_price(mp, sib.margin)
+            if price <= ceiling:
+                chosen = sib
+                chosen_price = price
+                break
+
+        if chosen is None or chosen_price is None:
+            continue
+
+        seen.add(cap_id)
+        out.append((match, chosen, chosen_price))
+
+    return out
+
+
 @weave.op
-async def rank(r, subtask_text: str, k: int = RANK_RECALL_K) -> list[Candidate]:
+async def rank(
+    r,
+    subtask_text: str,
+    *,
+    ceiling: float | None = None,
+    k: int = RANK_RECALL_K,
+) -> list[Candidate]:
     query_vec = emb.embed_bytes(subtask_text, task_type="RETRIEVAL_QUERY")
     hits = await registry.search(r, query_vec, k=k)
+
+    if ceiling is not None:
+        resolved = await resolve_tier_variants(r, hits, ceiling)
+    else:
+        resolved = []
+        for agent_id, match in hits:
+            a = await registry.get_agent_cached(r, agent_id)
+            if a is None:
+                continue
+            mp = await pricing.model_price(r, a.model)
+            price = pricing.derived_price(mp, a.margin)
+            resolved.append((match, a, price))
+
     out: list[Candidate] = []
-    for agent_id, match in hits:
-        a = await registry.get_agent_cached(r, agent_id)
-        if a is None:
-            continue
-        mp = await pricing.model_price(r, a.model)
-        price = pricing.derived_price(mp, a.margin)
-        final = W_MATCH * match + W_REP * a.reputation - W_PRICE * price
+    for match, agent, price in resolved:
+        final = W_MATCH * match + W_REP * agent.reputation - W_PRICE * price
         out.append(
             Candidate(
-                agent_id=agent_id,
+                agent_id=agent.agent_id,
                 match_score=match,
-                reputation=a.reputation,
+                reputation=agent.reputation,
                 price=price,
                 final_score=final,
             )
@@ -210,12 +272,13 @@ async def _run_task_body(
     remaining_budget = float(budget)
     prior_results: list[tuple[str, str]] = []
     for st in subtasks:
-        cands = await rank(r, st.text)
-        if not cands:
-            continue
-        # Only consider agents we can pay for out of the remaining budget and
-        # the user's live balance (which trades may have changed mid-task).
         ceiling = min(remaining_budget, await _live_credits(user_uuid))
+        cands = await rank(r, st.text, ceiling=ceiling)
+        if not cands:
+            await bus.publish(
+                SubtaskSkipped(subtask_id=st.subtask_id, reason="budget")
+            )
+            continue
         affordable = [c for c in cands if c.price <= ceiling]
         if not affordable:
             await bus.publish(
@@ -261,7 +324,7 @@ async def _run_task_body(
         config = {
             "model": a.model,
             "provider": model["provider"],
-            "system": SUGGESTED_PROMPTS.get(top.agent_id) or a.capability_text,
+            "system": SUGGESTED_PROMPTS.get(a.capability_id) or a.capability_text,
             "tools": a.tools,
         }
         agent_input = _build_subtask_prompt(goal, st.text, prior_results)

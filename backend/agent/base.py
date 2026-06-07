@@ -39,7 +39,7 @@ def _resolve_config(agent_id: str, metadata: dict) -> dict:
     return {
         "model": agent.model,
         "provider": _infer_provider(agent.model),
-        "system": SUGGESTED_PROMPTS.get(agent_id),
+        "system": SUGGESTED_PROMPTS.get(agent.capability_id) or agent.capability_text,
         "tools": agent.tools,
     }
 
