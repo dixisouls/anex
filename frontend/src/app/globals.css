@@ -1,26 +1,164 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─────────────────────────────────────────────────────────────────────────
+   ANEX — Terminal Noir
+   Near-black trading terminal. Amber-gold brand, phosphor green / red ticks,
+   monospace numerics, hairline grid, subtle CRT grain.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  --color-base: #0a0b0d;
+  --color-panel: #111418;
+  --color-raised: #161a20;
+  --color-line: #1e232b;
+  --color-line-bright: #2a3038;
+
+  --color-ink: #e6e9ed;
+  --color-muted: #8a93a0;
+  --color-dim: #5a626d;
+  --color-faint: #353b44;
+
+  --color-gold: #e8b339;
+  --color-gold-dim: #8a6e29;
+  --color-up: #3dd68c;
+  --color-up-dim: #1c7d52;
+  --color-down: #ff5c66;
+  --color-down-dim: #8f3138;
+  --color-info: #5aa9e6;
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --animate-marquee: marquee 60s linear infinite;
+  --animate-flash-up: flash-up 0.7s ease-out;
+  --animate-flash-down: flash-down 0.7s ease-out;
+  --animate-pulse-dot: pulse-dot 2s ease-in-out infinite;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }
 
+@keyframes flash-up {
+  0% {
+    background-color: color-mix(in srgb, var(--color-up) 28%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes flash-down {
+  0% {
+    background-color: color-mix(in srgb, var(--color-down) 28%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-up) 50%, transparent);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-base);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv01";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* CRT grain + faint scanlines, fixed over everything, non-interactive */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.012) 0px,
+      rgba(255, 255, 255, 0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  mix-blend-mode: overlay;
+}
+
+/* Tabular, slashed-zero numerics everywhere we opt in */
+.tabular {
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-feature-settings: "tnum", "zero";
+}
+
+.wordmark {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  font-stretch: expanded;
+}
+
+/* Scrollbars — thin, terminal-like */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-bright);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-dim);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-bright) transparent;
+}
+
+/* Hide native number-input spinners in the order ticket */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(var(--color-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
 }
