@@ -45,6 +45,8 @@ VECTOR_METRIC = "COSINE"
 GCP_PROJECT = os.getenv("GCP_PROJECT", os.getenv("VERTEX_PROJECT", ""))
 GCP_LOCATION = os.getenv("GCP_LOCATION", os.getenv("VERTEX_LOCATION", "global"))
 GCP_CHAT_MODEL = os.getenv("GCP_CHAT_MODEL", "gemini-3.5-flash")
+# Judge can use a stronger/steadier model than the default chat model.
+JUDGE_MODEL = os.getenv("JUDGE_MODEL", GCP_CHAT_MODEL)
 GCP_EMBED_MODEL = os.getenv(
     "GCP_EMBED_MODEL", os.getenv("VERTEX_EMBED_MODEL", "gemini-embedding-001")
 )
