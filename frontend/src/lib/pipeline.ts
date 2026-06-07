@@ -24,6 +24,7 @@ export interface SubtaskState {
   budgetRemaining?: number;
   skipped?: boolean;
   skipReason?: string;
+  skipMessage?: string;
 }
 
 export interface TaskState {
@@ -110,6 +111,7 @@ export function buildPipelines(events: FeedEvent[], limit = 8): TaskState[] {
         if (s) {
           s.skipped = true;
           s.skipReason = e.reason;
+          s.skipMessage = e.message;
         }
         break;
       }
@@ -136,4 +138,45 @@ export function buildPipelines(events: FeedEvent[], limit = 8): TaskState[] {
   return Object.values(tasks)
     .sort((a, b) => (a.ts < b.ts ? 1 : -1))
     .slice(0, limit);
+}
+
+export type TaskPhase = "posting" | "decomposing" | "running" | "complete";
+
+export function sortedSubtasks(task: TaskState): SubtaskState[] {
+  return Object.values(task.subtasks).sort((a, b) => a.index - b.index);
+}
+
+export function isTaskComplete(subs: SubtaskState[]): boolean {
+  if (subs.length === 0) return false;
+  return subs.every((s) => s.skipped || s.stage === "scored");
+}
+
+export function activeSubtaskIndex(subs: SubtaskState[]): number {
+  const idx = subs.findIndex((s) => !s.skipped && s.stage !== "scored");
+  return idx < 0 ? subs.length - 1 : idx;
+}
+
+export function taskSpendSummary(subs: SubtaskState[]): {
+  totalCharged: number;
+  finalRemaining?: number;
+} {
+  let totalCharged = 0;
+  let finalRemaining: number | undefined;
+  for (const s of subs) {
+    if (s.skipped) continue;
+    if (s.hirePrice != null) totalCharged += s.hirePrice;
+    if (s.budgetRemaining != null) finalRemaining = s.budgetRemaining;
+  }
+  return { totalCharged, finalRemaining };
+}
+
+export function taskPhase(
+  task: TaskState | null,
+  pending?: boolean,
+): TaskPhase {
+  if (pending || !task) return pending ? "posting" : "decomposing";
+  const subs = sortedSubtasks(task);
+  if (subs.length === 0) return "decomposing";
+  if (isTaskComplete(subs)) return "complete";
+  return "running";
 }

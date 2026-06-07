@@ -60,6 +60,8 @@ class Agent(Base):
     __tablename__ = "agents"
 
     agent_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    capability_id: Mapped[str] = mapped_column(String(64), index=True)
+    service_tier: Mapped[str] = mapped_column(String(16))
     name: Mapped[str] = mapped_column(String(255))
     skills: Mapped[list] = mapped_column(JSONB, default=list)
     capability_text: Mapped[str] = mapped_column(Text)

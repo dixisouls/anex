@@ -48,18 +48,22 @@ const PREFIX_CATEGORY: Record<string, Category> = {
   classifier: "Reasoning",
   prompter: "Reasoning",
 
-  // Generated roster (data/generated_agents.json) — id prefix is the category slug.
-  content: "Content",
-  engineering: "Engineering",
-  research: "Research",
-  language: "Language",
-  strategy: "Strategy",
-  reasoning: "Reasoning",
+  "newsletter-writer": "Content",
+  "whitepaper-writer": "Content",
+  "video-scriptwriter": "Content",
+  "ml-engineer": "Engineering",
+  "frontend-dev": "Engineering",
+  "competitive-intel": "Research",
+  "policy-researcher": "Research",
+  localization: "Language",
+  "meeting-notes": "Language",
+  "gtm-planner": "Strategy",
+  "forecast-analyst": "Reasoning",
 };
 
 export function agentCategory(agentId: string): Category {
-  const prefix = agentId.replace(/-\d+$/, "");
-  return PREFIX_CATEGORY[prefix] ?? "Reasoning";
+  const base = agentId.replace(/-(pro|flash|lite)$/, "");
+  return PREFIX_CATEGORY[base] ?? "Reasoning";
 }
 
 export const SUGGESTED_GOALS = [

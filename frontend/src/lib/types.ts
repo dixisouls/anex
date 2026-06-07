@@ -7,6 +7,8 @@ export type Side = "buy" | "sell";
 
 export interface Agent {
   agent_id: string;
+  capability_id: string;
+  service_tier: Tier;
   name: string;
   skills: string[];
   capability_text: string;
@@ -120,6 +122,8 @@ export interface TaskPostedEvent extends EventBase {
   task_id: string;
   goal: string;
   subtasks: Subtask[];
+  broker_model?: string;
+  preferred_tier?: Tier;
 }
 
 export interface CandidatesRankedEvent extends EventBase {
@@ -140,6 +144,7 @@ export interface SubtaskSkippedEvent extends EventBase {
   type: "subtask_skipped";
   subtask_id: string;
   reason: string;
+  message?: string;
 }
 
 export interface TaskExecutedEvent extends EventBase {

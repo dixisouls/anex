@@ -23,6 +23,8 @@ from backend.db.models import (
 def _to_schema(a: Agent) -> AgentSchema:
     return AgentSchema(
         agent_id=a.agent_id,
+        capability_id=a.capability_id,
+        service_tier=a.service_tier,  # type: ignore[arg-type]
         name=a.name,
         skills=list(a.skills or []),
         capability_text=a.capability_text,
@@ -40,6 +42,8 @@ def _to_schema(a: Agent) -> AgentSchema:
 async def upsert_agent(session, agent: AgentSchema) -> None:
     values = dict(
         agent_id=agent.agent_id,
+        capability_id=agent.capability_id,
+        service_tier=agent.service_tier,
         name=agent.name,
         skills=agent.skills,
         capability_text=agent.capability_text,

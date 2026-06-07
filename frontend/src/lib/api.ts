@@ -8,6 +8,7 @@ import type {
   Portfolio,
   Side,
   TaskSlots,
+  Tier,
   TradeResult,
   UserPublic,
 } from "./types";
@@ -57,10 +58,33 @@ export const api = {
       `/models/${encodeURIComponent(modelId)}/earnings?limit=${limit}`,
     ),
 
-  postTask: (goal: string, user_id?: string, budget?: number) =>
-    req<{ task_id: string; budget: number }>("/task", {
+  postTask: (
+    goal: string,
+    user_id?: string,
+    budget?: number,
+    broker_model?: string,
+    preferred_tier?: Tier,
+  ) =>
+    req<{
+      task_id: string;
+      budget: number;
+      broker_model: string;
+      preferred_tier: Tier;
+    }>("/task", {
       method: "POST",
-      body: JSON.stringify({ goal, user_id, budget }),
+      body: JSON.stringify({
+        goal,
+        user_id,
+        budget,
+        broker_model,
+        preferred_tier,
+      }),
+    }),
+
+  buyCredits: (user_id: string, amount: number) =>
+    req<{ credits: number }>("/credits/buy", {
+      method: "POST",
+      body: JSON.stringify({ user_id, amount }),
     }),
 
   register: (email: string, password: string, name?: string) =>

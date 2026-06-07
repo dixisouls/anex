@@ -76,6 +76,15 @@
   }
 }
 
+@keyframes pipeline-stroke {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
 * {
   border-color: var(--color-line);
 }

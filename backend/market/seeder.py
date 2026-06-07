@@ -12,6 +12,8 @@ from backend.infra.db import session_scope
 from backend.ports.factory import get_embeddings
 from backend.infra.redis_client import close_redis, get_redis
 from backend.market import exchange, registry
+from backend.market.capabilities import PRIMARY_TIER_BY_CAPABILITY
+from backend.market.registry import is_search_index_primary
 from backend.market.seed_agents import SEED_AGENTS
 from backend.market.seed_models import SEED_MODELS
 
@@ -60,9 +62,11 @@ async def seed() -> dict[str, int]:
 
     emb = get_embeddings()
     for agent in SEED_AGENTS:
-        await registry.project_agent(
-            r, agent, emb.embed_bytes(registry.agent_embed_text(agent))
-        )
+        if is_search_index_primary(agent, PRIMARY_TIER_BY_CAPABILITY):
+            vector = emb.embed_bytes(registry.agent_embed_text(agent))
+        else:
+            vector = None
+        await registry.project_agent(r, agent, vector)
 
     return {"agents": len(SEED_AGENTS), "models": len(SEED_MODELS), "users": user_count}
 

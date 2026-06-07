@@ -27,6 +27,8 @@ class TaskPosted(EventBase):
     task_id: str
     goal: str
     subtasks: list[Subtask]
+    broker_model: str | None = None
+    preferred_tier: str | None = None
 
 
 class CandidatesRanked(EventBase):
@@ -47,6 +49,7 @@ class SubtaskSkipped(EventBase):
     type: Literal["subtask_skipped"] = "subtask_skipped"
     subtask_id: str
     reason: str = "budget"
+    message: str | None = None
 
 
 class TaskExecuted(EventBase):

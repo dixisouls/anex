@@ -41,6 +41,13 @@ def model_key(model_id: str) -> str:
     return f"{MODEL_PREFIX}{model_id}"
 
 
+def _infer_capability_id(agent_id: str) -> str:
+    for suffix in ("-pro", "-flash", "-lite"):
+        if agent_id.endswith(suffix):
+            return agent_id[: -len(suffix)]
+    return agent_id
+
+
 def agent_embed_text(agent: Agent) -> str:
     """Document text projected into the hiring index. Includes name and skills
     so retrieval aligns with how subtasks are phrased, not just the prose blurb."""
@@ -48,9 +55,11 @@ def agent_embed_text(agent: Agent) -> str:
     return f"{agent.name}. Skills: {skills}. {agent.capability_text}"
 
 
-def agent_to_mapping(agent: Agent, vector_bytes: bytes) -> dict:
-    return {
+def agent_to_mapping(agent: Agent, vector_bytes: bytes | None = None) -> dict:
+    mapping = {
         "agent_id": agent.agent_id,
+        "capability_id": agent.capability_id,
+        "service_tier": agent.service_tier,
         "name": agent.name,
         "skills": json.dumps(agent.skills),
         "capability_text": agent.capability_text,
@@ -62,8 +71,10 @@ def agent_to_mapping(agent: Agent, vector_bytes: bytes) -> dict:
         "hires": str(agent.hires),
         "wins": str(agent.wins),
         "service_url": agent.service_url or "",
-        VECTOR_FIELD: vector_bytes,
     }
+    if vector_bytes is not None:
+        mapping[VECTOR_FIELD] = vector_bytes
+    return mapping
 
 
 def mapping_to_agent(mapping: dict) -> Agent:
@@ -75,6 +86,8 @@ def mapping_to_agent(mapping: dict) -> Agent:
         d[key] = to_str(raw_val)
     return Agent(
         agent_id=d["agent_id"],
+        capability_id=d.get("capability_id") or _infer_capability_id(d["agent_id"]),
+        service_tier=d.get("service_tier", "flash"),  # type: ignore[arg-type]
         name=d["name"],
         skills=json.loads(d["skills"]),
         capability_text=d["capability_text"],
@@ -122,9 +135,17 @@ async def reset_redis(r) -> None:
     await r.delete(STREAM_KEY)
 
 
-async def project_agent(r, agent: Agent, vector_bytes: bytes) -> None:
+async def project_agent(r, agent: Agent, vector_bytes: bytes | None) -> None:
     await r.hset(agent_key(agent.agent_id), mapping=agent_to_mapping(agent, vector_bytes))
     await r.zadd(LEADERBOARD_KEY, {agent.agent_id: agent.reputation})
+
+
+def is_search_index_primary(agent: Agent, primary_tiers: dict[str, str]) -> bool:
+    """True when this agent should be embedded in the vector hiring index."""
+    expected = primary_tiers.get(agent.capability_id)
+    if expected is None:
+        return agent.service_tier == "pro"
+    return agent.service_tier == expected
 
 
 async def project_model(r, m: ModelORM) -> None:
