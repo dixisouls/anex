@@ -1,6 +1,7 @@
 "use client";
 
 import { BrokerModelSelect } from "./BrokerModelSelect";
+import { PreferredTierSelect } from "./PreferredTierSelect";
 import { useNetwork } from "@/lib/networkContext";
 import { cn } from "@/lib/cn";
 
@@ -15,6 +16,7 @@ export function NetworkHeader({ agentCount }: { agentCount: number }) {
           Agent workflow
         </p>
       </div>
+      <PreferredTierSelect />
       <BrokerModelSelect />
       <button
         type="button"

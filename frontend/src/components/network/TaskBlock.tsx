@@ -74,6 +74,10 @@ export function TaskBlock({
   const finalOutput =
     lastSub?.output && !lastSub.skipped ? lastSub.output : null;
   const { totalCharged, finalRemaining } = taskSpendSummary(subs);
+  const skippedCount = subs.filter((s) => s.skipped).length;
+  const completedCount = subs.filter(
+    (s) => !s.skipped && s.stage === "scored",
+  ).length;
 
   return (
     <motion.article
@@ -151,6 +155,12 @@ export function TaskBlock({
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-up/70">
             Task complete
           </p>
+          {skippedCount > 0 && (
+            <p className="font-mono text-[10px] text-down/80">
+              {completedCount}/{subs.length} steps completed · {skippedCount}{" "}
+              skipped (insufficient credits)
+            </p>
+          )}
           {(totalCharged > 0 || finalRemaining != null) && (
             <p className="font-mono text-[10px] text-muted">
               {totalCharged > 0 && (

@@ -115,7 +115,9 @@ def test_decompose_fallback_on_bad_json(monkeypatch):
     monkeypatch.setattr(
         "backend.market.broker.generate", lambda *a, **k: {"output": "not json"}
     )
-    assert broker.decompose("single goal") == ["single goal"]
+    assert broker.decompose(
+        "single goal", model="gemini-3.5-flash", provider="gcp"
+    ) == ["single goal"]
 
 
 def test_build_subtask_prompt_first_step():
@@ -151,6 +153,12 @@ async def test_run_task_dispatches_sequentially(mock_agent):
 
     subtask_texts = ["step one", "step two"]
     with (
+        patch.object(
+            broker,
+            "resolve_broker_llm",
+            new_callable=AsyncMock,
+            return_value=("gemini-3.5-flash", "gcp"),
+        ),
         patch.object(broker, "decompose", return_value=subtask_texts),
         patch.object(broker, "rank", new_callable=AsyncMock) as mock_rank,
         patch.object(broker, "_live_credits", new_callable=AsyncMock) as mock_live,
@@ -210,6 +218,12 @@ async def test_run_task_skips_unaffordable_subtask(mock_agent):
     session = AsyncMock()
 
     with (
+        patch.object(
+            broker,
+            "resolve_broker_llm",
+            new_callable=AsyncMock,
+            return_value=("gemini-3.5-flash", "gcp"),
+        ),
         patch.object(broker, "decompose", return_value=["only step"]),
         patch.object(broker, "rank", new_callable=AsyncMock) as mock_rank,
         patch.object(broker, "_live_credits", new_callable=AsyncMock) as mock_live,
@@ -237,7 +251,9 @@ async def test_run_task_skips_unaffordable_subtask(mock_agent):
     mock_select.assert_not_awaited()
     mock_queue.enqueue_run_and_wait.assert_not_awaited()
     published = [c.args[0] for c in mock_pub.await_args_list]
-    assert any(getattr(e, "type", "") == "subtask_skipped" for e in published)
+    skipped = [e for e in published if getattr(e, "type", "") == "subtask_skipped"]
+    assert skipped
+    assert skipped[0].message == broker._SKIP_BUDGET_MSG
 
 
 def _cand(agent_id: str, final: float) -> Candidate:
@@ -255,7 +271,9 @@ async def test_select_best_single_candidate_skips_llm():
     r = AsyncMock()
     cands = [_cand("only-01", 0.9)]
     with patch.object(broker, "generate") as mock_gen:
-        chosen = await broker.select_best(r, "task", cands)
+        chosen = await broker.select_best(
+            r, "task", cands, model="gemini-3.5-flash", provider="gcp"
+        )
     assert chosen.agent_id == "only-01"
     mock_gen.assert_not_called()
 
@@ -272,8 +290,14 @@ async def test_select_best_picks_llm_choice(mock_agent):
     ):
         mock_get.return_value = mock_agent
         mock_gen.return_value = {"output": '{"agent_id": "b", "reason": "best fit"}'}
-        chosen = await broker.select_best(r, "task", cands)
+        chosen = await broker.select_best(
+            r, "task", cands, model="gpt-4.1", provider="openai"
+        )
     assert chosen.agent_id == "b"
+    mock_gen.assert_called_once()
+    assert mock_gen.call_args.args[0] == "gpt-4.1"
+    assert mock_gen.call_args.args[1] == "openai"
+    assert mock_gen.call_args.kwargs.get("system") == broker.BROKER_RERANK_SYSTEM
 
 
 @pytest.mark.asyncio
@@ -288,7 +312,9 @@ async def test_select_best_falls_back_on_unknown_id(mock_agent):
     ):
         mock_get.return_value = mock_agent
         mock_gen.return_value = {"output": '{"agent_id": "nonexistent"}'}
-        chosen = await broker.select_best(r, "task", cands)
+        chosen = await broker.select_best(
+            r, "task", cands, model="gemini-3.5-flash", provider="gcp"
+        )
     assert chosen.agent_id == "a"
 
 
@@ -304,8 +330,27 @@ async def test_select_best_falls_back_on_bad_json(mock_agent):
     ):
         mock_get.return_value = mock_agent
         mock_gen.return_value = {"output": "not json at all"}
-        chosen = await broker.select_best(r, "task", cands)
+        chosen = await broker.select_best(
+            r, "task", cands, model="gemini-3.5-flash", provider="gcp"
+        )
     assert chosen.agent_id == "a"
+
+
+def test_decompose_passes_system_prompt(monkeypatch):
+    calls: list[dict] = []
+
+    def fake_generate(model, provider, prompt, system=None):
+        calls.append(
+            {"model": model, "provider": provider, "system": system, "prompt": prompt}
+        )
+        return {"output": '["step one"]'}
+
+    monkeypatch.setattr("backend.market.broker.generate", fake_generate)
+    broker.decompose("my goal", model="gpt-4.1", provider="openai")
+    assert len(calls) == 1
+    assert calls[0]["model"] == "gpt-4.1"
+    assert calls[0]["provider"] == "openai"
+    assert calls[0]["system"] == broker.BROKER_DECOMPOSE_SYSTEM
 
 
 def test_derived_price():
@@ -378,6 +423,31 @@ async def test_resolve_tier_downgrades_to_lite():
 
 
 @pytest.mark.asyncio
+async def test_resolve_tier_respects_preferred_tier_ceiling():
+    """When preferred_tier=flash, pro is excluded even if affordable."""
+    r = AsyncMock()
+    siblings = _writer_siblings()
+    index = {a.agent_id: a for a in siblings["writer"]}
+    with (
+        patch.object(
+            broker.registry, "get_agent_cached", new_callable=AsyncMock
+        ) as mock_get,
+        patch.object(broker.pricing, "model_price", new_callable=AsyncMock) as mock_mp,
+    ):
+        mock_get.side_effect = lambda _r, aid: index[aid]
+        mock_mp.side_effect = [100.0, 50.0, 20.0]
+        resolved = await broker.resolve_tier_variants(
+            r,
+            [("writer-pro", 0.9)],
+            ceiling=200.0,
+            agents_by_capability=siblings,
+            preferred_tier="flash",
+        )
+    assert len(resolved) == 1
+    assert resolved[0][1].agent_id == "writer-flash"
+
+
+@pytest.mark.asyncio
 async def test_resolve_tier_dedupes_siblings():
     r = AsyncMock()
     siblings = _writer_siblings()
@@ -436,7 +506,7 @@ async def test_run_task_downgrades_mid_task():
     session = AsyncMock()
     hired: list[str] = []
 
-    async def fake_rank(_r, _text, *, ceiling, k=10):
+    async def fake_rank(_r, _text, *, ceiling, preferred_tier="pro", k=10):
         tier = "writer-pro" if ceiling >= 100.0 else "writer-lite"
         return [
             Candidate(
@@ -449,6 +519,12 @@ async def test_run_task_downgrades_mid_task():
         ]
 
     with (
+        patch.object(
+            broker,
+            "resolve_broker_llm",
+            new_callable=AsyncMock,
+            return_value=("gemini-3.5-flash", "gcp"),
+        ),
         patch.object(broker, "decompose", return_value=["step one", "step two"]),
         patch.object(broker, "rank", side_effect=fake_rank),
         patch.object(broker, "_live_credits", new_callable=AsyncMock, return_value=1000.0),
@@ -464,7 +540,7 @@ async def test_run_task_downgrades_mid_task():
         patch.object(broker.bus, "publish", new_callable=AsyncMock),
         patch("backend.market.broker.get_queue") as mock_get_queue,
     ):
-        mock_select.side_effect = lambda _r, _t, cands: cands[0]
+        mock_select.side_effect = lambda _r, _t, cands, **_: cands[0]
         mock_get_agent.side_effect = lambda _r, aid: _writer_agent(aid.split("-")[1])
         mock_queue = AsyncMock()
         mock_queue.enqueue_run_and_wait.return_value = "done"

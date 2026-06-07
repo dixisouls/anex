@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useUser } from "@/lib/user";
 import { useMarket } from "@/lib/market";
+import { useBuyCredits } from "@/lib/buyCredits";
 import { useNetwork } from "@/lib/networkContext";
 import { SUGGESTED_GOALS } from "@/lib/agents";
 import { fmtPrice } from "@/lib/format";
@@ -13,7 +14,8 @@ import type { TaskSlots } from "@/lib/types";
 export function TaskComposer() {
   const { userId } = useUser();
   const { portfolio } = useMarket();
-  const { addPendingTask } = useNetwork();
+  const { addPendingTask, brokerModel, preferredTier } = useNetwork();
+  const { openBuyCredits } = useBuyCredits();
   const cash = portfolio?.credits ?? null;
   const [goal, setGoal] = useState("");
   const [budget, setBudget] = useState("");
@@ -57,6 +59,8 @@ export function TaskComposer() {
         g,
         userId ?? undefined,
         budgetNum ?? undefined,
+        brokerModel,
+        preferredTier,
       );
       addPendingTask({
         task_id: res.task_id,
@@ -154,7 +158,18 @@ export function TaskComposer() {
               {slots.available}/{slots.max}
             </span>
           )}
-          {budgetInvalid && <span className="text-down">over budget</span>}
+          {budgetInvalid && (
+            <span className="flex items-center gap-1.5 text-down">
+              over budget
+              <button
+                type="button"
+                onClick={openBuyCredits}
+                className="text-gold/80 underline-offset-2 hover:text-gold hover:underline"
+              >
+                buy credits
+              </button>
+            </span>
+          )}
           {msg && <span className="text-down">{msg}</span>}
         </div>
       </div>

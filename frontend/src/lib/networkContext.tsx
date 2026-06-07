@@ -9,7 +9,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { loadBrokerModel, saveBrokerModel } from "./networkPrefs";
+import {
+  DEFAULT_PREFERRED_TIER,
+  loadBrokerModel,
+  loadPreferredTier,
+  saveBrokerModel,
+  savePreferredTier,
+} from "./networkPrefs";
+import type { Tier } from "./types";
 import type { PendingTask } from "./taskThread";
 
 interface NetworkContextValue {
@@ -19,6 +26,8 @@ interface NetworkContextValue {
   removePendingTask: (taskId: string) => void;
   brokerModel: string;
   setBrokerModel: (modelId: string) => void;
+  preferredTier: Tier;
+  setPreferredTier: (tier: Tier) => void;
   agentsOpen: boolean;
   setAgentsOpen: (open: boolean) => void;
   scrollNonce: number;
@@ -31,11 +40,15 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
   const [pendingTasks, setPendingTasks] = useState<PendingTask[]>([]);
   const [taskBudgets, setTaskBudgets] = useState<Record<string, number>>({});
   const [brokerModel, setBrokerModelState] = useState(loadBrokerModel);
+  const [preferredTier, setPreferredTierState] = useState<Tier>(
+    DEFAULT_PREFERRED_TIER,
+  );
   const [agentsOpen, setAgentsOpen] = useState(false);
   const [scrollNonce, setScrollNonce] = useState(0);
 
   useEffect(() => {
     setBrokerModelState(loadBrokerModel());
+    setPreferredTierState(loadPreferredTier());
   }, []);
 
   const addPendingTask = useCallback((task: PendingTask) => {
@@ -53,6 +66,11 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
     setBrokerModelState(modelId);
   }, []);
 
+  const setPreferredTier = useCallback((tier: Tier) => {
+    savePreferredTier(tier);
+    setPreferredTierState(tier);
+  }, []);
+
   const bumpScroll = useCallback(() => {
     setScrollNonce((n) => n + 1);
   }, []);
@@ -65,6 +83,8 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
       removePendingTask,
       brokerModel,
       setBrokerModel,
+      preferredTier,
+      setPreferredTier,
       agentsOpen,
       setAgentsOpen,
       scrollNonce,
@@ -77,6 +97,8 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
       removePendingTask,
       brokerModel,
       setBrokerModel,
+      preferredTier,
+      setPreferredTier,
       agentsOpen,
       scrollNonce,
       bumpScroll,

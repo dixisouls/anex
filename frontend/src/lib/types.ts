@@ -122,6 +122,8 @@ export interface TaskPostedEvent extends EventBase {
   task_id: string;
   goal: string;
   subtasks: Subtask[];
+  broker_model?: string;
+  preferred_tier?: Tier;
 }
 
 export interface CandidatesRankedEvent extends EventBase {
@@ -142,6 +144,7 @@ export interface SubtaskSkippedEvent extends EventBase {
   type: "subtask_skipped";
   subtask_id: string;
   reason: string;
+  message?: string;
 }
 
 export interface TaskExecutedEvent extends EventBase {

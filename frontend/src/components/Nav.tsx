@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { useUser } from "@/lib/user";
+import { useBuyCredits } from "@/lib/buyCredits";
 import { useMarket } from "@/lib/market";
 import { fmtPrice } from "@/lib/format";
 import { DemoControls } from "./DemoControls";
@@ -17,6 +18,7 @@ export function Nav() {
   const pathname = usePathname();
   const { name, email, isGuest, authed, logout } = useUser();
   const { portfolio } = useMarket();
+  const { openBuyCredits } = useBuyCredits();
 
   if (pathname === "/login" || !authed) return null;
 
@@ -64,9 +66,18 @@ export function Nav() {
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-dim">
               Cash
             </span>
-            <span className="tabular font-mono text-sm text-ink">
-              {portfolio ? fmtPrice(portfolio.credits) : "—"}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="tabular font-mono text-sm text-ink">
+                {portfolio ? fmtPrice(portfolio.credits) : "—"}
+              </span>
+              <button
+                type="button"
+                onClick={openBuyCredits}
+                className="font-mono text-[9px] uppercase tracking-[0.12em] text-gold/80 transition-colors hover:text-gold"
+              >
+                + Buy
+              </button>
+            </div>
           </div>
         </div>
         <div className="hidden flex-col items-end border-l border-line pl-4 leading-none lg:flex">

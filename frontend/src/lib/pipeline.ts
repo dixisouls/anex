@@ -24,6 +24,7 @@ export interface SubtaskState {
   budgetRemaining?: number;
   skipped?: boolean;
   skipReason?: string;
+  skipMessage?: string;
 }
 
 export interface TaskState {
@@ -110,6 +111,7 @@ export function buildPipelines(events: FeedEvent[], limit = 8): TaskState[] {
         if (s) {
           s.skipped = true;
           s.skipReason = e.reason;
+          s.skipMessage = e.message;
         }
         break;
       }

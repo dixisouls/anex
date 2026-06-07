@@ -20,7 +20,8 @@ from backend.infra.db import get_session
 from backend.infra.passwords import hash_password, verify_password
 from backend.infra.redis_client import close_redis, get_redis
 from backend.infra.weave_init import init_weave
-from backend.market import broker, portfolio, pricing, registry, seeder, trading
+from backend.market import broker, credits, portfolio, pricing, registry, seeder, trading
+from backend.config import GCP_CHAT_MODEL
 from backend.ports.factory import get_event_bus
 
 bus = get_event_bus()
@@ -47,6 +48,17 @@ class TaskBody(BaseModel):
     goal: str
     user_id: str | None = None
     budget: float | None = None
+    broker_model: str | None = None
+    preferred_tier: Literal["pro", "flash", "lite"] | None = None
+
+
+class BuyCreditsBody(BaseModel):
+    user_id: str
+    amount: float
+
+
+class BuyCreditsResponse(BaseModel):
+    credits: float
 
 
 class RegisterBody(BaseModel):
@@ -133,9 +145,35 @@ async def _list_public_models(session) -> list[dict]:
     return out
 
 
-async def _run_task(task_id: str, goal: str, user_id: str, budget: float) -> None:
+async def _run_task(
+    task_id: str,
+    goal: str,
+    user_id: str,
+    budget: float,
+    *,
+    broker_model: str,
+    preferred_tier: str,
+) -> None:
     async with task_pool.get_task_semaphore():
-        await broker.run_task(task_id, goal, user_id=user_id, budget=budget)
+        await broker.run_task(
+            task_id,
+            goal,
+            user_id=user_id,
+            budget=budget,
+            broker_model=broker_model,
+            preferred_tier=preferred_tier,
+        )
+
+
+async def _validate_broker_model(session, model_id: str) -> str:
+    r = get_redis()
+    cached = await registry.get_model_cached(r, model_id)
+    if cached is not None:
+        return model_id
+    models = await repo.list_models(session)
+    if any(m.model_id == model_id for m in models):
+        return model_id
+    raise HTTPException(status_code=400, detail=f"unknown broker model: {model_id}")
 
 
 @app.get("/agents")
@@ -165,11 +203,48 @@ async def post_task(body: TaskBody, session=Depends(get_session)):
         raise HTTPException(
             status_code=400, detail="budget exceeds available credits"
         )
+    broker_model = body.broker_model or GCP_CHAT_MODEL
+    await _validate_broker_model(session, broker_model)
+    preferred_tier = body.preferred_tier or "pro"
+    if preferred_tier not in ("pro", "flash", "lite"):
+        raise HTTPException(status_code=400, detail="invalid preferred_tier")
     task = await repo.create_task(session, goal=body.goal, user_id=user.id)
     await session.commit()
     task_id = str(task.id)
-    asyncio.create_task(_run_task(task_id, body.goal, str(user.id), budget))
-    return {"task_id": task_id, "budget": budget}
+    asyncio.create_task(
+        _run_task(
+            task_id,
+            body.goal,
+            str(user.id),
+            budget,
+            broker_model=broker_model,
+            preferred_tier=preferred_tier,
+        )
+    )
+    return {
+        "task_id": task_id,
+        "budget": budget,
+        "broker_model": broker_model,
+        "preferred_tier": preferred_tier,
+    }
+
+
+@app.post("/credits/buy", response_model=BuyCreditsResponse)
+async def buy_credits(body: BuyCreditsBody, session=Depends(get_session)):
+    amount = float(body.amount)
+    if amount < credits.MIN_BUY_AMOUNT or amount > credits.MAX_BUY_AMOUNT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"amount must be between {credits.MIN_BUY_AMOUNT:g} and {credits.MAX_BUY_AMOUNT:g}",
+        )
+    try:
+        user = await repo.get_user(session, body.user_id)
+    except (KeyError, ValueError) as exc:
+        raise HTTPException(status_code=404, detail="user not found") from exc
+    r = get_redis()
+    new_balance = await credits.grant_credits(r, user_id=user.id, amount=amount)
+    await session.commit()
+    return BuyCreditsResponse(credits=new_balance)
 
 
 @app.get("/feed")

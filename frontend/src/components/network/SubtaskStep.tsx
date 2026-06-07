@@ -6,6 +6,7 @@ import { Markdown } from "@/components/Markdown";
 import { StepPipeline } from "./StepPipeline";
 import { fmtPrice } from "@/lib/format";
 import { tickerSymbol } from "@/lib/ticker";
+import { useBuyCredits } from "@/lib/buyCredits";
 import { cn } from "@/lib/cn";
 import type { SubtaskState } from "@/lib/pipeline";
 import type { Agent } from "@/lib/types";
@@ -34,6 +35,7 @@ export function SubtaskStep({
   hideInlineOutput?: boolean;
 }) {
   const [showAuction, setShowAuction] = useState(false);
+  const { openBuyCredits } = useBuyCredits();
   const agentName = (id?: string) => (id ? agents[id]?.name ?? id : "—");
   const agentModel = (id?: string) => (id ? agents[id]?.model : undefined);
 
@@ -44,14 +46,28 @@ export function SubtaskStep({
   const minScore = Math.min(...sub.candidates.map((c) => c.final_score), 0);
 
   if (sub.skipped) {
+    const skipLabel =
+      sub.skipMessage ??
+      (sub.skipReason === "budget"
+        ? "No affordable agent at your tier preference"
+        : "Agent unavailable");
     return (
-      <div className="rounded-xl border border-line/40 bg-panel/20 px-4 py-3 opacity-60">
-        <div className="flex items-center gap-2 text-[13px]">
+      <div className="rounded-xl border border-down/20 bg-down/5 px-4 py-3">
+        <div className="flex items-start gap-2 text-[13px]">
           <span className="font-mono text-[10px] text-dim">Step {stepNumber}</span>
-          <span className="flex-1 truncate text-dim line-through">{sub.text}</span>
-          <span className="font-mono text-[10px] text-down">
-            {sub.skipReason === "budget" ? "Over budget" : "Skipped"}
-          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-dim line-through">{sub.text}</p>
+            <p className="mt-1 font-mono text-[10px] text-down">{skipLabel}</p>
+            {sub.skipReason === "budget" && (
+              <button
+                type="button"
+                onClick={openBuyCredits}
+                className="mt-1 font-mono text-[10px] text-gold/80 underline-offset-2 hover:text-gold hover:underline"
+              >
+                Buy credits
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );

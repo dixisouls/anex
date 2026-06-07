@@ -37,6 +37,20 @@ from backend.ports.queue import RunDispatch
 bus = get_event_bus()
 emb = get_embeddings()
 
+BROKER_DECOMPOSE_SYSTEM = (
+    "You are the ANEX task broker. Split goals into ordered, self-contained "
+    "subtasks that map to specialist agent skills. Reply only with JSON."
+)
+BROKER_RERANK_SYSTEM = (
+    "You are the ANEX hiring broker. Pick the single best-matched agent "
+    "for a subtask. Reply only with JSON."
+)
+
+_SKIP_BUDGET_MSG = (
+    "No agent tier within your preference fits the remaining budget."
+)
+_SKIP_UNAVAILABLE_MSG = "No agent available to execute this step."
+
 
 def _build_skill_catalog(limit: int = 64) -> str:
     """Deduplicated, evenly-sampled skill list advertised to the decomposer so
@@ -77,8 +91,24 @@ def _build_subtask_prompt(
     )
 
 
+async def resolve_broker_llm(
+    r, broker_model: str
+) -> tuple[str, str]:
+    """Resolve model id + provider for broker LLM calls."""
+    cached = await registry.get_model_cached(r, broker_model)
+    if cached is not None:
+        return broker_model, cached["provider"]
+    return GCP_CHAT_MODEL, "gcp"
+
+
 @weave.op
-def decompose(goal: str) -> list[str]:
+def decompose(
+    goal: str,
+    *,
+    model: str,
+    provider: str,
+    system: str | None = BROKER_DECOMPOSE_SYSTEM,
+) -> list[str]:
     prompt = (
         "Split GOAL into 1-4 ordered subtasks for specialized agents.\n"
         "Each subtask string MUST be self-contained: include concrete content "
@@ -91,7 +121,7 @@ def decompose(goal: str) -> list[str]:
         "Reply ONLY a JSON list of strings.\n\n"
         f"GOAL: {goal}"
     )
-    raw = generate(GCP_CHAT_MODEL, "gcp", prompt)["output"]
+    raw = generate(model, provider, prompt, system=system)["output"]
     try:
         start = raw.find("[")
         end = raw.rfind("]") + 1
@@ -111,12 +141,14 @@ async def resolve_tier_variants(
     ceiling: float,
     *,
     agents_by_capability: dict[str, list[Agent]] | None = None,
+    preferred_tier: str = "pro",
 ) -> list[tuple[float, Agent, float]]:
     """Map vector hits to one affordable tier variant per capability family.
 
-  Picks the highest tier (pro > flash > lite) whose derived hire price fits
-  within ceiling. Dedupes multiple tier siblings returned by vector recall.
+  Picks the highest allowed tier (up to preferred_tier) whose derived hire
+  price fits within ceiling. Dedupes multiple tier siblings returned by vector recall.
     """
+    max_rank = TIER_RANK.get(preferred_tier, TIER_RANK["pro"])
     catalog = agents_by_capability if agents_by_capability is not None else AGENTS_BY_CAPABILITY
     seen: set[str] = set()
     out: list[tuple[float, Agent, float]] = []
@@ -136,6 +168,8 @@ async def resolve_tier_variants(
         chosen: Agent | None = None
         chosen_price: float | None = None
         for sib in sorted(siblings, key=lambda a: TIER_RANK[a.service_tier], reverse=True):
+            if TIER_RANK.get(sib.service_tier, 0) > max_rank:
+                continue
             mp = await pricing.model_price(r, sib.model)
             price = pricing.derived_price(mp, sib.margin)
             if price <= ceiling:
@@ -158,13 +192,16 @@ async def rank(
     subtask_text: str,
     *,
     ceiling: float | None = None,
+    preferred_tier: str = "pro",
     k: int = RANK_RECALL_K,
 ) -> list[Candidate]:
     query_vec = emb.embed_bytes(subtask_text, task_type="RETRIEVAL_QUERY")
     hits = await registry.search(r, query_vec, k=k)
 
     if ceiling is not None:
-        resolved = await resolve_tier_variants(r, hits, ceiling)
+        resolved = await resolve_tier_variants(
+            r, hits, ceiling, preferred_tier=preferred_tier
+        )
     else:
         resolved = []
         for agent_id, match in hits:
@@ -192,7 +229,15 @@ async def rank(
 
 
 @weave.op
-async def select_best(r, subtask_text: str, cands: list[Candidate]) -> Candidate:
+async def select_best(
+    r,
+    subtask_text: str,
+    cands: list[Candidate],
+    *,
+    model: str,
+    provider: str,
+    system: str | None = BROKER_RERANK_SYSTEM,
+) -> Candidate:
     """LLM re-rank: pick the best-fit agent among the cosine finalists.
 
     Cosine recall is good at breadth but often returns an over-narrow specialist
@@ -225,7 +270,7 @@ async def select_best(r, subtask_text: str, cands: list[Candidate]) -> Candidate
     )
     valid = {c.agent_id for c in finalists}
     try:
-        raw = generate(GCP_CHAT_MODEL, "gcp", prompt)["output"]
+        raw = generate(model, provider, prompt, system=system)["output"]
         data = json.loads(raw[raw.find("{") : raw.rfind("}") + 1])
         chosen_id = str(data.get("agent_id", "")).strip()
         if chosen_id in valid:
@@ -236,12 +281,27 @@ async def select_best(r, subtask_text: str, cands: list[Candidate]) -> Candidate
 
 
 @weave.op
-async def run_task(task_id: str, goal: str, *, user_id: str, budget: float) -> None:
+async def run_task(
+    task_id: str,
+    goal: str,
+    *,
+    user_id: str,
+    budget: float,
+    broker_model: str = GCP_CHAT_MODEL,
+    preferred_tier: str = "pro",
+) -> None:
     """Root trace for one posted task; decompose/rank/judge/settle nest under this op."""
     async with session_scope() as session:
         r = get_redis()
         await _run_task_body(
-            r, session, task_id, goal, user_id=user_id, budget=budget
+            r,
+            session,
+            task_id,
+            goal,
+            user_id=user_id,
+            budget=budget,
+            broker_model=broker_model,
+            preferred_tier=preferred_tier,
         )
 
 
@@ -253,10 +313,21 @@ async def _live_credits(user_uuid) -> float:
 
 
 async def _run_task_body(
-    r, session, task_id: str, goal: str, *, user_id: str, budget: float
+    r,
+    session,
+    task_id: str,
+    goal: str,
+    *,
+    user_id: str,
+    budget: float,
+    broker_model: str = GCP_CHAT_MODEL,
+    preferred_tier: str = "pro",
 ) -> None:
     queue = get_queue()
-    subtask_texts = decompose(goal)
+    llm_model, llm_provider = await resolve_broker_llm(r, broker_model)
+    subtask_texts = decompose(
+        goal, model=llm_model, provider=llm_provider, system=BROKER_DECOMPOSE_SYSTEM
+    )
     subtasks = [
         Subtask(subtask_id=f"{task_id}-{i}", text=t)
         for i, t in enumerate(subtask_texts)
@@ -266,36 +337,69 @@ async def _run_task_body(
     for i, text in enumerate(subtask_texts):
         await repo.create_subtask(session, task_id=task_uuid, order_index=i, text=text)
 
-    await bus.publish(TaskPosted(task_id=task_id, goal=goal, subtasks=subtasks))
+    await bus.publish(
+        TaskPosted(
+            task_id=task_id,
+            goal=goal,
+            subtasks=subtasks,
+            broker_model=broker_model,
+            preferred_tier=preferred_tier,
+        )
+    )
 
     user_uuid = uuid.UUID(user_id)
     remaining_budget = float(budget)
     prior_results: list[tuple[str, str]] = []
     for st in subtasks:
         ceiling = min(remaining_budget, await _live_credits(user_uuid))
-        cands = await rank(r, st.text, ceiling=ceiling)
+        cands = await rank(
+            r, st.text, ceiling=ceiling, preferred_tier=preferred_tier
+        )
         if not cands:
             await bus.publish(
-                SubtaskSkipped(subtask_id=st.subtask_id, reason="budget")
+                SubtaskSkipped(
+                    subtask_id=st.subtask_id,
+                    reason="budget",
+                    message=_SKIP_BUDGET_MSG,
+                )
             )
             continue
         affordable = [c for c in cands if c.price <= ceiling]
         if not affordable:
             await bus.publish(
-                SubtaskSkipped(subtask_id=st.subtask_id, reason="budget")
+                SubtaskSkipped(
+                    subtask_id=st.subtask_id,
+                    reason="budget",
+                    message=_SKIP_BUDGET_MSG,
+                )
             )
             continue
-        top = await select_best(r, st.text, affordable)
+        top = await select_best(
+            r,
+            st.text,
+            affordable,
+            model=llm_model,
+            provider=llm_provider,
+            system=BROKER_RERANK_SYSTEM,
+        )
         a = await registry.get_agent_cached(r, top.agent_id)
         if a is None or not a.service_url:
             await bus.publish(
-                SubtaskSkipped(subtask_id=st.subtask_id, reason="unavailable")
+                SubtaskSkipped(
+                    subtask_id=st.subtask_id,
+                    reason="unavailable",
+                    message=_SKIP_UNAVAILABLE_MSG,
+                )
             )
             continue
         model = await registry.get_model_cached(r, a.model)
         if model is None:
             await bus.publish(
-                SubtaskSkipped(subtask_id=st.subtask_id, reason="unavailable")
+                SubtaskSkipped(
+                    subtask_id=st.subtask_id,
+                    reason="unavailable",
+                    message=_SKIP_UNAVAILABLE_MSG,
+                )
             )
             continue
 

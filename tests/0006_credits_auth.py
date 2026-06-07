@@ -84,3 +84,41 @@ async def test_charge_hire_debits_user_and_credits_agent():
     published = [c.args[0].type for c in pub.await_args_list]
     assert "credits_changed" in published
     assert "portfolio_changed" in published
+
+
+@pytest.mark.asyncio
+async def test_grant_credits_increases_balance_and_emits_portfolio():
+    r = AsyncMock()
+    fake_session = AsyncMock()
+
+    class _Scope:
+        async def __aenter__(self):
+            return fake_session
+
+        async def __aexit__(self, *exc):
+            return False
+
+    from backend.market import credits
+
+    portfolio_val = Portfolio(
+        user_id="u1",
+        credits=1200.0,
+        holdings=[],
+        holdings_value=0.0,
+        total=1200.0,
+    )
+
+    with (
+        patch.object(credits, "session_scope", lambda: _Scope()),
+        patch.object(credits.repo, "adjust_user_credits", new_callable=AsyncMock) as adj,
+        patch.object(credits.portfolio, "value", new_callable=AsyncMock) as pval,
+        patch.object(credits.bus, "publish", new_callable=AsyncMock) as pub,
+    ):
+        pval.return_value = portfolio_val
+        new_bal = await credits.grant_credits(r, user_id="u1", amount=200.0)
+
+    adj.assert_awaited_once()
+    assert adj.await_args.args[2] == 200.0
+    assert new_bal == 1200.0
+    published = [c.args[0].type for c in pub.await_args_list]
+    assert "portfolio_changed" in published
