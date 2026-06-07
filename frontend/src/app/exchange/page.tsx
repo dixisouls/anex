@@ -9,10 +9,15 @@ import { OrderTicket } from "@/components/exchange/OrderTicket";
 import { PortfolioRail } from "@/components/exchange/PortfolioRail";
 import { TradeBlotter } from "@/components/exchange/TradeBlotter";
 import { Leaderboard } from "@/components/exchange/Leaderboard";
+import { BloombergTerminal } from "@/components/exchange/BloombergTerminal";
+import { cn } from "@/lib/cn";
+
+type ViewMode = "standard" | "terminal";
 
 export default function ExchangePage() {
   const { models, modelMap, error } = useMarket();
   const [selected, setSelected] = useState<string | null>(null);
+  const [mode, setMode] = useState<ViewMode>("standard");
 
   useEffect(() => {
     if (!selected && models.length > 0) setSelected(models[0].model_id);
@@ -20,14 +25,63 @@ export default function ExchangePage() {
 
   const active = selected ? modelMap[selected] : undefined;
 
+  const modeToggle = (
+    <div className="flex items-center border border-line">
+      {(["standard", "terminal"] as ViewMode[]).map((m) => (
+        <button
+          key={m}
+          type="button"
+          onClick={() => setMode(m)}
+          className={cn(
+            "px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors",
+            mode === m
+              ? "bg-gold text-base"
+              : "text-dim hover:text-muted",
+          )}
+        >
+          {m === "standard" ? "Standard" : "Terminal"}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (mode === "terminal") {
+    return (
+      <div className="flex h-full flex-col">
+        {error && (
+          <div className="border-b border-down/40 bg-down/10 px-4 py-2 font-mono text-[11px] text-down">
+            Backend unreachable ({error}). Start the API on :8000, then SEED the
+            market from the SIM menu.
+          </div>
+        )}
+        <div className="flex items-center justify-between border-b border-line px-3 py-2">
+          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-dim">
+            Bloomberg-style terminal
+          </span>
+          {modeToggle}
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <BloombergTerminal selected={selected} onSelect={setSelected} />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full overflow-y-auto xl:overflow-hidden">
+    <div className="flex h-full flex-col">
       {error && (
         <div className="border-b border-down/40 bg-down/10 px-4 py-2 font-mono text-[11px] text-down">
           Backend unreachable ({error}). Start the API on :8000, then SEED the
           market from the SIM menu.
         </div>
       )}
+      <div className="flex items-center justify-between border-b border-line px-3 py-2">
+        <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-dim">
+          Market overview
+        </span>
+        {modeToggle}
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto xl:overflow-hidden">
       <div className="grid grid-cols-1 gap-3 p-3 xl:h-full xl:grid-cols-12">
         {/* Left — watchlist + leaderboard */}
         <section className="flex flex-col gap-3 xl:col-span-3 xl:min-h-0">
@@ -84,6 +138,7 @@ export default function ExchangePage() {
             </div>
           </Panel>
         </section>
+      </div>
       </div>
     </div>
   );

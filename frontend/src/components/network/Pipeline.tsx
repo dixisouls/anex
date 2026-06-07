@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useFeed } from "@/lib/feed";
 import { buildPipelines, STAGE_ORDER, type Stage, type SubtaskState } from "@/lib/pipeline";
 import { fmtTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { Markdown } from "@/components/Markdown";
 import type { Agent } from "@/lib/types";
 
 const STAGE_LABEL: Record<Stage, string> = {
@@ -68,8 +69,13 @@ export function Pipeline({ agents }: { agents: Record<string, Agent> }) {
                 </span>
               </div>
               <div className="divide-y divide-line/50">
-                {subs.map((s) => (
-                  <SubtaskRow key={s.subtask_id} sub={s} agents={agents} />
+                {subs.map((s, i) => (
+                  <SubtaskRow
+                    key={s.subtask_id}
+                    sub={s}
+                    agents={agents}
+                    isFinal={i === subs.length - 1}
+                  />
                 ))}
               </div>
             </motion.div>
@@ -83,12 +89,16 @@ export function Pipeline({ agents }: { agents: Record<string, Agent> }) {
 function SubtaskRow({
   sub,
   agents,
+  isFinal,
 }: {
   sub: SubtaskState;
   agents: Record<string, Agent>;
+  isFinal: boolean;
 }) {
   const curIdx = STAGE_ORDER.indexOf(sub.stage);
+  const complete = sub.stage === "scored";
   const agentName = (id?: string) => (id ? agents[id]?.name ?? id : "—");
+  const [expanded, setExpanded] = useState(isFinal);
 
   const maxScore = Math.max(...sub.candidates.map((c) => c.final_score), 0.0001);
   const minScore = Math.min(...sub.candidates.map((c) => c.final_score), 0);
@@ -112,8 +122,8 @@ function SubtaskRow({
       {/* Stage rail */}
       <div className="mt-2 flex items-center gap-1">
         {STAGE_ORDER.map((stage, i) => {
-          const done = i < curIdx;
-          const active = i === curIdx;
+          const done = complete || i < curIdx;
+          const active = !complete && i === curIdx;
           return (
             <div key={stage} className="flex flex-1 items-center gap-1">
               <div className="flex items-center gap-1.5">
@@ -180,7 +190,7 @@ function SubtaskRow({
         </div>
       )}
 
-      {/* Output preview */}
+      {/* Output */}
       <AnimatePresence>
         {sub.output && (
           <motion.div
@@ -188,13 +198,47 @@ function SubtaskRow({
             animate={{ opacity: 1, height: "auto" }}
             className="mt-2 overflow-hidden"
           >
-            <div className="border-l-2 border-line-bright bg-base/60 px-2 py-1.5">
-              <div className="mb-0.5 font-mono text-[9px] uppercase tracking-[0.18em] text-dim">
-                {agentName(sub.hiredAgentId)} output
-              </div>
-              <p className="line-clamp-3 font-mono text-[11px] text-muted">
-                {sub.output}
-              </p>
+            <div className="border-l-2 border-line-bright bg-base/60">
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="flex w-full items-center gap-1.5 px-2 py-1.5 text-left transition-colors hover:bg-line/20"
+              >
+                <span
+                  className={cn(
+                    "font-mono text-[9px] text-dim transition-transform",
+                    expanded && "rotate-90",
+                  )}
+                >
+                  ▸
+                </span>
+                <span className="flex-1 font-mono text-[9px] uppercase tracking-[0.18em] text-dim">
+                  {agentName(sub.hiredAgentId)} output
+                  {isFinal && (
+                    <span className="ml-1.5 text-gold/70">· final</span>
+                  )}
+                </span>
+                {!expanded && (
+                  <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-dim/70">
+                    show
+                  </span>
+                )}
+              </button>
+              <AnimatePresence initial={false}>
+                {expanded && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="border-t border-line/50 px-2.5 py-2">
+                      <Markdown>{sub.output}</Markdown>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}

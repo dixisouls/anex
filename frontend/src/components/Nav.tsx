@@ -3,11 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { useFeed } from "@/lib/feed";
 import { useUser } from "@/lib/user";
 import { useMarket } from "@/lib/market";
 import { fmtPrice } from "@/lib/format";
-import { ConnectionDot } from "./ui";
 import { DemoControls } from "./DemoControls";
 
 const TABS = [
@@ -17,7 +15,6 @@ const TABS = [
 
 export function Nav() {
   const pathname = usePathname();
-  const { status } = useFeed();
   const { name } = useUser();
   const { portfolio } = useMarket();
 
@@ -52,7 +49,6 @@ export function Nav() {
       </div>
 
       <div className="flex items-center gap-4">
-        <ConnectionDot status={status} />
         <div className="hidden items-center gap-3 border-l border-line pl-4 md:flex">
           <div className="flex flex-col items-end leading-none">
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-dim">
