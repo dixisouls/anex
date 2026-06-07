@@ -281,7 +281,6 @@ async def test_investor_loop_llm_mode(monkeypatch):
         async def __aexit__(self, *args):
             return None
 
-    monkeypatch.setattr(sim_runner, "SIM_INVESTOR_MODE", "llm")
     monkeypatch.setattr(
         sim_runner.llm_investor,
         "llm_decide",
@@ -305,7 +304,7 @@ async def test_investor_loop_llm_mode(monkeypatch):
 
     with pytest.raises(asyncio.CancelledError):
         await sim_runner._investor_loop(
-            "http://test", "u1", 1.0, strategies.VALUE
+            "http://test", "u1", 1.0, mode="llm", strategy=strategies.VALUE
         )
 
     assert len(posted) == 1

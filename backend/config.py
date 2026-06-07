@@ -91,6 +91,11 @@ SIM_INVESTORS = int(os.getenv("SIM_INVESTORS", "8"))
 SIM_CADENCE_S = float(os.getenv("SIM_CADENCE_S", "4.0"))
 SIM_CADENCE_JITTER = float(os.getenv("SIM_CADENCE_JITTER", "0.5"))
 SIM_INVESTOR_MODE = os.getenv("SIM_INVESTOR_MODE", "llm").lower()  # "llm" | "math"
+SIM_USE_COHORTS = os.getenv("SIM_USE_COHORTS", "1").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+)
 TRADE_CAP = float(os.getenv("TRADE_CAP", "100"))
 MAX_CONCURRENT_TASKS = int(os.getenv("MAX_CONCURRENT_TASKS", "2"))
 

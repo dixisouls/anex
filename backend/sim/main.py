@@ -14,16 +14,27 @@ logger = logging.getLogger(__name__)
 
 
 async def _run(args: argparse.Namespace) -> None:
+    use_cohorts = False if args.legacy else None
     await sim_runner.start(
         args.api_url,
         n_posters=args.posters,
         n_investors=args.investors,
         cadence_s=args.cadence_s,
+        use_cohorts=use_cohorts,
     )
+    from backend.sim import cohorts as sim_cohorts
+
+    if use_cohorts is False:
+        investor_note = (
+            f"legacy investors={args.investors if args.investors is not None else SIM_INVESTORS}"
+        )
+    else:
+        n = sim_cohorts.total_investor_count(sim_cohorts.default_cohorts())
+        investor_note = f"cohort investors={n}"
     logger.info(
-        "sim running posters=%s investors=%s cadence_s=%s api=%s",
+        "sim running posters=%s %s poster_cadence_s=%s api=%s",
         args.posters if args.posters is not None else SIM_POSTERS,
-        args.investors if args.investors is not None else SIM_INVESTORS,
+        investor_note,
         args.cadence_s if args.cadence_s is not None else SIM_CADENCE_S,
         args.api_url,
     )
@@ -47,7 +58,12 @@ def main() -> None:
         type=float,
         default=None,
         dest="cadence_s",
-        help="Seconds between loop iterations per sim user",
+        help="Seconds between poster loop iterations (investors use cohort cadences when enabled)",
+    )
+    parser.add_argument(
+        "--legacy",
+        action="store_true",
+        help="Disable role cohorts; use SIM_INVESTORS + SIM_INVESTOR_MODE for all investors",
     )
     asyncio.run(_run(parser.parse_args()))
 

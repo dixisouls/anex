@@ -116,6 +116,7 @@ class SimStartBody(BaseModel):
     n_posters: int | None = None
     n_investors: int | None = None
     cadence_s: float | None = None
+    use_cohorts: bool | None = None
 
 
 class MarketResponse(BaseModel):

@@ -178,7 +178,6 @@ async def test_investor_loop_iteration_caps_trade(monkeypatch):
         async def __aexit__(self, *args):
             return None
 
-    monkeypatch.setattr(sim_runner, "SIM_INVESTOR_MODE", "math")
     monkeypatch.setattr(
         sim_runner.strategies,
         "decide",
@@ -192,7 +191,9 @@ async def test_investor_loop_iteration_caps_trade(monkeypatch):
     monkeypatch.setattr(sim_runner.asyncio, "sleep", AsyncMock(side_effect=asyncio.CancelledError))
 
     with pytest.raises(asyncio.CancelledError):
-        await sim_runner._investor_loop("http://test", "u1", 1.0, strategies.VALUE)
+        await sim_runner._investor_loop(
+            "http://test", "u1", 1.0, mode="math", strategy=strategies.VALUE
+        )
 
     assert len(posted) == 1
     assert posted[0]["amount"] == sim_runner.TRADE_CAP
@@ -229,7 +230,6 @@ async def test_investor_loop_hold_posts_nothing(monkeypatch):
         async def __aexit__(self, *args):
             return None
 
-    monkeypatch.setattr(sim_runner, "SIM_INVESTOR_MODE", "math")
     monkeypatch.setattr(
         sim_runner.strategies, "decide", lambda *a, **k: {"action": "hold"}
     )
@@ -237,6 +237,8 @@ async def test_investor_loop_hold_posts_nothing(monkeypatch):
     monkeypatch.setattr(sim_runner.asyncio, "sleep", AsyncMock(side_effect=asyncio.CancelledError))
 
     with pytest.raises(asyncio.CancelledError):
-        await sim_runner._investor_loop("http://test", "u1", 1.0, strategies.NOISE)
+        await sim_runner._investor_loop(
+            "http://test", "u1", 1.0, mode="math", strategy=strategies.NOISE
+        )
 
     assert posted == []
