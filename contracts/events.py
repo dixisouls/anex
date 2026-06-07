@@ -39,6 +39,14 @@ class AgentHired(EventBase):
     type: Literal["agent_hired"] = "agent_hired"
     subtask_id: str
     agent_id: str
+    price: float = 0.0
+    budget_remaining: float = 0.0
+
+
+class SubtaskSkipped(EventBase):
+    type: Literal["subtask_skipped"] = "subtask_skipped"
+    subtask_id: str
+    reason: str = "budget"
 
 
 class TaskExecuted(EventBase):
@@ -126,6 +134,7 @@ MarketEvent = Annotated[
         TaskPosted,
         CandidatesRanked,
         AgentHired,
+        SubtaskSkipped,
         TaskExecuted,
         TaskScored,
         ReputationChanged,

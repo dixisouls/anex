@@ -17,6 +17,7 @@ from backend.sim import runner as sim_runner
 from backend.db import repo
 from backend.db.models import Model as ModelORM
 from backend.infra.db import get_session
+from backend.infra.passwords import hash_password, verify_password
 from backend.infra.redis_client import close_redis, get_redis
 from backend.infra.weave_init import init_weave
 from backend.market import broker, portfolio, pricing, registry, seeder, trading
@@ -45,6 +46,25 @@ app.add_middleware(
 class TaskBody(BaseModel):
     goal: str
     user_id: str | None = None
+    budget: float | None = None
+
+
+class RegisterBody(BaseModel):
+    email: str
+    password: str
+    name: str | None = None
+
+
+class LoginBody(BaseModel):
+    email: str
+    password: str
+
+
+class AuthResponse(BaseModel):
+    user_id: str
+    name: str
+    email: str
+    credits: float
 
 
 class RunResultBody(BaseModel):
@@ -113,9 +133,9 @@ async def _list_public_models(session) -> list[dict]:
     return out
 
 
-async def _run_task(task_id: str, goal: str) -> None:
+async def _run_task(task_id: str, goal: str, user_id: str, budget: float) -> None:
     async with task_pool.get_task_semaphore():
-        await broker.run_task(task_id, goal)
+        await broker.run_task(task_id, goal, user_id=user_id, budget=budget)
 
 
 @app.get("/agents")
@@ -131,12 +151,25 @@ async def get_agents(session=Depends(get_session)):
 
 @app.post("/task")
 async def post_task(body: TaskBody, session=Depends(get_session)):
-    user_uuid = uuid.UUID(body.user_id) if body.user_id else None
-    task = await repo.create_task(session, goal=body.goal, user_id=user_uuid)
+    if not body.user_id:
+        raise HTTPException(status_code=401, detail="login required to post a task")
+    try:
+        user = await repo.get_user(session, body.user_id)
+    except (KeyError, ValueError) as exc:
+        raise HTTPException(status_code=404, detail="user not found") from exc
+    credits = float(user.credits)
+    budget = credits if body.budget is None else float(body.budget)
+    if budget <= 0:
+        raise HTTPException(status_code=400, detail="budget must be positive")
+    if budget > credits:
+        raise HTTPException(
+            status_code=400, detail="budget exceeds available credits"
+        )
+    task = await repo.create_task(session, goal=body.goal, user_id=user.id)
     await session.commit()
     task_id = str(task.id)
-    asyncio.create_task(_run_task(task_id, body.goal))
-    return {"task_id": task_id}
+    asyncio.create_task(_run_task(task_id, body.goal, str(user.id), budget))
+    return {"task_id": task_id, "budget": budget}
 
 
 @app.get("/feed")
@@ -199,6 +232,22 @@ async def get_models(session=Depends(get_session)):
     return await _list_public_models(session)
 
 
+@app.get("/models/{model_id}/earnings")
+async def get_model_earnings(
+    model_id: str, limit: int = 20, session=Depends(get_session)
+):
+    entries = await repo.list_model_earnings(session, model_id, limit=limit)
+    return [
+        {
+            "ts": e.created_at.isoformat(),
+            "agent_id": e.agent_id,
+            "amount": float(e.amount) if e.amount is not None else 0.0,
+            "judge_score": None,
+        }
+        for e in entries
+    ]
+
+
 @app.get("/market", response_model=MarketResponse)
 async def get_market(session=Depends(get_session)):
     r = get_redis()
@@ -235,6 +284,41 @@ async def get_portfolio(user_id: uuid.UUID, session=Depends(get_session)):
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return p.model_dump()
+
+
+@app.post("/auth/register", response_model=AuthResponse)
+async def auth_register(body: RegisterBody, session=Depends(get_session)):
+    email = body.email.strip().lower()
+    if not email or not body.password:
+        raise HTTPException(status_code=400, detail="email and password required")
+    if await repo.get_user_by_email(session, email) is not None:
+        raise HTTPException(status_code=409, detail="email already registered")
+    name = (body.name or email.split("@")[0]).strip() or email.split("@")[0]
+    u = await repo.create_user(
+        session,
+        email=email,
+        name=name,
+        credits=USER_START_CREDITS,
+        password_hash=hash_password(body.password),
+    )
+    await session.commit()
+    return AuthResponse(
+        user_id=str(u.id), name=u.name, email=u.email, credits=float(u.credits)
+    )
+
+
+@app.post("/auth/login", response_model=AuthResponse)
+async def auth_login(body: LoginBody, session=Depends(get_session)):
+    email = body.email.strip().lower()
+    user = await repo.get_user_by_email(session, email)
+    if user is None or not verify_password(body.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="invalid email or password")
+    return AuthResponse(
+        user_id=str(user.id),
+        name=user.name,
+        email=user.email,
+        credits=float(user.credits),
+    )
 
 
 @app.post("/users", response_model=CreateUserResponse)

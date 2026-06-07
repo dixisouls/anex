@@ -89,7 +89,7 @@ SEED_MODELS: list[dict] = [
         "model_id": "gpt-4.1",
         "name": "GPT-4.1",
         "provider": "openai",
-        "tier": "pro",
+        "tier": "lite",
     },
     {
         "model_id": "gpt-4.1-mini",

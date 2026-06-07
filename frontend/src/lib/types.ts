@@ -66,6 +66,21 @@ export interface UserPublic {
   net_worth: number | null;
 }
 
+export interface AuthUser {
+  user_id: string;
+  name: string;
+  email: string;
+  credits: number;
+}
+
+export interface EarningsRow {
+  event_id?: string;
+  ts: string;
+  agent_id: string;
+  amount: number;
+  judge_score: number | null;
+}
+
 export interface TaskSlots {
   max: number;
   available: number;
@@ -117,6 +132,14 @@ export interface AgentHiredEvent extends EventBase {
   type: "agent_hired";
   subtask_id: string;
   agent_id: string;
+  price: number;
+  budget_remaining: number;
+}
+
+export interface SubtaskSkippedEvent extends EventBase {
+  type: "subtask_skipped";
+  subtask_id: string;
+  reason: string;
 }
 
 export interface TaskExecutedEvent extends EventBase {
@@ -195,6 +218,7 @@ export type FeedEvent =
   | TaskPostedEvent
   | CandidatesRankedEvent
   | AgentHiredEvent
+  | SubtaskSkippedEvent
   | TaskExecutedEvent
   | TaskScoredEvent
   | ReputationChangedEvent

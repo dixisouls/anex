@@ -287,3 +287,20 @@ input[type="number"] {
   color: var(--color-ink);
   font-weight: 600;
 }
+
+.auth-input {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  background: var(--color-base);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  outline: none;
+}
+.auth-input::placeholder {
+  color: var(--color-faint);
+}
+.auth-input:focus {
+  border-color: var(--color-gold-dim);
+}

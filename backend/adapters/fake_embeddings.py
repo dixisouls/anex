@@ -41,7 +41,7 @@ def _hash_feature(feature: str) -> tuple[int, float]:
 
 
 class FakeEmbeddings:
-    def embed(self, text: str) -> np.ndarray:
+    def embed(self, text: str, *, task_type: str = "RETRIEVAL_DOCUMENT") -> np.ndarray:
         vec = np.zeros(VECTOR_DIM, dtype=np.float32)
         for feature in _features(text):
             bucket, sign = _hash_feature(feature)
@@ -51,5 +51,5 @@ class FakeEmbeddings:
             vec /= norm
         return vec
 
-    def embed_bytes(self, text: str) -> bytes:
-        return self.embed(text).tobytes()
+    def embed_bytes(self, text: str, *, task_type: str = "RETRIEVAL_DOCUMENT") -> bytes:
+        return self.embed(text, task_type=task_type).tobytes()

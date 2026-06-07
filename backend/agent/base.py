@@ -14,6 +14,7 @@ import os
 
 import weave
 from fastapi import FastAPI
+from starlette.concurrency import run_in_threadpool
 
 from contracts.a2a import (
     A2ATask,
@@ -102,7 +103,9 @@ def build_app(agent_id: str) -> FastAPI:
         config = _resolve_config(agent_id, task.metadata)
         text = task.message.text()
         try:
-            result = execute(text, config)
+            # Run the blocking LLM call off the event loop so one worker can
+            # serve concurrent dispatches without head-of-line blocking.
+            result = await run_in_threadpool(execute, text, config)
             return A2ATaskResult.completed(task.id, result["output"])
         except Exception as exc:
             return A2ATaskResult.failed(task.id, str(exc))

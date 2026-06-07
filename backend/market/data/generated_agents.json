@@ -1,0 +1,3266 @@
+[
+  {
+    "agent_id": "content-001",
+    "name": "Direct Response Copywriter",
+    "skills": [
+      "AIDA Framework",
+      "Sales Page Structuring",
+      "Conversion Rate Optimization",
+      "Emotional Triggers",
+      "Value Proposition Design"
+    ],
+    "capability_text": "This agent specializes in crafting high-converting sales landing pages and long-form promotional letters. It excels at leveraging psychological drivers and clear value propositions to prompt immediate reader action. By analyzing customer pain points, it generates compelling hooks and frictionless calls to action tailored to target demographics.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.12,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-002",
+    "name": "UX Microcopy Optimizer",
+    "skills": [
+      "Interface Microcopy",
+      "Conversion Rate Optimization",
+      "Usability Heuristics",
+      "Call-to-Action Design",
+      "A/B Test Ideation"
+    ],
+    "capability_text": "This agent designs high-impact, short-form copy for digital interfaces, focusing on buttons, headers, and form fields. It excels at turning ambiguous UI elements into intuitive, action-oriented directives that guide users effortlessly through checkout and signup funnels. By analyzing user behavior paths, it delivers microcopy that reduces friction and maximizes conversion metrics.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.13,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-003",
+    "name": "B2B Whitepaper Architect",
+    "skills": [
+      "Technical Research",
+      "Industry Trend Analysis",
+      "Data Synthesis",
+      "Corporate Storytelling",
+      "Executive Summary Design"
+    ],
+    "capability_text": "This agent synthesizes complex industrial data and market research into authoritative, high-value whitepapers. It excels at framing technical innovations within a compelling business-value narrative that resonates with C-suite decision-makers. The resulting content establishes thought leadership and generates qualified leads by presenting rigorous solutions to industry challenges.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.14,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-004",
+    "name": "E-commerce Product Description Artisan",
+    "skills": [
+      "Feature-to-Benefit Translation",
+      "SEO Product Copy",
+      "Emotional Branding",
+      "Platform Spec Compliance",
+      "Sensory Language"
+    ],
+    "capability_text": "This agent crafts engaging, sensory-rich product detail pages that transform basic technical specifications into compelling buying motivations. It excels at finding the unique emotional hook for physical products, appealing directly to the customer's lifestyle. The resulting copy is highly optimized for search algorithms while remaining human-centric and persuasive.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.26,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-005",
+    "name": "Semantic SEO Blog Planner",
+    "skills": [
+      "Keyword Clustering",
+      "Search Intent Mapping",
+      "Topic Authority Modeling",
+      "SEO Content Outlining",
+      "On-Page Optimization"
+    ],
+    "capability_text": "This agent generates highly structured, search-optimized blog outlines and comprehensive articles based on deep semantic keyword grouping. It excels at matching search intent and structuring content with precise heading hierarchies to capture search engine snippets. The agent guarantees that every article systematically covers secondary search terms to build immediate topical authority.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.23,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-006",
+    "name": "Technical API Blogger",
+    "skills": [
+      "API Integration Explainers",
+      "Markdown Formatting",
+      "Developer Relations Copy",
+      "Code-to-Text Translation",
+      "Tech Stack Architecture"
+    ],
+    "capability_text": "This agent translates complex software architecture and API behaviors into highly readable, developer-friendly blog posts. It excels at integrating code snippets seamlessly into narrative explanations, guiding engineers through technical integrations. By maintaining an authentic developer-to-developer tone, it builds brand trust within technical communities.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.19,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-007",
+    "name": "Thought Leadership Essayist",
+    "skills": [
+      "Anecdotal Storytelling",
+      "Trend Forecasting",
+      "Opinion Piece Writing",
+      "Metaphor Construction",
+      "Tone Adaptation"
+    ],
+    "capability_text": "This agent drafts compelling, perspective-shifting essays designed to position business executives as industry pioneers. It excels at synthesizing raw executive thoughts and contrarian industry perspectives into polished, publishable prose. The resulting content challenges status quos and stimulates engagement across platforms like Medium, Substack, and premium industry publications.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.26,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-008",
+    "name": "Affiliate Product Reviewer",
+    "skills": [
+      "Pros-and-Cons Analysis",
+      "Buying Guide Creation",
+      "Comparative Copywriting",
+      "Neutral Tone Balancing",
+      "Affiliate Link Integration"
+    ],
+    "capability_text": "This agent writes objective, highly structured product reviews and \"best of\" roundup articles optimized for affiliate conversions. It excels at systematically breaking down product features into real-world pros and cons, helping buyers make confident purchasing decisions. The copy balances promotional goals with objective critique to build long-term reader trust.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.24,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-009",
+    "name": "Developer SDK Documenter",
+    "skills": [
+      "Technical Reference Writing",
+      "Markdown Schema",
+      "SDK Onboarding Guides",
+      "Code Commenting",
+      "Developer UX"
+    ],
+    "capability_text": "This agent generates clear, precise reference manuals and getting-started guides for software development kits. It excels at organizing complex class hierarchies and function calls into logical, easily navigable documentation structures. The agent ensures that setup instructions are foolproof, minimizing developer friction and reducing technical support tickets.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.17,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-010",
+    "name": "Interactive SOP Designer",
+    "skills": [
+      "Standard Operating Procedures",
+      "Process Mapping",
+      "Plain Language Writing",
+      "Workflow Standardization",
+      "Internal Compliance"
+    ],
+    "capability_text": "This agent transforms chaotic internal company workflows into crystal-clear, step-by-step Standard Operating Procedures. It excels at removing ambiguity from corporate tasks, breaking complex operations down into actionable, sequential instructions. The output helps companies onboard new employees faster and maintain strict quality control standards.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.32,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-011",
+    "name": "Help Center Knowledge Architect",
+    "skills": [
+      "Self-Service Content",
+      "Troubleshooting Guides",
+      "Search-Optimized FAQ",
+      "Empathy-Driven Technical Writing",
+      "Information Hierarchy"
+    ],
+    "capability_text": "This agent crafts comprehensive customer self-service articles and troubleshooting matrices for online help centers. It excels at using empathetic, simple language to guide frustrated users through resolving software or hardware issues. The agent structures content to be highly searchable, drastically lowering support ticket volumes.",
+    "model": "gpt-5.5",
+    "margin": 0.21,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-012",
+    "name": "Corporate Policy Documenter",
+    "skills": [
+      "Compliance Copywriting",
+      "Risk Mitigation Tone",
+      "Policy Standardization",
+      "Legalese-to-Plain-English",
+      "Internal Communications"
+    ],
+    "capability_text": "This agent drafts clear, regulatory-compliant corporate policies, employee handbooks, and code of conduct guidelines. It excels at translating complex legal requirements into easily digestible guidelines that employees can readily understand and apply. The resulting documentation minimizes liability while fostering a transparent corporate culture.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.12,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-013",
+    "name": "YouTube Retention Scriptwriter",
+    "skills": [
+      "Engagement Hook Creation",
+      "Video Retention Dynamics",
+      "Visual Cues Design",
+      "Pacing & Timing",
+      "Call-to-Action Seeding"
+    ],
+    "capability_text": "This agent writes high-retention video scripts for YouTube, focusing on immediate hook execution and structured narrative payoffs. It excels at embedding visual and auditory pattern interrupts directly into the script to combat viewer drop-off. The narrative structure balances informational delivery with entertainment value to boost platform algorithmic performance.",
+    "model": "gpt-4.1",
+    "margin": 0.1,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-014",
+    "name": "B2B Explainer Scripter",
+    "skills": [
+      "Dual-Column Scripting",
+      "Voiceover Cadence",
+      "Visual Cue Mapping",
+      "Elevator Pitch Framing",
+      "Problem-Solution Structure"
+    ],
+    "capability_text": "This agent creates highly structured scripts for corporate and product explainer videos, utilizing a dual-column format that separates audio from visual cues. It excels at condensing complex software or enterprise offerings into simple, 60-second value propositions. The scripts are perfectly paced to match standard voiceover speeds and visual animation flows.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.3,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-015",
+    "name": "Podcast Narrative Outliner",
+    "skills": [
+      "Conversational Flow Design",
+      "Question Structuring",
+      "Story Arc Mapping",
+      "Host Transition Notes",
+      "Listener Hooking"
+    ],
+    "capability_text": "This agent maps out detailed narrative flows, guest interview structures, and research profiles for podcast hosts. It excels at designing open-ended questions and dynamic segment transitions that foster natural, highly engaging conversations. The outlines provide a perfect balance of structure and flexibility, keeping episodes on-theme while allowing organic moments.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.26,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-016",
+    "name": "Short-Form Viral Scripter",
+    "skills": [
+      "Looping Script Design",
+      "High-Energy Hooks",
+      "Platform Optimization",
+      "On-Screen Text Planning",
+      "Trend Adaptation"
+    ],
+    "capability_text": "This agent designs rapid-fire, 15-to-60-second scripts tailored specifically for TikTok, YouTube Shorts, and Instagram Reels. It excels at generating immediate visual hooks and seamless script loops that encourage repeated video views. Each script includes precise pacing directives, on-screen text placements, and gesture cues to maximize algorithmic reach.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.13,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-017",
+    "name": "LinkedIn Executive Ghostwriter",
+    "skills": [
+      "Corporate Storytelling",
+      "White-Space Formatting",
+      "Professional Hook Curation",
+      "Personal Brand Voice",
+      "Algorithm Optimization"
+    ],
+    "capability_text": "This agent crafts engaging professional narratives and business lessons specifically optimized for the LinkedIn feed. It excels at turning dry industry milestones into compelling stories of growth, leadership, and resilience. The output is structured with the characteristic readability and spacing required to maximize platform engagement and establish authority.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.12,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-018",
+    "name": "X Thread Engineer",
+    "skills": [
+      "Micro-Hook Curation",
+      "Information Condensation",
+      "Thread Structure Layout",
+      "Viral Pacing",
+      "Engagement CTAs"
+    ],
+    "capability_text": "This agent decomposes complex ideas, books, or case studies into highly engaging, viral X (formerly Twitter) threads. It excels at writing hyper-optimized opening tweets that capture immediate attention in fast-moving feeds. Every tweet in the thread is designed to stand alone while driving readers forward to the final conversion goal.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.2,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-019",
+    "name": "Pinterest SEO Strategist",
+    "skills": [
+      "Pinterest SEO",
+      "Visual Description Copy",
+      "Board Organization",
+      "Rich Pin Optimization",
+      "Alt-Text Copywriting"
+    ],
+    "capability_text": "This agent generates highly descriptive, keyword-rich copy for Pinterest pin descriptions, board titles, and alt text. It excels at identifying high-volume search terms on Pinterest and blending them into natural, action-oriented descriptions. The output is designed to drive massive referral traffic to e-commerce storefronts and blogs.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.11,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-020",
+    "name": "Reddit Community Communicator",
+    "skills": [
+      "Platform Etiquette Adaptation",
+      "Authentic Engagement Tone",
+      "Niche Subreddit Customization",
+      "Subtle Product Placement",
+      "Conversational Writing"
+    ],
+    "capability_text": "This agent crafts helpful, highly contextual responses for community platforms like Reddit and Quora. It excels at adopting the precise colloquial tone of individual niche subreddits to avoid looking like spam. The responses subtly integrate product recommendations as organic solutions to user-reported pain points.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.28,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-021",
+    "name": "Brand Voice Guide Architect",
+    "skills": [
+      "Brand Identity Mapping",
+      "Tone Matrix Creation",
+      "Do/Don't Vocabulary Lists",
+      "Style Guide Development",
+      "Copywriting Directives"
+    ],
+    "capability_text": "This agent builds comprehensive brand voice guidelines and corporate style guides from the ground up. It excels at defining a brand's unique tonal attributes and translating them into concrete writing instructions with side-by-side examples. The guide serves as a unified reference point, ensuring editorial consistency across global marketing teams.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.18,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-022",
+    "name": "Brand Naming Specialist",
+    "skills": [
+      "Linguistic Auditing",
+      "Tagline Ideation",
+      "Brand Association Mapping",
+      "Trademark Pre-screening",
+      "Domain Availability Strategy"
+    ],
+    "capability_text": "This agent generates creative, linguistically sound names for brands, products, features, and campaigns. It excels at conducting deep semantic exploration to uncover punchy, memorable monikers that evoke the desired emotional response. Each naming suggestion is accompanied by matching tagline concepts and strategic rationales for market positioning.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.12,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-023",
+    "name": "Employer Brand Biographer",
+    "skills": [
+      "Company Culture Manifesto",
+      "Recruitment Copywriting",
+      "Employee Value Proposition",
+      "Job Description Elevation",
+      "HR Communications"
+    ],
+    "capability_text": "This agent drafts highly engaging culture manifestos, career pages, and employer-branding materials that attract top-tier talent. It excels at translating cold HR benefits into compelling stories about company life, values, and career growth. The resulting content helps companies build an authentic, inviting workplace reputation that eases recruitment.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.13,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-024",
+    "name": "Onboarding UX Writer",
+    "skills": [
+      "First-Time User Experience",
+      "Tooltip Instruction Copy",
+      "Progressive Disclosure Copy",
+      "Empty State Messaging",
+      "Interactive Microcopy"
+    ],
+    "capability_text": "This agent specializes in the critical microcopy of user onboarding flows, guiding new application sign-ups toward their first major action. It excels at drafting concise, friendly tooltips, empty-state screens, and walkthrough prompts that prevent early-stage churn. By minimizing cognitive load, it increases long-term software adoption rates.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.12,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-025",
+    "name": "Error UX Writer",
+    "skills": [
+      "Crisis Communications Tone",
+      "Technical Translation",
+      "Actionable Guidance",
+      "De-escalation Microcopy",
+      "Status Page Messaging"
+    ],
+    "capability_text": "This agent designs status updates, system downtime banners, and software error messages that resolve user frustration. It excels at translating dry, confusing code errors into polite, plain-English solutions that tell users exactly what to do next. The output maintains trust and keeps users calm, even during service outages or account issues.",
+    "model": "gpt-5.5",
+    "margin": 0.15,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-026",
+    "name": "IVR System Conversationalist",
+    "skills": [
+      "Interactive Voice Response",
+      "Vocal Path Mapping",
+      "Acoustic Pacing Design",
+      "Phone Tree Scripting",
+      "Conversational UI"
+    ],
+    "capability_text": "This agent scripts automated interactive voice response phone directories and customer support call pathways. It excels at writing short, clear spoken options that are easy to process aurally, minimizing caller confusion and drop-off. The script pacing is optimized for natural vocal delivery by automated text-to-speech engines.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.28,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-027",
+    "name": "Gamification Microcopy Motivator",
+    "skills": [
+      "Reward Mechanics Copy",
+      "Progress Milestones",
+      "Badge Description Design",
+      "Retention Psychology",
+      "Behavioral Nudges"
+    ],
+    "capability_text": "This agent drafts encouraging microcopy for app achievements, loyalty programs, streaks, and milestone notifications. It excels at using playful, urgency-free reinforcement language that builds healthy user engagement habits. The copy turns mundane interface milestones into exciting, rewarding digital accomplishments.",
+    "model": "gpt-4.1",
+    "margin": 0.28,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-028",
+    "name": "Newsletter Curator and Digestor",
+    "skills": [
+      "Content Aggregation Summaries",
+      "Editorial Hook Writing",
+      "Pithy Link Curation",
+      "Newsletter Layout Structuring",
+      "Skim-Friendly Writing"
+    ],
+    "capability_text": "This agent curates and digests high volumes of industry news into engaging, skim-friendly newsletter roundups. It excels at writing brief, insightful summaries of external articles that capture the main takeaway while teasing the click. The format is designed to deliver immediate value directly to busy professional inboxes.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.29,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-029",
+    "name": "Daily Habit Newsletter Writer",
+    "skills": [
+      "Habit-Forming Copywriting",
+      "Open Rate Optimization",
+      "Short-Form Digestibility",
+      "Community Connection Tone",
+      "Subject Line Engineering"
+    ],
+    "capability_text": "This agent drafts brief, high-frequency daily newsletters designed to build strong reader opening habits. It excels at delivering single, punchy insights or daily lessons in under 200 words, accompanied by high-curiosity subject lines. The consistent, personal-feeling tone fosters intense subscriber loyalty and high long-term engagement.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.32,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-030",
+    "name": "Cold Outreach Email Architect",
+    "skills": [
+      "Spam-Trigger Avoidance",
+      "B2B Personalization",
+      "Low-Friction CTAs",
+      "Email Deliverability Copy",
+      "Prospect Research Alignment"
+    ],
+    "capability_text": "This agent creates highly customized, spam-compliant cold email outbound sequences for sales and partnership outreach. It excels at identifying natural insertion points for prospect personalization, avoiding generic-sounding pitches. The copy is engineered to initiate conversations rather than push hard sales, maximizing response rates.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.3,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-031",
+    "name": "Executive Keynote Speechwriter",
+    "skills": [
+      "Rhetorical Device Design",
+      "Spoken Cadence Optimization",
+      "Stage Movement Integration",
+      "Verbal Hook Mapping",
+      "Audience Connection"
+    ],
+    "capability_text": "This agent drafts high-stakes keynote speeches, panel talking points, and opening remarks for corporate executives. It excels at structuring presentations around memorable narratives and rhythmic cadences designed specifically for the spoken voice. Each script includes precise performance notes, timing cues, and slide transitions to ensure a flawless delivery.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.15,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-032",
+    "name": "Book Proposal Planner",
+    "skills": [
+      "Publishing Pitch Creation",
+      "Market Competitive Analysis",
+      "Chapter-by-Chapter Outlining",
+      "Author Platform Framing",
+      "Publishing Industry Standards"
+    ],
+    "capability_text": "This agent drafts comprehensive non-fiction book proposals optimized for literary agents and traditional publishing houses. It excels at analyzing the target market, detailing competitive books, and building highly structured chapter-by-chapter summaries. The output packages raw intellectual property into a highly sellable commercial business case.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.29,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-033",
+    "name": "Memoir Voice Mirror",
+    "skills": [
+      "First-Person Narrative",
+      "Voice Mirroring",
+      "Biographical Sequencing",
+      "Sensory Scene Re-creation",
+      "Emotional Memoir Writing"
+    ],
+    "capability_text": "This agent ghostwrites long-form personal memoirs, adapting its tone to mimic the exact speaking style and personality of the author. It excels at restructuring unstructured life memories into compelling, chronologically sound narrative chapters. The output captures complex emotional realities and vivid scene-setting details, preserving authentic personal legacies.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.22,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "content-034",
+    "name": "Creative Worldbuilding Documentarian",
+    "skills": [
+      "Lore Bible Creation",
+      "Character Profile Design",
+      "Fictional Magic/Tech Systems",
+      "Consistent Narrative Timelines",
+      "Creative Genre Development"
+    ],
+    "capability_text": "This agent constructs incredibly detailed lore bibles, world systems, and narrative timelines for novelists, game developers, and screenwriters. It excels at mapping out logically consistent rules for fictional magic, futuristic technology, and historical fantasy societies. The resulting document acts as a definitive source of truth, preventing continuity errors in creative projects.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.29,
+    "tools": [],
+    "category": "content"
+  },
+  {
+    "agent_id": "engineering-001",
+    "name": "Legacy Code Migrator",
+    "skills": [
+      "COBOL",
+      "Java",
+      "Go",
+      "Refactoring",
+      "Code Translation"
+    ],
+    "capability_text": "This agent specializes in converting legacy, monolithic source code into high-performance, modern languages like Go or Rust. It analyzes complex, undocumented business logic to produce clean, modular, and fully tested codebases. Additionally, it excels at identifying and refactoring anti-patterns during the translation process.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.33,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-002",
+    "name": "Concurrency Optimizer",
+    "skills": [
+      "Thread Safety",
+      "Mutex",
+      "Deadlock Resolution",
+      "Async/Await",
+      "Race Conditions"
+    ],
+    "capability_text": "This agent is dedicated to analyzing multithreaded and asynchronous backend code to find and resolve concurrency issues. It excels at detecting race conditions, thread starvation, and deadlocks in complex software architectures. By refactoring lock mechanisms and suggesting lock-free data structures, it maximizes CPU utilization and runtime efficiency.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.24,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-003",
+    "name": "Distributed Consensus Architect",
+    "skills": [
+      "Raft",
+      "Paxos",
+      "ZooKeeper",
+      "Distributed Systems",
+      "State Machines"
+    ],
+    "capability_text": "This specialist agent designs and debugs distributed coordination systems that require high availability and strict consistency. It excels at implementing consensus protocols like Raft and Paxos to manage cluster state and leadership election. It also provides precise debugging of split-brain scenarios and network partition failures.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.29,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-004",
+    "name": "Web Accessibility Auditor",
+    "skills": [
+      "WCAG 2.2",
+      "WAI-ARIA",
+      "Screen Readers",
+      "Semantic HTML",
+      "A11y Testing"
+    ],
+    "capability_text": "This agent reviews frontend codebases to ensure absolute compliance with WCAG 2.2 accessibility standards. It specializes in injecting appropriate WAI-ARIA attributes, correcting HTML semantics, and establishing keyboard navigation flows. It guarantees that applications are highly usable by individuals using assistive technologies.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.16,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-005",
+    "name": "Micro-Frontend Orchestrator",
+    "skills": [
+      "Webpack 5",
+      "Module Federation",
+      "Single-SPA",
+      "Monorepos",
+      "State Sharing"
+    ],
+    "capability_text": "This agent specializes in the architectural design and integration of large-scale micro-frontend systems. It configures Webpack Module Federation, manages cross-application state sharing, and resolves version conflicts among shared dependencies. It excels at enabling multiple autonomous frontend teams to deploy independent features seamlessly.",
+    "model": "gpt-5.5",
+    "margin": 0.3,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-006",
+    "name": "CSS Layout Specialist",
+    "skills": [
+      "CSS Grid",
+      "Flexbox",
+      "GPU Acceleration",
+      "Responsive Design",
+      "Tailwind"
+    ],
+    "capability_text": "This specialist agent solves the most complex UI styling, layout rendering, and performance issues. It excels at building highly responsive layouts, debugging rendering bottlenecks, and optimizing animations using GPU hardware acceleration. It writes highly structured, scalable CSS that behaves consistently across all modern browsers.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.34,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-007",
+    "name": "WebAssembly Porter",
+    "skills": [
+      "WebAssembly",
+      "Rust",
+      "C++",
+      "Emscripten",
+      "JS Bindings"
+    ],
+    "capability_text": "This agent compiles heavy computation logic written in C++ or Rust into highly efficient WebAssembly modules for browser execution. It excels at designing ultra-fast memory bridges and JS bindings to minimize boundary-crossing overhead. It is perfect for porting heavy video editors, game engines, or complex math solvers to web platforms.",
+    "model": "gpt-4.1",
+    "margin": 0.11,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-008",
+    "name": "Cloud Data FinOps",
+    "skills": [
+      "Snowflake",
+      "BigQuery",
+      "Cost Optimization",
+      "SQL Tuning",
+      "Resource Allocation"
+    ],
+    "capability_text": "This agent focuses exclusively on reducing the operational costs of cloud-native data warehouses like Snowflake and BigQuery. It analyzes historic query logs to pinpoint inefficient execution plans, designs better clustering keys, and optimizes storage tiering. It excels at delivering dramatic database cost savings without sacrificing query performance.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.2,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-009",
+    "name": "CDC Integration Specialist",
+    "skills": [
+      "Debezium",
+      "Apache Kafka",
+      "Schema Registry",
+      "CDC",
+      "Event-Driven"
+    ],
+    "capability_text": "This agent designs real-time data replication systems using Change Data Capture technologies. It excels at setting up Debezium connectors, configuring Kafka topics, and managing schemas through Schema Registries to prevent breaking changes. It ensures transactional integrity and minimal lag during streaming database synchronization.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.22,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-010",
+    "name": "Graph Database Architect",
+    "skills": [
+      "Neo4j",
+      "Cypher",
+      "GraphQL",
+      "Ontology Design",
+      "Index Tuning"
+    ],
+    "capability_text": "This specialist agent designs highly performant graph schemas and writes optimal traversal queries for graph databases like Neo4j. It excels at structuring complex relationships, defining entity ontologies, and optimizing Cypher queries to prevent search performance degradation. It is ideal for fraud detection, recommendation engines, and social network backends.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.14,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-011",
+    "name": "LLM Quantization Specialist",
+    "skills": [
+      "GGML/GGUF",
+      "GPTQ",
+      "ONNX Runtime",
+      "Model Distillation",
+      "TensorRT"
+    ],
+    "capability_text": "This agent specializes in optimizing large language models for deployment on resource-constrained edge devices or low-cost server hardware. It excels at performing model quantization, pruning redundant layers, and distilling knowledge into smaller student networks. It ensures minimal accuracy loss while significantly reducing VRAM footprint and inference latency.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.16,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-012",
+    "name": "Vector Database Tuner",
+    "skills": [
+      "Pinecone",
+      "Milvus",
+      "HNSW Indexing",
+      "Cosine Similarity",
+      "Metadata Filtering"
+    ],
+    "capability_text": "This agent specializes in configuring and tuning high-performance vector databases for similarity search. It excels at optimizing Hierarchical Navigable Small World indexes to balance query recall, precision, and latency. It also builds efficient metadata filtering strategies to speed up hybrid search queries.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.14,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-013",
+    "name": "LLM Guardrail Developer",
+    "skills": [
+      "NeMo Guardrails",
+      "LlamaGuard",
+      "Prompt Injection Defense",
+      "PII Redaction",
+      "Output Validation"
+    ],
+    "capability_text": "This agent builds runtime security wrappers and validation layers around LLMs to prevent prompt injection and data exfiltration. It excels at configuring moderation models, redacting sensitive data in real-time, and structuring rigid output formats from unstructured model responses. It ensures AI agents remain safe, compliant, and predictable in production.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.21,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-014",
+    "name": "Edge ML Compiler",
+    "skills": [
+      "TensorFlow Lite",
+      "CoreML",
+      "ONNX",
+      "Edge TPU",
+      "Hardware Acceleration"
+    ],
+    "capability_text": "This specialist compiles, optimizes, and deploys deep learning models onto specific edge hardware like iOS, Android, and embedded devices. It excels at converting model architectures into formats like CoreML or TensorFlow Lite and tuning execution delegates for NPUs. It maximizes hardware utilization while keeping battery consumption to a minimum.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.14,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-015",
+    "name": "Terraform Recovery Specialist",
+    "skills": [
+      "Terraform State",
+      "Infrastructure Drift",
+      "HCL",
+      "State Migration",
+      "Import Blocks"
+    ],
+    "capability_text": "This agent specializes in resolving catastrophic infrastructure-as-code failures, corrupted Terraform state files, and undocumented infrastructure drift. It excels at safely manipulating JSON state targets, generating missing HCL import blocks, and synchronizing reality with code. It mitigates the risk of accidental resource destruction during complex platform migrations.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.22,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-016",
+    "name": "Kubernetes FinOps Specialist",
+    "skills": [
+      "Kubecost",
+      "Horizontal Pod Autoscaler",
+      "Spot Instances",
+      "Resource Limits",
+      "Prometheus"
+    ],
+    "capability_text": "This agent monitors and optimizes Kubernetes clusters to reduce idle compute waste and lower cloud bills. It excels at fine-tuning pod resource requests, setting up dynamic autoscaling profiles, and configuring spot instance interruption handlers. It balances workload reliability with maximum cost efficiency.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.31,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-017",
+    "name": "CI/CD Speed Runner",
+    "skills": [
+      "GitHub Actions",
+      "Docker Caching",
+      "Buildkit",
+      "Parallel Workflows",
+      "Webpack/Vite Speed"
+    ],
+    "capability_text": "This agent is dedicated to diagnosing and fixing slow, bloated CI/CD pipelines to improve developer velocity. It excels at optimizing Docker layer caching, parallelizing unit testing jobs, and caching package manager dependencies across runs. It turns frustrating, hours-long pipeline builds into streamlined, minutes-long runs.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.19,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-018",
+    "name": "Chaos Engineering Simulator",
+    "skills": [
+      "Chaos Mesh",
+      "Gremlin",
+      "Latency Injection",
+      "Network Partitioning",
+      "Resilience Audits"
+    ],
+    "capability_text": "This specialist agent systematically injects synthetic faults, latency spikes, and network partitions into cloud environments to test system resilience. It excels at establishing baseline telemetry metrics, creating automated chaos experiments, and highlighting single points of failure. It helps engineering teams build self-healing architectures that survive real-world outages.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.27,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-019",
+    "name": "Flaky Test Detective",
+    "skills": [
+      "Playwright",
+      "Cypress",
+      "Jest",
+      "State Isolation",
+      "Network Mocking"
+    ],
+    "capability_text": "This agent analyzes testing suites to identify, isolate, and refactor flaky, non-deterministic tests. It excels at diagnosing race conditions in asynchronous assertions, fixing uncleaned database states, and replacing unstable real network calls with robust mocks. It restores team trust in CI test pipelines by eliminating false-positive failures.",
+    "model": "gpt-5.5",
+    "margin": 0.15,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-020",
+    "name": "Mutation Testing Analyst",
+    "skills": [
+      "Stryker Mutator",
+      "Pitest",
+      "Code Coverage",
+      "Assertion Strength",
+      "Bug Simulation"
+    ],
+    "capability_text": "This specialist agent uses mutation testing to assess the true quality and strength of a software test suite. It injects deliberate, subtle bugs into your actual application code and verifies whether your test suite successfully catches them. It provides detailed reports on weak assertions and untested logical execution paths.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.27,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-021",
+    "name": "Load Testing Architect",
+    "skills": [
+      "k6",
+      "Locust",
+      "JMeter",
+      "Spike Testing",
+      "Grafana Dashboards"
+    ],
+    "capability_text": "This agent designs and executes extreme performance, load, and stress tests to find system breaking points. It excels at writing complex user behavior simulation scripts in tools like k6 and configuring distributed load generators. It analyzes system performance metrics under heavy traffic to identify memory leaks and database connection bottlenecks.",
+    "model": "gpt-4.1",
+    "margin": 0.17,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-022",
+    "name": "Dependency Patching Agent",
+    "skills": [
+      "CVE Remediation",
+      "Dependabot",
+      "Semantic Versioning",
+      "Regression Testing",
+      "Snyk"
+    ],
+    "capability_text": "This agent monitors and automatically resolves high-severity security vulnerabilities in third-party software dependencies. It excels at finding safe, non-breaking upgrade paths by parsing semantic versioning constraints and executing localized regression tests. It eliminates security technical debt while preserving application stability.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.32,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-023",
+    "name": "OAuth2 Protocol Auditor",
+    "skills": [
+      "OAuth 2.1",
+      "OIDC",
+      "PKCE Flow",
+      "JWT Validation",
+      "Auth0/Okta"
+    ],
+    "capability_text": "This specialist agent analyzes and secures identity and authorization implementations across microservices and frontend clients. It excels at configuring OAuth 2.1 authorization flows, validating JSON Web Tokens, and auditing scopes to prevent privilege escalation. It ensures absolute compliance with modern secure-identity standards.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.32,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-024",
+    "name": "Git Secret Purger",
+    "skills": [
+      "BFG Repo-Cleaner",
+      "Git History",
+      "Trufflehog",
+      "API Rotation",
+      "Key Revocation"
+    ],
+    "capability_text": "This agent scans entire Git revision histories to detect, extract, and completely purge leaked secrets like API keys and private certificates. It excels at rewriting remote git history safely without corrupting branch trees, and provides instructions for programmatic key revocation. It acts as a rapid-response tool when high-risk secrets are accidentally committed.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.2,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-025",
+    "name": "Custom SAST Rulewriter",
+    "skills": [
+      "Semgrep",
+      "SonarQube",
+      "AST Parsing",
+      "RegEx Security",
+      "Static Analysis"
+    ],
+    "capability_text": "This agent writes customized Abstract Syntax Tree patterns and Static Application Security Testing rules to find domain-specific code violations. It excels at creating rules in Semgrep and SonarQube to catch custom API misuse, insecure coding patterns, and compliance failures. It integrates security policies directly into the IDE and PR process.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.31,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-026",
+    "name": "React Native Bridger",
+    "skills": [
+      "Objective-C",
+      "Java/Kotlin",
+      "C++ Turbo Modules",
+      "JSI Integration",
+      "React Native"
+    ],
+    "capability_text": "This specialist agent designs custom, high-performance native bridges and JSI Turbo Modules for React Native applications. It excels at interfacing complex JavaScript code with underlying iOS and Android native OS APIs. It resolves complex thread-jumping issues between the JS runtime and native UI thread.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.28,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-027",
+    "name": "App Store Publisher",
+    "skills": [
+      "Fastlane",
+      "TestFlight",
+      "Google Play Console",
+      "App Store Connect",
+      "Provisioning Profiles"
+    ],
+    "capability_text": "This agent automates the end-to-end deployment pipeline for mobile applications to both Apple App Store and Google Play. It excels at configuring Fastlane scripts, managing signing certificates and provisioning profiles, and coordinating multi-track beta releases. It removes the manual frustration of native mobile application delivery.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.25,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-028",
+    "name": "Mobile Memory Debugger",
+    "skills": [
+      "Xcode Instruments",
+      "LeakCanary",
+      "Memory Profiling",
+      "Android Profiler",
+      "Garbage Collection"
+    ],
+    "capability_text": "This agent identifies, traces, and fixes memory leaks, excessive garbage collection, and heap bloat in native and cross-platform mobile apps. It excels at analyzing Xcode Instruments allocations and Android Profiler heap dumps to find circular references and unreleased resources. It keeps mobile applications running fast and prevents unexpected OS-level out-of-memory terminations.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.16,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-029",
+    "name": "PostgreSQL Query Optimizer",
+    "skills": [
+      "EXPLAIN ANALYZE",
+      "Index Optimization",
+      "Autovacuum Tuning",
+      "PgBouncer",
+      "SQL Refactoring"
+    ],
+    "capability_text": "This specialist agent diagnoses and repairs performance bottlenecks in PostgreSQL databases. It excels at interpreting complex EXPLAIN ANALYZE outputs, suggesting multi-column or partial indexes, and tuning autovacuum configurations. It ensures high throughput and low execution times for complex transactional queries under massive scale.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.17,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-030",
+    "name": "Zero-Downtime Migration Planner",
+    "skills": [
+      "Blue-Green Schema",
+      "Flyway/Liquibase",
+      "Dual Writing",
+      "Backward Compatibility",
+      "Feature Flags"
+    ],
+    "capability_text": "This agent designs reliable, zero-downtime database migration plans using patterns like Expand and Contract. It excels at ensuring that database schema modifications are fully backward-compatible with active application instances during blue-green deployments. It avoids system locks and data corruption during structural changes.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.24,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-031",
+    "name": "NoSQL Partition Key Tuner",
+    "skills": [
+      "DynamoDB",
+      "Cassandra",
+      "Partition Keys",
+      "Hot Spots",
+      "GSI/LSI"
+    ],
+    "capability_text": "This agent designs optimal data distribution schemas for non-relational databases like Cassandra and AWS DynamoDB. It excels at selecting partition and sort keys that distribute write loads evenly across clusters, preventing performance-killing hot partitions. It also designs cost-efficient Global Secondary Indexes to optimize read path costs.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.16,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-032",
+    "name": "OpenAPI & SDK Architect",
+    "skills": [
+      "OpenAPI Spec 3.1",
+      "Swagger",
+      "SDK Generation",
+      "TypeScript Types",
+      "API Validation"
+    ],
+    "capability_text": "This agent maintains, validates, and refactors OpenAPI schemas to enforce strict design standards across microservices. It excels at generating highly accurate, typed client SDKs in multiple languages directly from API contracts. It ensures contract consistency and eliminates drift between API server implementations and client consumers.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.25,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-033",
+    "name": "API Rate Limiter",
+    "skills": [
+      "Redis Token Bucket",
+      "Sliding Window",
+      "API Gateway",
+      "Kong/Envoy",
+      "DDoS Mitigation"
+    ],
+    "capability_text": "This agent designs and implements scalable, low-latency rate limiting and throttling strategies at the API gateway layer. It excels at writing custom Redis-backed algorithms to protect backend services from abusive traffic and scraping attempts. It ensures high-availability and fair resource sharing among tenants.",
+    "model": "gpt-5.5",
+    "margin": 0.25,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "engineering-034",
+    "name": "gRPC Protocol Architect",
+    "skills": [
+      "gRPC",
+      "Protocol Buffers",
+      "HTTP/2",
+      "Multiplexing",
+      "Streaming APIs"
+    ],
+    "capability_text": "This agent specializes in designing low-latency, high-throughput inter-service communication systems using gRPC and Protocol Buffers. It excels at structuring highly backward-compatible Protobuf message contracts and optimizing HTTP/2 network connection multiplexing. It is perfect for microservice backends that require lightning-fast, bi-directional streaming APIs.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.21,
+    "tools": [],
+    "category": "engineering"
+  },
+  {
+    "agent_id": "research-001",
+    "name": "Geopolitical Risk Forecaster",
+    "skills": [
+      "Macroeconomic modeling",
+      "Sovereign risk assessment",
+      "Conflict escalation tracking",
+      "Predictive intelligence",
+      "Scenario mapping"
+    ],
+    "capability_text": "This agent excels at analyzing regional stability, supply chain choke points, and political developments to predict global operational risks. It monitors multi-language state media, diplomatic statements, and economic indicators to calculate sovereign risk scores. Users receive structured scenario matrices outlining best, worst, and most likely outcomes for cross-border investments.",
+    "model": "gpt-4.1",
+    "margin": 0.15,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-002",
+    "name": "Clinical Trial Protocol Analyst",
+    "skills": [
+      "FDA guidelines compliance",
+      "Patient eligibility modeling",
+      "Statistical power analysis",
+      "Cohort design validation",
+      "Adverse event profiling"
+    ],
+    "capability_text": "This specialist dissects draft clinical trial protocols to identify design flaws, recruitment bottlenecks, and compliance risks. It benchmarks proposed trial parameters against historical clinical registry data to optimize sample sizes and endpoint definitions. It excels at identifying prospective participant inclusion and exclusion conflicts to streamline regulatory approval pipelines.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.34,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-003",
+    "name": "SaaS Competitor Feature Mapper",
+    "skills": [
+      "Feature gap analysis",
+      "Pricing tier dissection",
+      "Product roadmap inference",
+      "User review scraping",
+      "Release note tracking"
+    ],
+    "capability_text": "This agent systematically audits and maps the product features of competing software-as-a-service platforms. It monitors release notes, public documentation, API changes, and user forums to build an interactive, living feature matrix. It excels at identifying competitive functional gaps and predicting your rivals' upcoming product updates.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.15,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-004",
+    "name": "Patent Prior Art Searcher",
+    "skills": [
+      "Patent classification mapping",
+      "Keyword proximity search",
+      "Non-patent literature review",
+      "FTO risk analysis",
+      "Claim chart generation"
+    ],
+    "capability_text": "This agent specializes in identifying global prior art to assess the patentability of new inventions and mitigate Freedom to Operate (FTO) risks. It scans USPTO, EPO, WIPO, and academic databases using advanced semantic search strategies and Boolean logic. It excels at producing structured claim charts comparing proposed inventions against existing patents to highlight potential infringement vulnerabilities.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.21,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-005",
+    "name": "Consumer Sentiment Cohort Tracker",
+    "skills": [
+      "Micro-cohort segmenting",
+      "Emotional arc analysis",
+      "Brand health tracking",
+      "Natural language processing",
+      "Trend inflection mapping"
+    ],
+    "capability_text": "This agent parses social media, review sites, and focus group transcripts to map nuanced consumer sentiment shifts over time. It segments target audiences into highly specific micro-cohorts to track differing reactions to product launches and marketing campaigns. The agent excels at detecting the early warning signs of brand dissatisfaction and identifying emerging cultural trends before they go mainstream.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.28,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-006",
+    "name": "Alternative Data Financial Engine",
+    "skills": [
+      "Satellite imagery processing",
+      "Credit card swipe analysis",
+      "Foot traffic estimation",
+      "E-commerce scraping",
+      "Predictive revenue modeling"
+    ],
+    "capability_text": "This agent transforms unstructured alternative datasets into actionable predictive inputs for financial valuation models. It processes atypical data feeds, such as satellite parking lot traffic, shipping manifests, and app download velocity, to forecast corporate revenue beats or misses. It excels at giving buy-side analysts a quantifiable information edge ahead of quarterly earnings releases.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.16,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-007",
+    "name": "Municipal Bond Compliance Auditor",
+    "skills": [
+      "Disclosure monitoring",
+      "Debt covenant analysis",
+      "Tax-exempt rule verification",
+      "Credit rating tracking",
+      "ESG risk scoring"
+    ],
+    "capability_text": "This agent specializes in auditing municipal bond issuances and tracking ongoing compliance with secondary market disclosure requirements. It constantly parses the EMMA database, municipal financial statements, and local legislative records to flag potential default risks or covenant violations. It excels at identifying discrepancies in fund allocations and evaluating the climate risk profiles of regional infrastructure projects.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.24,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-008",
+    "name": "Qualitative UX Interview Synthesizer",
+    "skills": [
+      "Thematic coding",
+      "Friction point mapping",
+      "User need extraction",
+      "Quote categorization",
+      "Affinity diagramming"
+    ],
+    "capability_text": "This agent processes raw transcripts and recordings from qualitative user research sessions to extract high-value insights. It uses advanced thematic coding to group user frustrations, desires, and mental models into structured affinity diagrams. It excels at translating disorganized conversational data into actionable design recommendations and concrete feature requests.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.28,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-009",
+    "name": "Bioinformatics Gene Sequence Annotator",
+    "skills": [
+      "Genomic variant calling",
+      "Phylogenetic analysis",
+      "Functional annotation",
+      "CRISPR target design",
+      "Omics data integration"
+    ],
+    "capability_text": "This agent processes raw genomic sequencing data to identify, categorize, and annotate genetic variants of interest. It references global bio-databases to predict the functional impact of single nucleotide polymorphisms (SNPs) on protein structures. It excels at accelerating target discovery for genetic therapeutics by automating high-throughput phylogenetic and pathway analyses.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.13,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-010",
+    "name": "AML Transaction Tracer",
+    "skills": [
+      "Layering pattern detection",
+      "Shell company mapping",
+      "UBO identification",
+      "Transaction reconstruction",
+      "Risk scoring"
+    ],
+    "capability_text": "This agent analyzes complex financial transaction ledgers to detect patterns indicative of money laundering, structuring, or sanctions evasion. It cross-references public registries to map ultimate beneficial ownership (UBO) chains and spot hidden corporate linkages. It excels at reconstructing fragmented asset flows and generating structured Suspicious Activity Reports (SARs) for compliance officers.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.23,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-011",
+    "name": "Local Zoning Land-Use Analyst",
+    "skills": [
+      "Zoning code parsing",
+      "Development feasibility modeling",
+      "Variance risk assessment",
+      "Permit history tracking",
+      "GIS data overlay"
+    ],
+    "capability_text": "This agent evaluates real estate development sites by analyzing local municipal codes, zoning maps, and land-use regulations. It instantly determines maximum building heights, density limits, setback requirements, and parking minimums for specified parcels. It excels at identifying the likelihood of securing variances and spotting historic preservation or environmental overlay restrictions.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.32,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-012",
+    "name": "E-commerce Pricing Elasticity Modeler",
+    "skills": [
+      "Dynamic pricing optimization",
+      "Competitor price monitoring",
+      "Demand curve modeling",
+      "Discount simulation",
+      "Revenue maximization"
+    ],
+    "capability_text": "This agent analyzes transaction histories, competitor pricing shifts, and seasonal inventory levels to calculate price elasticity of demand for retail SKUs. It runs Monte Carlo simulations to predict how price increases or decreases will affect overall conversion rates and net profit margins. It excels at formulating optimal real-time promotional strategy configurations to clear stagnant inventory without cannibalizing margin.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.27,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-013",
+    "name": "Environmental Impact Assessment Evaluator",
+    "skills": [
+      "NEPA compliance checking",
+      "Biodiversity impact assessment",
+      "Carbon footprint modeling",
+      "Hydrological risk analysis",
+      "Mitigation strategy formulation"
+    ],
+    "capability_text": "This agent audits Environmental Impact Assessments (EIAs) for infrastructure, mining, and energy projects to ensure absolute compliance with national regulations. It cross-references regional ecological databases to identify endangered species habitats, wetlands, and tribal land overlaps. It excels at identifying hidden ecological liabilities and drafting robust, defensible environmental mitigation strategies.",
+    "model": "gpt-5.5",
+    "margin": 0.28,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-014",
+    "name": "Crypto On-Chain Data Investigator",
+    "skills": [
+      "Smart contract auditing",
+      "Address clustering",
+      "Liquidity pool monitoring",
+      "Exploit trace analysis",
+      "DeFi protocol profiling"
+    ],
+    "capability_text": "This agent tracks block-by-block transactions across EVM and non-EVM blockchains to uncover security exploits, wash trading, and insider activity. It clusters wallet addresses to trace the origin of stolen or high-value funds through decentralized exchanges and mixers. It excels at delivering granular structural flow charts of complex decentralized finance (DeFi) exploits and systemic liquidity events.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.33,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-015",
+    "name": "Product Heuristic Usability Auditor",
+    "skills": [
+      "Heuristic evaluation",
+      "Accessibility compliance verification",
+      "Information architecture review",
+      "Friction mapping",
+      "Cognitive walkthrough modeling"
+    ],
+    "capability_text": "This agent systematically reviews website and mobile application interfaces against established UX design principles and WCAG accessibility standards. It identifies specific violations related to system status visibility, error prevention, and user control, assigning severity scores to each issue. It excels at delivering prioritized, wireframe-level improvement recommendations to dramatically reduce user drop-offs.",
+    "model": "gpt-4.1",
+    "margin": 0.29,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-016",
+    "name": "Supply Chain Vulnerability Mapper",
+    "skills": [
+      "N-tier supplier mapping",
+      "Geopolitical risk overlays",
+      "Logistics bottleneck detection",
+      "Alternative sourcing discovery",
+      "Lead-time optimization"
+    ],
+    "capability_text": "This agent models complex global supply chains down to tier-three and tier-four component suppliers to expose single points of failure. It overlays real-time labor disputes, weather patterns, and tariff fluctuations to calculate operational resilience scores. It excels at recommending pre-vetted alternative sourcing routes and safety-stock thresholds to mitigate sudden manufacturing stoppages.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.3,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-017",
+    "name": "Federal Lobbying Disclosure Auditor",
+    "skills": [
+      "LD-2 report extraction",
+      "PAC donation mapping",
+      "Legislative bill tracking",
+      "Influence network visualization",
+      "Regulatory capture analysis"
+    ],
+    "capability_text": "This agent monitors federal lobbying disclosures, political action committee (PAC) contributions, and congressional hearing schedules to map special interest influence. It connects the dots between campaign donations, legislative sponsors, and specific earmarks inserted into massive bills. It excels at providing corporate and non-profit clients with clear, real-time diagrams of who is funding whom in Washington.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.28,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-018",
+    "name": "Meta-Analysis Statistical Synthesizer",
+    "skills": [
+      "Effect size calculation",
+      "Heterogeneity testing",
+      "Publication bias adjustment",
+      "Forest plot generation",
+      "Random-effects modeling"
+    ],
+    "capability_text": "This agent ingests heterogeneous quantitative data from dozens of independent scientific papers to perform a rigorous mathematical meta-analysis. It standardizes disparate metrics, screens for publication bias using funnel plot analysis, and calculates weighted global effect sizes. It excels at resolving conflicting findings in scientific fields to provide a clear, unified statistical conclusion.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.21,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-019",
+    "name": "SEC Filings Red-Flag Screener",
+    "skills": [
+      "MD&A sentiment analysis",
+      "Related-party transaction identification",
+      "Footnote discrepancy detection",
+      "Non-GAAP reconciliation review",
+      "Accounting policy drift mapping"
+    ],
+    "capability_text": "This agent conducts deep forensic reviews of SEC filings, including 10-K, 10-Q, and 8-K forms, to spot hidden corporate liabilities and aggressive accounting practices. It highlights sudden changes in management's discussion and analysis (MD&A) wording, unusual related-party transactions, and complex off-balance-sheet structures. It excels at flagging risks that quantitative equity screens often miss, protecting portfolios from sudden corporate collapses.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.21,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-020",
+    "name": "Social Media Trend Locator",
+    "skills": [
+      "Virality velocity tracking",
+      "Niche community mapping",
+      "Influencer seed analysis",
+      "Slang and meme tracing",
+      "Platform API scraping"
+    ],
+    "capability_text": "This agent scans decentralized social spaces, Discord servers, and emerging platforms to detect micro-trends before they hit mainstream algorithms. It identifies key seed influencers and tracks how ideas, aesthetics, or product recommendations move across different digital subcultures. It excels at providing consumer brand teams with early predictive insights on high-velocity cultural trends.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.29,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-021",
+    "name": "Trademark Infringement Risk Evaluator",
+    "skills": [
+      "Phonetic similarity checking",
+      "Confusion likelihood evaluation",
+      "Nice Classification search",
+      "Common law mark scanning",
+      "Geographic market profiling"
+    ],
+    "capability_text": "This agent evaluates potential brand names and logos for global trademark conflicts, calculating the likelihood of confusion under legal standards. It crawls official IP registries as well as common law digital footprints like domain registrations and social media handles. It excels at delivering risk heatmaps indicating which product categories and international markets pose the highest litigation threats.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.3,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-022",
+    "name": "Dark Web Threat Crawler",
+    "skills": [
+      "Onion site scraping",
+      "Credential leak parsing",
+      "Ransomware group monitoring",
+      "Zero-day market tracking",
+      "Anonymized forum profiling"
+    ],
+    "capability_text": "This agent monitors underground marketplaces, private Telegram channels, and onion forums for active cyber threats against specific corporate entities. It flags compromised user credentials, active plans for ransomware deployments, and sales of zero-day exploits targeting corporate infrastructure. It excels at translating raw, highly unstructured dark web chatter into actionable cyber defense steps.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.31,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-023",
+    "name": "A/B Test Bayesian Calculator",
+    "skills": [
+      "Bayesian inference",
+      "Sample size estimation",
+      "Segment performance modeling",
+      "False positive reduction",
+      "Sequential testing analysis"
+    ],
+    "capability_text": "This agent analyzes e-commerce and marketing experimentation data using advanced Bayesian models to determine true conversion rate improvements. It mitigates the risk of peeking errors and handles multi-variant tests efficiently by updating probability distributions continuously. It excels at identifying subtle, high-converting customer segments that standard frequentist testing overlooks.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.32,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-024",
+    "name": "Academic Literature Gap Identifier",
+    "skills": [
+      "Semantic similarity mapping",
+      "Citation network analysis",
+      "Research direction generation",
+      "Hypothesis validity scoring",
+      "Unexplored link identification"
+    ],
+    "capability_text": "This agent reads thousands of academic abstracts in a specific field to find logical disconnects and unresearched cross-disciplinary connections. By mapping citation networks and semantic clusters, it isolates areas where direct evidence is lacking or contradictory. It excels at helping doctoral candidates and research institutions discover highly viable, novel directions for original scientific inquiry.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.31,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-025",
+    "name": "VC Pitch Deck Benchmarker",
+    "skills": [
+      "TAM/SAM/SOM validation",
+      "Competitor landscape auditing",
+      "Financial projection sanity checking",
+      "Narrative flow optimization",
+      "Cohort retention comparison"
+    ],
+    "capability_text": "This agent audits startup pitch decks against historical venture capital database metrics to assess fundraising viability. It evaluates the credibility of market size claims, scrutinizes unit economic projections, and flags gaps in competitor comparisons. It excels at helping founders refine their story and helping investment associates prioritize inbound deal flows.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.19,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-026",
+    "name": "Mobile App Friction Diagnostic",
+    "skills": [
+      "Click-path analysis",
+      "Crash log correlation",
+      "Funnels drop-off visualization",
+      "UI responsiveness metrics",
+      "Micro-interaction auditing"
+    ],
+    "capability_text": "This agent ingests user interaction logs and performance data from iOS and Android apps to pinpoint exact moments of user frustration. It correlates app crashes, sluggish UI frame rates, and rage clicks with specific stages of the onboarding or checkout funnels. It excels at producing prioritized technical and design tickets to instantly improve mobile retention rates.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.15,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-027",
+    "name": "International Sanctions List Auditor",
+    "skills": [
+      "OFAC/EU list matching",
+      "Fuzzy-name screening",
+      "Entity network expansion",
+      "Geographic trade compliance",
+      "Dual-use goods tracking"
+    ],
+    "capability_text": "This agent audits corporate client databases and vendor networks against constantly updated global sanctions registers, including OFAC, EU, and UN lists. It utilizes advanced phonetic and fuzzy-name matching algorithms to prevent false negatives while minimizing false positives. It excels at tracing complex, nested corporate ownership stakes to flag indirect compliance exposures.",
+    "model": "gpt-5.5",
+    "margin": 0.28,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-028",
+    "name": "Keyword Intent SERP Analyst",
+    "skills": [
+      "Search intent classification",
+      "SERP feature analysis",
+      "Keyword difficulty calculation",
+      "Content gap identification",
+      "Organic visibility forecasting"
+    ],
+    "capability_text": "This agent analyzes search engine results pages (SERPs) to decode real user search intent and evaluate organic competition. It identifies which search queries require informational, transactional, or local content structures and tracks dynamic SERP features like featured snippets and PAA boxes. It excels at architecting targeted content plans that maximize organic search ranking success.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.29,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-029",
+    "name": "Clinical Drug-Drug Interaction Profiler",
+    "skills": [
+      "Pharmacokinetic pathway modeling",
+      "Adverse drug event prediction",
+      "CYP450 enzyme profiling",
+      "Contraindication identification",
+      "Dosage adjustment recommendation"
+    ],
+    "capability_text": "This agent analyzes complex patient medication regimes to identify potential, non-obvious drug-to-drug interactions (DDIs). It profiles metabolic pathways, particularly CYP450 enzyme inhibition and induction, to predict variations in drug efficacy and toxicity. It excels at providing clinicians and pharmaceutical researchers with clear, evidence-based alerts and alternative prescription recommendations.",
+    "model": "gpt-4.1",
+    "margin": 0.21,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-030",
+    "name": "M&A Synergy Integration Estimator",
+    "skills": [
+      "Cost synergy quantification",
+      "Cultural alignment assessment",
+      "Tech stack overlap analysis",
+      "Redundant asset identification",
+      "Post-merger integration sequencing"
+    ],
+    "capability_text": "This agent evaluates potential corporate mergers and acquisitions by modeling cost synergies, operational redundancies, and system integration risks. It analyzes the financial and operational data of both target and acquirer to find duplicate software licenses, real estate, and personnel structures. It excels at delivering a phased, highly realistic integration roadmap optimized to preserve deal value.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.3,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-031",
+    "name": "SQL Query Optimization Profiler",
+    "skills": [
+      "Execution plan dissection",
+      "Index utilization modeling",
+      "Query rewriting",
+      "Resource consumption benchmarking",
+      "Database schema analysis"
+    ],
+    "capability_text": "This agent analyzes slow-running SQL queries and database execution plans to eliminate bottlenecks and optimize compute resource usage. It identifies missing indexes, redundant joins, and sub-optimal subqueries, providing immediate, rewritten code solutions. It excels at helping data teams reduce cloud database hosting costs and dramatically improve application latency.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.29,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-032",
+    "name": "B2B Buyer Persona Mapper",
+    "skills": [
+      "Buying committee modeling",
+      "Pain point synthesis",
+      "Decision criteria mapping",
+      "Professional channel profiling",
+      "Content preference targeting"
+    ],
+    "capability_text": "This agent profiles complex B2B buying committees, mapping the unique pain points, responsibilities, and decision criteria of individual stakeholders. It synthesizes executive interviews, LinkedIn demographic data, and industry whitepapers to construct highly accurate, actionable buyer personas. It excels at defining the exact content formats and value propositions required to win consensus across enterprise-level organizations.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.22,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-033",
+    "name": "Energy Grid Capacity Forecaster",
+    "skills": [
+      "Renewable generation forecasting",
+      "Grid congestion modeling",
+      "Demand-response prediction",
+      "EV charging impact analysis",
+      "Weather pattern correlation"
+    ],
+    "capability_text": "This agent models regional electricity grid performance, projecting capacity challenges and distribution bottlenecks based on environmental and demand variables. It correlates historical grid loads with weather forecasts, EV adoption curves, and localized renewable generation outputs. It excels at delivering actionable, predictive load-balancing recommendations for utility companies and clean-energy investors.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.1,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "research-034",
+    "name": "Contract Clause Divergence Identifier",
+    "skills": [
+      "Legal standard playbook mapping",
+      "Liability limit auditing",
+      "Indemnification discrepancy detection",
+      "Governing law verification",
+      "Fallback clause recommendation"
+    ],
+    "capability_text": "This agent compares drafts of inbound commercial contracts against an organization's pre-approved legal playbooks. It highlights deviations in indemnification caps, intellectual property rights, and termination rights, assigning risk levels to each divergence. It excels at suggesting pre-approved fallback language to accelerate negotiation cycle times and ensure enterprise policy compliance.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.25,
+    "tools": [],
+    "category": "research"
+  },
+  {
+    "agent_id": "language-001",
+    "name": "Pharmaceutical Patent Translator",
+    "skills": [
+      "medical terminology",
+      "patent law translation",
+      "chemical nomenclature",
+      "regulatory compliance",
+      "bilingual alignment"
+    ],
+    "capability_text": "This agent specializes in translating highly technical pharmaceutical patents between global languages while maintaining absolute legal and scientific precision. It ensures that IUPAC chemical names, delivery mechanisms, and dosage formulations are accurately translated without losing patent protection validity. It excels at maintaining the highly structured, dry prose style required by international patent offices.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.3,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-002",
+    "name": "Common Law Localizer",
+    "skills": [
+      "jurisdictional adaptation",
+      "legal terminology",
+      "contract restructuring",
+      "cross-border compliance",
+      "comparative law"
+    ],
+    "capability_text": "This agent adapts legal contracts, terms of service, and privacy policies between different common law jurisdictions, such as the US, UK, Canada, and Australia. It replaces localized legal jargon, updates statutory references, and realigns dispute resolution clauses to fit regional requirements. The agent ensures that the original intent of the contract remains legally enforceable in the destination territory.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.2,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-003",
+    "name": "API Documentation Localizer",
+    "skills": [
+      "developer documentation",
+      "markdown translation",
+      "code-syntax preservation",
+      "technical terminology",
+      "localized code examples"
+    ],
+    "capability_text": "This specialist translates developer documentation and API reference guides without breaking code blocks, JSON structures, or markdown formatting. It accurately localizes explanatory text while preserving parameter names, function calls, and technical variables exactly as they appear in the source code. It excels at maintaining a helpful, peer-to-peer tone suitable for international software engineering communities.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.31,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-004",
+    "name": "Academic Citation Auditor",
+    "skills": [
+      "APA style guide",
+      "MLA citation rules",
+      "bibliography formatting",
+      "academic proofreading",
+      "cross-reference validation"
+    ],
+    "capability_text": "This agent meticulously reviews academic bibliographies, footnotes, and in-text citations to ensure absolute compliance with major style manuals like APA, MLA, Chicago, and Harvard. It automatically detects missing metadata, matches citations against referenced works, and flags inconsistencies in author names or publication dates. It excels at preparing complex scholarly manuscripts for peer-review submissions.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.17,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-005",
+    "name": "Clinical Trial Summarizer",
+    "skills": [
+      "medical jargon simplification",
+      "patient-facing summaries",
+      "clinical study design",
+      "plain language writing",
+      "medical data synthesis"
+    ],
+    "capability_text": "This agent transforms dense, technical clinical trial protocols and results into accessible, plain-language summaries for patients and the general public. It extracts key trial objectives, efficacy results, and safety data while stripping away confusing statistical and medical jargon. It ensures compliance with health literacy guidelines and ethical reporting standards for patient communication.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.26,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-006",
+    "name": "Deposition Transcript Cleaner",
+    "skills": [
+      "courtroom transcription",
+      "verbatim clean-up",
+      "speaker diarization",
+      "legal formatting",
+      "ambient noise filtering"
+    ],
+    "capability_text": "This agent cleans up messy audio transcripts of legal depositions by removing verbal tics, stutters, and repetitive filler words without altering the factual testimony. It formats the text into standard legal pleading templates, corrects misspelled legal and medical terms, and ensures clear speaker labels. It excels at producing clean, readable transcripts that are ready for court submissions or lawyer review.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.16,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-007",
+    "name": "Financial SEC Extractor",
+    "skills": [
+      "SEC filings parsing",
+      "financial statement extraction",
+      "GAAP terminology",
+      "entity recognition",
+      "tabular data mapping"
+    ],
+    "capability_text": "This agent analyzes complex corporate filings such as SEC 10-K and 10-Q reports to extract key financial metrics, risk factors, and executive compensation details. It automatically maps unstructured text narratives to standard GAAP financial tables, highlighting discrepancies or changes in accounting policies. It excels at turning lengthy regulatory filings into structured JSON data feeds for financial analysts.",
+    "model": "gpt-5.5",
+    "margin": 0.1,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-008",
+    "name": "SEO Microcopy Optimizer",
+    "skills": [
+      "UX writing",
+      "SEO keyword placement",
+      "conversion rate optimization",
+      "call-to-action design",
+      "concise editing"
+    ],
+    "capability_text": "This agent focuses on writing and editing high-converting microcopy for web interfaces, checkout screens, and call-to-action buttons. It optimizes copy for search engines using targeted keywords while keeping the length brief enough to fit strict mobile and web design layouts. It excels at improving user click-through rates and reducing cart abandonment through persuasive, minimalist writing.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.24,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-009",
+    "name": "Brand Satirist Adapter",
+    "skills": [
+      "humor writing",
+      "satire adaptation",
+      "brand voice crafting",
+      "creative copy editing",
+      "cultural commentary"
+    ],
+    "capability_text": "This agent transforms dry, traditional corporate announcements and copy into witty, satirical, or humorous narratives suitable for engaging social media campaigns. It applies clever wordplay, ironic observations, and pop-culture references while maintaining a highly curated, non-offensive brand voice. It excels at helping companies cut through digital noise by adopting a playful and self-aware persona.",
+    "model": "gpt-4.1",
+    "margin": 0.28,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-010",
+    "name": "Game UI Localizer",
+    "skills": [
+      "string translation",
+      "character limit management",
+      "gaming terminology",
+      "variables preservation",
+      "UI layout adaptation"
+    ],
+    "capability_text": "This agent translates video game user interface elements, menus, and inventory items across multiple languages under strict character-count constraints. It ensures that variables, placeholders, and hotkeys are preserved correctly in the target language files without breaking the visual layout. It excels at finding ultra-short, highly descriptive synonyms to prevent text overflow on mobile and console screens.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.26,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-011",
+    "name": "Idiomatic Humor Localizer",
+    "skills": [
+      "joke translation",
+      "cultural adaptation",
+      "idiom localization",
+      "creative writing",
+      "slang adaptation"
+    ],
+    "capability_text": "This agent specializes in localizing comedy, puns, idioms, and pop culture jokes for target audiences of different regions. It avoids literal translations, instead crafting equivalent comedic setup-and-punchline structures that resonate with local cultural contexts. It excels at keeping marketing slogans, video scripts, and creative literature engaging and funny across borders.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.24,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-012",
+    "name": "OCR Error Corrector",
+    "skills": [
+      "OCR scanning cleanup",
+      "text reconstruction",
+      "spelling correction",
+      "layout preservation",
+      "historical typography"
+    ],
+    "capability_text": "This agent processes and cleans up messy text outputs generated by optical character recognition (OCR) software from scanned physical documents. It automatically corrects common machine-reading errors, such as misread characters, misplaced punctuation, and broken hyphenated words. It excels at restoring the integrity of digitized archives, books, and historical files while preserving original formatting structure.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.17,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-013",
+    "name": "Executive Briefing Synthesizer",
+    "skills": [
+      "meeting summarization",
+      "action item extraction",
+      "political briefing",
+      "concise writing",
+      "agenda tracking"
+    ],
+    "capability_text": "This agent synthesizes lengthy, multi-hour executive meetings, government hearings, or corporate retreats into high-impact, one-page briefs. It identifies key strategic decisions, lists assigned action items with deadlines, and maps out diverging opinions voiced during the sessions. It excels at delivering high-level, actionable intelligence to busy C-suite executives and board members.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.25,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-014",
+    "name": "Podcaster Tic Remover",
+    "skills": [
+      "verbal tic removal",
+      "conversational cleaning",
+      "discourse analysis",
+      "audio transcript alignment",
+      "readability enhancement"
+    ],
+    "capability_text": "This agent takes raw audio transcripts of conversational podcasts and converts them into polished, highly readable written interviews. It systematically removes repetitive verbal tics like 'like', 'you know', and 'basically' while preserving the unique voice and rhythm of the speakers. It excels at formatting conversational audio into professional blog posts, newsletter articles, or Q&A transcripts.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.25,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-015",
+    "name": "CV Resume Parser",
+    "skills": [
+      "resume parsing",
+      "skills classification",
+      "experience extraction",
+      "educational validation",
+      "unstructured text processing"
+    ],
+    "capability_text": "This agent parses highly unstructured resumes, CVs, and LinkedIn profiles in multiple languages to extract clean structured data. It categorizes technical skills, quantifies years of relevant experience, and standardizes job titles and academic degrees. It excels at helping recruiting software automatically screen, index, and match candidates to complex job descriptions.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.19,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-016",
+    "name": "Academic ESL Editor",
+    "skills": [
+      "ESL academic writing",
+      "peer-review preparation",
+      "sentence structure optimization",
+      "scholarly voice",
+      "scientific flow"
+    ],
+    "capability_text": "This agent specializes in refining research papers written by non-native English speakers to meet the rigorous publication standards of top-tier academic journals. It corrects awkward phrasing, improves logical transitions, and ensures the tone is authoritative and objective without altering the underlying scientific findings. It excels at elevating research manuscripts across engineering, medicine, and the humanities.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.26,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-017",
+    "name": "Crisis Communication Stylist",
+    "skills": [
+      "reputation management",
+      "empathy adaptation",
+      "corporate apology drafting",
+      "liability reduction",
+      "tone calibration"
+    ],
+    "capability_text": "This agent assists corporate communications teams by drafting and refining high-stakes crisis responses, public apologies, and press statements. It carefully calibrates the level of empathy, responsibility, and operational resolve expressed in the text to match the gravity of the situation. It excels at ensuring public statements mitigate reputational damage while avoiding legally binding admissions of liability.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.25,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-018",
+    "name": "Poetry Meter Translator",
+    "skills": [
+      "literary translation",
+      "meter adaptation",
+      "rhyme scheme matching",
+      "creative writing",
+      "metaphor interpretation"
+    ],
+    "capability_text": "This agent translates classic and contemporary poetry between languages while striving to preserve the original meter, rhyme scheme, and emotional resonance. It rejects literal word-for-word translations in favor of poetic equivalents that fit target language aesthetics and phonetic flows. It excels at bringing the nuanced beauty, rhythm, and imagery of world poetry to new linguistic audiences.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.15,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-019",
+    "name": "App Store Localizer",
+    "skills": [
+      "ASO optimization",
+      "multilingual keyword research",
+      "char-limit copywriting",
+      "app store guidelines",
+      "marketing localization"
+    ],
+    "capability_text": "This agent localizes mobile app descriptions, titles, and release notes to maximize organic search discoverability on global app marketplaces. It translates marketing hooks while strategically integrating regional search keywords discovered through App Store Optimization (ASO) analysis. It excels at keeping text within strict character limits while maintaining high conversion rates in international markets.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.23,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-020",
+    "name": "Smart Contract Spec Auditor",
+    "skills": [
+      "technical specification audit",
+      "solidity comparison",
+      "logical flow analysis",
+      "security spec translation",
+      "document cross-referencing"
+    ],
+    "capability_text": "This agent cross-references written natural language specifications for smart contracts with the actual technical code structure. It flags discrepancies where the English business rules do not match the logical executions described in Solidity or Rust source files. It excels at helping development teams identify logical vulnerabilities and miscommunications before deploying protocols live on-chain.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.16,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-021",
+    "name": "Legal Precedent Synthesizer",
+    "skills": [
+      "case law summarization",
+      "legal citation extraction",
+      "judicial opinion analysis",
+      "legal reasoning mapping",
+      "precedent categorization"
+    ],
+    "capability_text": "This agent analyzes vast catalogs of judicial opinions and legal decisions to synthesize precedent summaries relevant to active litigation briefs. It extracts ruling rationales, dissenting opinions, and key case citations, organizing them by jurisprudential weight and legal strategy. It excels at helping legal researchers build solid, precedent-supported arguments in a fraction of the usual time.",
+    "model": "gpt-5.5",
+    "margin": 0.26,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-022",
+    "name": "Multilingual Call Transcriber",
+    "skills": [
+      "code-switching transcription",
+      "multilingual speech cleanup",
+      "customer sentiment analysis",
+      "call center formatting",
+      "bilingual categorization"
+    ],
+    "capability_text": "This agent cleans up and structures transcription data from customer service call centers where agents and customers frequently swap between languages in a single conversation. It accurately identifies code-switching, applies correct bilingual grammatical standards, and structures the text into a clean dialogue log. It excels at preparing raw call center data for downstream conversational sentiment analysis and training models.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.12,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-023",
+    "name": "Culinary Recipe Parser",
+    "skills": [
+      "recipe extraction",
+      "ingredient standardization",
+      "unit conversion",
+      "cooking technique classification",
+      "metric/imperial mapping"
+    ],
+    "capability_text": "This agent parses raw recipes from cooking blogs, books, and videos, turning them into standardized, structured data formats. It extracts exact ingredient lists, splits step-by-step instructions into discrete logical actions, and converts measurements between metric and imperial systems. It excels at creating structured recipe databases for smart cooking appliances, diet apps, and meal planning platforms.",
+    "model": "gpt-4.1",
+    "margin": 0.34,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-024",
+    "name": "Micro-SaaS Copywriter",
+    "skills": [
+      "product onboarding writing",
+      "micro-SaaS conversion",
+      "concise feature descriptions",
+      "user journey optimization",
+      "persuasive tone"
+    ],
+    "capability_text": "This agent drafts and refines in-app tooltips, onboarding walkthroughs, and transactional emails specifically for Micro-SaaS platforms. It simplifies complex technical features into brief, high-value explanations that keep new users engaged and lower user churn. It excels at optimizing the user interface journey by writing punchy, helpful, and highly contextual copy.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.16,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-025",
+    "name": "Gen Z Slang Adapter",
+    "skills": [
+      "slang localization",
+      "youth culture tone",
+      "social media rewriting",
+      "meme integration",
+      "generational trends"
+    ],
+    "capability_text": "This agent translates traditional brand messaging into authentic Gen Z vernacular and digital culture dialects. It avoids forced, cringe-worthy phrasings by utilizing correct contextual slang, emojis, and internet idioms popular across major visual social media networks. It excels at making established brands look culturally fluent and approachable to younger demographic segments.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.26,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-026",
+    "name": "Paleographic Manuscript Translator",
+    "skills": [
+      "historical translation",
+      "archaic transcription",
+      "paleography analysis",
+      "etymology identification",
+      "medieval document translation"
+    ],
+    "capability_text": "This agent specializes in transcribing and translating historical handwritten manuscripts, medieval charts, and early modern texts into clear modern languages. It deciphers archaic spellings, obsolete grammatical structures, and regional abbreviations using deep contextual knowledge of linguistic history. It excels at helping historians and researchers quickly extract legible data from physical archive scans.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.26,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-027",
+    "name": "E-Commerce Catalog Localizer",
+    "skills": [
+      "measurement conversion",
+      "currency adaptation",
+      "product listing translation",
+      "regional sizing standards",
+      "e-commerce copywriting"
+    ],
+    "capability_text": "This agent localizes bulk e-commerce product catalogs to fit specific regional market customs, standards, and regulatory rules. It automatically converts measurements, currency, and apparel sizing standards while translating product descriptions into highly persuasive local retail copy. It excels at scaling online stores globally by ensuring localized product detail pages feel native to local buyers.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.1,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-028",
+    "name": "Accessibility Alt-Text Writer",
+    "skills": [
+      "alt-text generation",
+      "image description translation",
+      "web accessibility compliance",
+      "WCAG guidelines",
+      "screen reader optimization"
+    ],
+    "capability_text": "This agent reviews website text, documents, and media tags to write clear, descriptive alt-text for images, charts, and interactive graphics. It ensures descriptions are screen-reader-friendly and compliant with WCAG accessibility standards, keeping descriptions precise and contextual. It excels at helping content publishers make their digital portals fully accessible to blind or visually impaired users.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.35,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-029",
+    "name": "Earnings Call Summarizer",
+    "skills": [
+      "earnings report analysis",
+      "investor relations metrics",
+      "financial Q&A synthesis",
+      "guidance extraction",
+      "market sentiment analysis"
+    ],
+    "capability_text": "This agent processes public earnings call transcripts, separating administrative introductory remarks from high-value financial data and investor Q&A. It extracts key guidance numbers, revenue highlights, and capital expenditure targets, synthesizing them into a brief investor memo. It excels at helping stock analysts quickly identify executive sentiment shifts and unexpected corporate announcements.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.1,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-030",
+    "name": "Focus Group Transcriber",
+    "skills": [
+      "overlapping speech cleanup",
+      "focus group diarization",
+      "conversational sentiment tagging",
+      "demographic speaker labeling",
+      "colloquial transcript cleaning"
+    ],
+    "capability_text": "This agent cleans up and annotates transcripts of qualitative focus group sessions characterized by multiple overlapping voices and informal cross-talk. It accurately separates speaker tracks, highlights emotional tone shifts, and tags participant remarks by demographic profiles if provided. It excels at providing clean, readable text files structured for marketing researchers to extract consumer insights.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.17,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-031",
+    "name": "Commercial Lease Abstractor",
+    "skills": [
+      "lease abstract extraction",
+      "commercial real estate terminology",
+      "critical date mapping",
+      "clause classification",
+      "financial obligation tracking"
+    ],
+    "capability_text": "This agent abstracts commercial real estate leases by extracting critical contract data, such as base rent schedules, escalation clauses, renewal options, and square footage details. It converts long, confusing multi-hundred-page lease agreements into highly structured, searchable summary sheets. It excels at helping asset managers and property owners easily monitor their tenant obligations and portfolio dates.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.3,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-032",
+    "name": "Manual Plain-Language Editor",
+    "skills": [
+      "technical writing simplification",
+      "industrial manual editing",
+      "user safety instructions",
+      "step-by-step clarity",
+      "plain-language compliance"
+    ],
+    "capability_text": "This agent rewrites highly complex engineering, manufacturing, and consumer hardware manuals into clear, easy-to-follow, plain-language instruction sets. It eliminates dense technical jargon, breaks compound actions into single linear steps, and elevates crucial safety warning placements. It excels at reducing post-purchase customer support tickets by making user guides intuitive and foolproof.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.24,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-033",
+    "name": "Diplomatic Email Neutralizer",
+    "skills": [
+      "workplace communication",
+      "conflict resolution tone",
+      "diplomatic corporate writing",
+      "frustration filtering",
+      "professional translation"
+    ],
+    "capability_text": "This agent analyzes emotional, tense, or passive-aggressive draft emails and rewrites them into constructive, professional, and diplomatic communications. It filters out frustration, sarcasm, and accusatory language while ensuring the core message, requests, and boundaries remain clear and authoritative. It excels at fostering calm, productive relationships in highly stressful workplace environments.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.32,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "language-034",
+    "name": "Subtitle Timing Adapter",
+    "skills": [
+      "timed subtitle translation",
+      "characters-per-second limiting",
+      "video subtitle synchronization",
+      "caption line-breaking",
+      "dialogue localization"
+    ],
+    "capability_text": "This agent localizes video subtitles while carefully matching the physical reading speed constraints of target languages. It manages optimal line breaks and ensures translations are perfectly synced with the on-screen timecodes to prevent text crowding or lagging. It excels at making international film, television, and training content accessible and natural to watch.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.21,
+    "tools": [],
+    "category": "language"
+  },
+  {
+    "agent_id": "strategy-001",
+    "name": "Product Taxonomy Architect",
+    "skills": [
+      "SKU Management",
+      "Information Architecture",
+      "Product Cataloging",
+      "Metadata Design",
+      "E-commerce Hierarchy"
+    ],
+    "capability_text": "This agent specializes in organizing complex product portfolios into intuitive, scalable category structures and metadata schemas. It analyzes raw inventory data to eliminate redundancies and optimize searchability for users. By designing clean taxonomy relationships, it streamlines the customer's purchase path and improves catalog management efficiency.",
+    "model": "gpt-5.5",
+    "margin": 0.14,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-002",
+    "name": "Feature Prioritization Modeler",
+    "skills": [
+      "RICE Framework",
+      "Kano Model",
+      "Opportunity Scoring",
+      "Backlog Grooming",
+      "Stakeholder Alignment"
+    ],
+    "capability_text": "This agent resolves product backlog chaos by applying objective mathematical frameworks to rank upcoming features. It ingests customer feedback, engineering estimates, and business goals to output weighted prioritization scores. By modeling different scenario trade-offs, it helps product managers make defensible roadmap decisions.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.23,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-003",
+    "name": "API Monetization Planner",
+    "skills": [
+      "API Strategy",
+      "Developer Experience",
+      "Rate Limiting",
+      "Partner Integration",
+      "SaaS Licensing"
+    ],
+    "capability_text": "This agent designs strategic business models for exposing software functionality via public or partner APIs. It analyzes technical usage patterns to recommend optimal tiering, rate limits, and consumption-based billing models. It ensures your developer portal acts as a self-sustaining revenue engine rather than just a technical utility.",
+    "model": "gpt-4.1",
+    "margin": 0.12,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-004",
+    "name": "UX Localization Strategist",
+    "skills": [
+      "Cultural Adaptation",
+      "Internationalization",
+      "Accessibility Standards",
+      "Regional UX",
+      "Global Copywriting"
+    ],
+    "capability_text": "This agent adapts digital product interfaces for entry into new cultural and geographic markets. It reviews visual assets, layout flows, and copy to flag potential cultural friction points or accessibility issues. By planning region-specific UX adjustments, it ensures your product feels native to users worldwide.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.12,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-005",
+    "name": "Legacy Tech Migration Planner",
+    "skills": [
+      "System Deprecation",
+      "Risk Mitigation",
+      "Phased Rollout",
+      "Technical Debt",
+      "Architecture Mapping"
+    ],
+    "capability_text": "This agent designs step-by-step strategies for transitioning enterprise software away from aging legacy systems. It maps interdependencies between legacy systems and modern tech stacks to minimize service downtime. By creating phased deprecation roadmaps, it mitigates risk and ensures business continuity during high-stakes refactoring projects.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.29,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-006",
+    "name": "Scenario Planning Forecaster",
+    "skills": [
+      "Stress Testing",
+      "Macroeconomic Analysis",
+      "Risk Assessment",
+      "Alternative Futures",
+      "Strategic Resilience"
+    ],
+    "capability_text": "This agent stress-tests corporate strategies against volatile market shifts and unexpected economic disruptions. It constructs multiple plausible future scenarios based on regulatory, technological, and competitive trends. It provides actionable contingency plans for each path, allowing executives to pivot rapidly in uncertain environments.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.21,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-007",
+    "name": "Corporate Spin-Off Planner",
+    "skills": [
+      "Asset Divestiture",
+      "Operational Carve-Out",
+      "Transition Agreements",
+      "IP Allocation",
+      "Corporate Restructuring"
+    ],
+    "capability_text": "This agent coordinates the strategic and operational separation of corporate business units into independent entities. It maps shared resources, divides intellectual property, and drafts transition service agreements. By identifying operational dependencies early, it ensures both parent and spin-off companies maintain business continuity post-separation.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.22,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-008",
+    "name": "TAM Expansion Calculator",
+    "skills": [
+      "Market Sizing",
+      "Adjacent Verticals",
+      "Demographic Modeling",
+      "Bottom-Up Analysis",
+      "Growth Projection"
+    ],
+    "capability_text": "This agent identifies and quantifies untapped market segments adjacent to a company's current customer base. It analyzes raw demographic and industry data to calculate Total Addressable Market expansion vectors. By mapping these new segments, it provides strategic recommendations on the most lucrative directions for geographic or vertical growth.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.29,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-009",
+    "name": "Unit Economics Optimizer",
+    "skills": [
+      "LTV-to-CAC Ratio",
+      "Contribution Margin",
+      "COGS Analysis",
+      "Payback Period",
+      "SaaS Metrics"
+    ],
+    "capability_text": "This agent drills down into individual customer transactions to maximize business profitability at a fundamental scale. It uncovers hidden operational costs to accurately calculate contribution margins and payback periods. Through deep cohort analysis, it highlights which customer profiles generate sustainable, long-term profitable value.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.22,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-010",
+    "name": "Circular Economy Strategist",
+    "skills": [
+      "Sustainability Lifecycle",
+      "Closed-Loop Supply",
+      "Reverse Logistics",
+      "Eco-Design",
+      "Material Reuse"
+    ],
+    "capability_text": "This agent redesigns traditional linear business models into sustainable, waste-reducing circular systems. It maps material lifecycles, plans reverse logistics for product returns, and designs buy-back program strategies. This ensures companies reduce environmental footprints while unlocking new, eco-friendly revenue streams from reclaimed assets.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.29,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-011",
+    "name": "PLG Onboarding Funnel Architect",
+    "skills": [
+      "Product-Led Growth",
+      "Time-To-Value",
+      "Self-Serve UX",
+      "Friction Reduction",
+      "User Activation"
+    ],
+    "capability_text": "This agent optimizes self-serve product onboarding flows to minimize time-to-value for new signups. It analyzes drop-off points in user registration sequences and recommends interactive walkthrough adjustments. By maximizing early product utility, it drives higher conversion rates from free trials to paid tiers.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.15,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-012",
+    "name": "ABM Playbook Architect",
+    "skills": [
+      "Account-Based Marketing",
+      "Enterprise GTM",
+      "Target Account Lists",
+      "Personalized Campaigns",
+      "Sales Alignment"
+    ],
+    "capability_text": "This agent designs targeted go-to-market strategies tailored specifically for high-value enterprise accounts. It profiles key stakeholders, maps decision-making units, and plans personalized multi-channel outreach campaigns. This coordinated approach aligns sales and marketing teams to land complex six-figure contracts.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.21,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-013",
+    "name": "Channel Conflict Mitigator",
+    "skills": [
+      "Indirect Sales",
+      "Partner Compensation",
+      "Rules of Engagement",
+      "Deal Registration",
+      "Distributor Relations"
+    ],
+    "capability_text": "This agent resolves and prevents friction between direct sales forces and indirect partner networks. It creates clear rules of engagement and structures fair deal-registration policies to protect margins. By aligning incentives across all sales distribution channels, it fosters healthy partner ecosystems without internal cannibalization.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.23,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-014",
+    "name": "Geographic Expansion Navigator",
+    "skills": [
+      "Cross-Border Compliance",
+      "Market Entry GTM",
+      "Local Competitors",
+      "Regulatory Hurdles",
+      "Localization Strategy"
+    ],
+    "capability_text": "This agent maps out market entry blueprints for businesses expanding into new countries. It evaluates local regulatory requirements, assesses localized competitor strengths, and outlines compliance strategies. By identifying target regional niches, it ensures high-impact, compliant, and cost-efficient expansion campaigns.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.13,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-015",
+    "name": "Early-Adopter Scout",
+    "skills": [
+      "Beta Programs",
+      "Ideal Customer Profile",
+      "Feedback Loops",
+      "Lighthouse Customers",
+      "Outreach Strategy"
+    ],
+    "capability_text": "This agent identifies and recruits ideal initial reference customers for pre-launch or newly launched products. It scans target directories and professional platforms to find innovation-friendly buyers facing the exact pain point. It designs initial beta programs that secure critical qualitative feedback and valuable marketing case studies.",
+    "model": "gpt-5.5",
+    "margin": 0.33,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-016",
+    "name": "Supply Chain Resiliency Analyst",
+    "skills": [
+      "Risk Diversification",
+      "Logistics Optimization",
+      "Vendor Auditing",
+      "Lead Time Reduction",
+      "Contingency Sourcing"
+    ],
+    "capability_text": "This agent stress-tests supply chains to identify single points of failure, tariff risks, and transit bottlenecks. It designs multi-sourcing and geographic diversification strategies to protect operations from global trade disruptions. By establishing real-time inventory triggers, it helps companies maintain continuous manufacturing and distribution flow.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.3,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-017",
+    "name": "Capacity Bottleneck Predictor",
+    "skills": [
+      "Throughput Modeling",
+      "Operational Queueing",
+      "Resource Allocation",
+      "Process Mapping",
+      "Scalability Testing"
+    ],
+    "capability_text": "This agent analyzes workflow data to predict where operational bottlenecks will occur as transaction volumes scale. It simulates variable demand surges to stress-test human resources, manufacturing lines, and server architectures. By identifying capacity ceilings, it provides remediation roadmaps before operations reach a breaking point.",
+    "model": "gpt-4.1",
+    "margin": 0.24,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-018",
+    "name": "Remote Work Infrastructure Planner",
+    "skills": [
+      "Distributed Collaboration",
+      "Digital Workplace",
+      "Asynchronous Operations",
+      "IT Provisioning",
+      "Remote Culture"
+    ],
+    "capability_text": "This agent designs operational systems and communication architectures for highly distributed or fully remote companies. It maps out asynchronous communication guidelines, structures document knowledge hubs, and plans secure hardware provisioning. This transforms chaotic remote teams into highly efficient, output-oriented asynchronous operations.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.3,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-019",
+    "name": "SOP Automation Mapper",
+    "skills": [
+      "Process Mining",
+      "Workflow Integration",
+      "RPA Assessment",
+      "Standard Procedures",
+      "Operational Efficiency"
+    ],
+    "capability_text": "This agent audits current standard operating procedures to identify manual tasks ripe for software automation. It documents steps, maps technical triggers, and selects appropriate Robotic Process Automation tools. This converts tedious administrative processes into hands-off background automations that free up human talent.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.28,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-020",
+    "name": "Business Continuity Planner",
+    "skills": [
+      "Disaster Recovery",
+      "Incident Response",
+      "Crisis Operations",
+      "Redundant Systems",
+      "Regulatory Mandates"
+    ],
+    "capability_text": "This agent drafts comprehensive backup plans and protocols to protect corporate assets during severe operational disruptions. It designs emergency communication cascades, off-site data access strategies, and physical facility backup options. This ensures organizations can quickly resume mission-critical operations under crisis scenarios.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.13,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-021",
+    "name": "CPM Scheduler",
+    "skills": [
+      "Critical Path Method",
+      "Project Dependencies",
+      "Timeline Compression",
+      "Slack Time Analysis",
+      "Resource Leveling"
+    ],
+    "capability_text": "This agent builds and optimizes complex project timelines using the Critical Path Method. It analyzes task dependencies, calculates slack time, and identifies activities that dictate overall project duration. By continuously updating path schedules, it prevents timeline slips and guides project managers on resource reallocation.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.34,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-022",
+    "name": "Scope Creep Sentinel",
+    "skills": [
+      "Change Control",
+      "Project Baseline",
+      "Feature Creep Risk",
+      "Contract Compliance",
+      "Stakeholder Alignment"
+    ],
+    "capability_text": "This agent monitors ongoing projects for unauthorized expansions of deliverables and budget deviations. It flags when incoming change requests threaten project baselines and analyzes potential cost overruns. This helps delivery leads manage client expectations and maintain healthy project margins.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.1,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-023",
+    "name": "Cross-Functional Dependency Mapper",
+    "skills": [
+      "Inter-team Coordination",
+      "Gantt Chart Analysis",
+      "Risk Alignment",
+      "Milestone Tracking",
+      "Release Readiness"
+    ],
+    "capability_text": "This agent ensures alignment across diverse departments, such as engineering, marketing, and legal, during major initiatives. It visualizes and tracks intersecting milestones, highlighting potential hand-off bottlenecks early. By coordinating interdependencies, it prevents developmental siloing and keeps launch schedules on track.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.12,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-024",
+    "name": "Agile Velocity Forecaster",
+    "skills": [
+      "Sprint Burnup",
+      "Velocity Mapping",
+      "Capacity Forecasting",
+      "Jira Integration",
+      "Milestone Planning"
+    ],
+    "capability_text": "This agent analyzes historical team velocity to project future agile release windows with high precision. It models external factor variations and developer turnover rates to predict roadmap target accuracy. This helps engineering leads set realistic timeline expectations for external business stakeholders.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.35,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-025",
+    "name": "Resource Allocation Balancer",
+    "skills": [
+      "Capacity Planning",
+      "Skills Inventory",
+      "Utilization Rates",
+      "Talent Sourcing",
+      "Burnout Mitigation"
+    ],
+    "capability_text": "This agent optimizes human resource utilization across parallel projects to prevent burnout and skill shortages. It tracks team skill sets, current workloads, and upcoming project needs to recommend balanced allocations. This ensures high-priority projects are staffed appropriately without over-burdening core team members.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.19,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-026",
+    "name": "Viral Loop Engineer",
+    "skills": [
+      "Network Effects",
+      "Referral Loops",
+      "Incentive Design",
+      "Viral Coefficient",
+      "User Sharing UX"
+    ],
+    "capability_text": "This agent designs integrated product mechanics that encourage current users to invite new customers organically. It models viral coefficients and designs referral incentives to maximize user sharing rates. By tuning social share touchpoints, it drives organic growth directly from product utilization.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.28,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-027",
+    "name": "Customer Churn Diagnostic Planner",
+    "skills": [
+      "Retention Analysis",
+      "Cohort Segmentation",
+      "Churn Risk Modeling",
+      "Intervention Playbooks",
+      "Customer Health Score"
+    ],
+    "capability_text": "This agent analyzes usage drop-offs and negative feedback indicators to identify customers at risk of churn. It constructs proactive customer health scores and triggers automated save-playbooks for sliding accounts. This helps customer success teams intervene effectively before accounts reach renewal dates.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.29,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-028",
+    "name": "Activation Milestone Optimizer",
+    "skills": [
+      "Aha Moment Discovery",
+      "User Journey Mapping",
+      "Activation Tracking",
+      "Behavioral Cohorts",
+      "Funnel Optimization"
+    ],
+    "capability_text": "This agent isolates the exact actions that lead users to realize your product's core value proposition. It analyzes event logs to identify correlations between early user interactions and long-term retention. It then designs strategic changes to guide new signups to these milestone moments quickly.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.25,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-029",
+    "name": "Programmatic SEO Strategy Architect",
+    "skills": [
+      "Programmatic SEO",
+      "Scalable Landers",
+      "Keyword Taxonomy",
+      "Dynamic Content",
+      "Search Intent Analysis"
+    ],
+    "capability_text": "This agent designs strategies for building large-scale, high-quality search landing pages powered by structured databases. It maps search intents across millions of long-tail queries and designs templates to serve them dynamically. This generates massive organic search visibility and inbound lead pipelines with minimal manual content creation.",
+    "model": "gpt-5.5",
+    "margin": 0.13,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-030",
+    "name": "Value-Based Pricing Modeler",
+    "skills": [
+      "Willingness-to-Pay",
+      "Feature Gating",
+      "Pricing Tiers",
+      "Customer Segmentation",
+      "Value Metrics"
+    ],
+    "capability_text": "This agent designs software pricing tiers by aligning prices directly with the tangible value perceived by distinct buyer personas. It maps software features and limits to willingness-to-pay dynamics discovered through customer research. This ensures products capture maximum margin from enterprise buyers while remaining accessible to early-stage teams.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.29,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-031",
+    "name": "Dynamic Pricing Architect",
+    "skills": [
+      "Demand Elasticity",
+      "Surge Pricing",
+      "Algorithmic Pricing",
+      "Real-Time Optimization",
+      "Inventory Yielding"
+    ],
+    "capability_text": "This agent designs pricing strategies that automatically adapt to real-time supply, demand, and competitor trends. It models customer price-sensitivity across peak windows to maximize overall inventory yields. This protects profit margins during high-demand periods while driving sales volume during slow intervals.",
+    "model": "gpt-4.1",
+    "margin": 0.17,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-032",
+    "name": "Freemium Gate Architect",
+    "skills": [
+      "Paywall Design",
+      "Feature Entitlement",
+      "Freemium Conversions",
+      "Usage Analytics",
+      "Monetization Gaps"
+    ],
+    "capability_text": "This agent optimizes the balance between what product features remain free and what requires a paid subscription. It maps user engagement paths to discover critical conversion triggers and natural friction points. By strategically positioning paywalls, it maximizes free-to-paid conversion rates without hindering user acquisition dynamics.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.14,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-033",
+    "name": "Affiliate Ecosystem Architect",
+    "skills": [
+      "Affiliate Program",
+      "Commission Modeling",
+      "Partner Recruitment",
+      "Fraud Prevention",
+      "Referral Attribution"
+    ],
+    "capability_text": "This agent designs external, indirect growth channels through affiliate networks and social media influencer partners. It creates optimal incentive payouts, tiered reward structures, and programmatic onboarding paths for new partners. This structures a self-sustaining sales loop that acquires customers cost-effectively through third-party credibility.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.23,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "strategy-034",
+    "name": "Strategic Joint Venture Mapper",
+    "skills": [
+      "Joint Venture Strategy",
+      "IP Protection",
+      "Revenue Share Models",
+      "Co-Marketing Ops",
+      "Governance Frameworks"
+    ],
+    "capability_text": "This agent drafts operational and structural blueprints for commercial joint ventures and strategic alliances. It designs balanced risk-sharing frameworks, outlines intellectual property handling rules, and details revenue splits. This minimizes operational integration friction and accelerates the time-to-market for collaborative cross-company products.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.15,
+    "tools": [],
+    "category": "strategy"
+  },
+  {
+    "agent_id": "reasoning-001",
+    "name": "Topology Spatial Analyst",
+    "skills": [
+      "Topology",
+      "Manifold learning",
+      "Knot theory",
+      "Homology",
+      "Persistent homology"
+    ],
+    "capability_text": "This agent specializes in identifying, classifying, and mapping multi-dimensional topological manifolds and persistent homologies within raw geometric datasets. It excels at parsing complex spatial structures, analyzing high-dimensional point clouds, and solving intricate knot theory problems. By mathematically characterizing invariant spatial properties under continuous deformation, it assists researchers in understanding global shapes without local metric constraints.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.16,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-002",
+    "name": "Stochastic Calculus Modeler",
+    "skills": [
+      "Ito calculus",
+      "Brownian motion",
+      "Martingale theory",
+      "Asset pricing",
+      "Stochastic differential equations"
+    ],
+    "capability_text": "This agent excels at constructing and solving continuous-time mathematical models driven by random, unpredictable processes. It specializes in applying Ito's Lemma, setting up stochastic differential equations, and evaluating martingales for risk management or asset pricing. Users rely on this specialist to simulate path-dependent outcomes and calculate expectation boundaries under complex volatility regimes.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.25,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-003",
+    "name": "Discrete Combinatorics Optimizer",
+    "skills": [
+      "Graph theory",
+      "Generating functions",
+      "Partition theory",
+      "Network flows",
+      "Combinatorics"
+    ],
+    "capability_text": "This agent specializes in resolving complex counting, partitioning, and arrangement problems across discrete systems. It analyzes network structures using advanced graph theory and derives explicit solutions via generating functions and recurrence relations. This agent is designed to find exact structural configurations where continuous approximation methods fail.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.28,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-004",
+    "name": "Abstract Algebra Prover",
+    "skills": [
+      "Group theory",
+      "Galois theory",
+      "Ring structures",
+      "Homological algebra",
+      "Matrix representations"
+    ],
+    "capability_text": "This agent is designed to analyze and prove algebraic structural properties within abstract spaces such as groups, rings, fields, and vector spaces. It solves highly complex theoretical math problems using Galois theory, homological structures, and matrix representations. By systematically testing for symmetry, homomorphism, and isomorphism, it delivers rigorous mathematical proofs for advanced research.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.31,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-005",
+    "name": "Numerical Integration Engine",
+    "skills": [
+      "Finite element analysis",
+      "Runge-Kutta methods",
+      "Boundary value problems",
+      "Convergence analysis",
+      "Error estimation"
+    ],
+    "capability_text": "This agent specializes in approximating numerical solutions to differential equations and complex integrals where analytical solutions are impossible. It evaluates errors, ensures convergence, and designs numerical integration routines using methods like Runge-Kutta and finite element analysis. It is highly proficient at optimizing grid resolution to balance computational efficiency against numerical stability.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.17,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-006",
+    "name": "Quantum Hamiltonian Simulator",
+    "skills": [
+      "Schrodinger equation",
+      "Perturbation theory",
+      "Spin systems",
+      "Quantum state evolution",
+      "Density matrices"
+    ],
+    "capability_text": "This agent specializes in simulating quantum mechanical systems by formulating and solving the time-independent and time-dependent Schrodinger equations. It calculates exact energy eigenvalues, models spin-system interactions, and maps wavefunctions under various perturbation regimes. By predicting physical properties of subatomic configurations, it accelerates materials discovery and quantum computing architecture designs.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.24,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-007",
+    "name": "Metabolic Flux Analyst",
+    "skills": [
+      "Enzyme kinetics",
+      "Stoichiometric modeling",
+      "Metabolic pathways",
+      "Flux balance analysis",
+      "Cellular thermodynamics"
+    ],
+    "capability_text": "This agent models and analyzes cellular metabolic pathways by calculating stoichiometric flows of metabolites within complex biological networks. It applies flux balance analysis and enzyme kinetic equations to predict cellular outputs, optimize bio-engineering processes, and identify metabolic bottlenecks. Scientists leverage this specialist to run virtual knockout experiments and maximize product yield in synthetic biology.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.3,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-008",
+    "name": "Spectroscopic Signature Classifier",
+    "skills": [
+      "NMR spectroscopy",
+      "Mass spectrometry",
+      "FTIR analysis",
+      "Chromatogram alignment",
+      "Molecular fingerprinting"
+    ],
+    "capability_text": "This agent is engineered to analyze and classify complex chemical compounds by interpreting spectral datasets from NMR, FTIR, and mass spectrometry instruments. It matches noisy, multi-peak spectra against vast reference catalogs using precise alignment and isotopic ratio calculations. It excels at identifying functional groups, elucidating molecular structures, and flagging contaminant markers.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.18,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-009",
+    "name": "Orbital Trajectory Mechanic",
+    "skills": [
+      "N-body simulations",
+      "Keplerian mechanics",
+      "Lagrange points",
+      "Delta-v calculation",
+      "Orbital perturbations"
+    ],
+    "capability_text": "This agent specializes in calculating Keplerian and non-Keplerian orbital configurations, including complex n-body gravitational simulations. It plans highly efficient spacecraft trajectories, calculates delta-V budgets, and optimizes low-thrust pathways near Lagrange points. Aerospace engineers use this agent to simulate orbital perturbations and design stable launch and insertion maneuvers.",
+    "model": "gpt-5.5",
+    "margin": 0.21,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-010",
+    "name": "Crystallographic Lattice Resolver",
+    "skills": [
+      "X-ray diffraction",
+      "Bravais lattices",
+      "Space group determination",
+      "Patterson synthesis",
+      "Electron density mapping"
+    ],
+    "capability_text": "This agent processes X-ray diffraction patterns to reconstruct the three-dimensional atomic structures of crystalline solid materials. It maps electron densities, identifies unit cells, and resolves space group classifications with high mathematical precision. Its main utility lies in solving the crystallographic phase problem to determine exact molecular arrangements in unknown crystals.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.18,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-011",
+    "name": "Phylogenetic Sequence Reconstructionist",
+    "skills": [
+      "Maximum likelihood estimation",
+      "Cladistics",
+      "Sequence alignment",
+      "Ancestral state reconstruction",
+      "Tree topology evaluation"
+    ],
+    "capability_text": "This agent analyzes genomic sequences to reconstruct evolutionary lineages and construct phylogenetic trees using maximum likelihood, Bayesian inference, and parsimony methods. It performs complex multiple sequence alignments, evaluates ancestral state models, and identifies branch length mutations with rigorous statistical grounding. This specialist aids evolutionary biologists in tracking genetic drift and mapping biodiversity pathways.",
+    "model": "gpt-4.1",
+    "margin": 0.23,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-012",
+    "name": "Game Theoretic Strategist",
+    "skills": [
+      "Nash equilibrium",
+      "Mechanism design",
+      "Auction theory",
+      "Pareto optimality",
+      "Sequential games"
+    ],
+    "capability_text": "This agent is engineered to model and solve multi-agent strategic interactions, finding Nash equilibria and subgame perfect outcomes. It designs incentive-compatible mechanisms, calculates optimal auction rules, and predicts behavioral outcomes in competitive markets. Business strategists and policy designers use it to optimize strategies under asymmetric or incomplete information.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.11,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-013",
+    "name": "Macroeconomic Shock Forecaster",
+    "skills": [
+      "DSGE modeling",
+      "Vector autoregression",
+      "Inflation dynamics",
+      "Monetary policy transmission",
+      "Econometric simulation"
+    ],
+    "capability_text": "This agent simulates the impacts of systemic shocks on complex national economies using dynamic stochastic general equilibrium and vector autoregression models. It forecasts inflation, interest rate adjustments, and output gaps under various monetary and fiscal policy scenarios. It is exceptionally skilled at isolating variables to test economic resilience against unforeseen black swan triggers.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.13,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-014",
+    "name": "Behavioral Choice Architect",
+    "skills": [
+      "Nudge theory",
+      "Cognitive bias mitigation",
+      "Prospect theory",
+      "Decision framing",
+      "Utility elicitation"
+    ],
+    "capability_text": "This agent designs and optimizes choice environments by applying cognitive bias mitigation, prospect theory, and nudging principles. It structures decision flows, interfaces, and options to encourage specific user choices without restricting their freedom of action. Behavioral scientists use this agent to construct incentive systems that naturally align user habits with strategic objectives.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.28,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-015",
+    "name": "Leontief Supply Chain Analyst",
+    "skills": [
+      "Input-output tables",
+      "Inter-industry multipliers",
+      "Structural bottleneck analysis",
+      "Economic demand propagation",
+      "Trade flow forecasting"
+    ],
+    "capability_text": "This agent analyzes macro-level economic interdependence using Leontief input-output models to quantify supply chain risks. It traces the cascade effect of regional supply shocks and calculates output multipliers across hundreds of interdependent industries. Supply chain managers and economists use this tool to isolate specific vulnerabilities and optimize structural redundancies.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.13,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-016",
+    "name": "Market Clearing Mechanism Designer",
+    "skills": [
+      "Gale-Shapley matching",
+      "Double auctions",
+      "Incentive compatibility",
+      "Resource allocation",
+      "Stable marriage problems"
+    ],
+    "capability_text": "This agent designs mathematical rules for allocating scarce resources and matching supply with demand in complex, non-monetary markets. It implements Gale-Shapley matching algorithms, stable marriage formulas, and double-auction mechanisms to ensure Pareto-efficient outcomes. It excels at preventing market manipulation and ensuring fair, stable alignments between participants.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.12,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-017",
+    "name": "Biological Taxonomy Classifier",
+    "skills": [
+      "Phylogenetic nomenclature",
+      "Binomial taxonomy",
+      "Phenotypic keys",
+      "Cladogram sorting",
+      "Specimen identification"
+    ],
+    "capability_text": "This agent classifies organism specimens into precise taxonomic ranks based on genetic, morphological, and ecological data. It maps complex phenotypical keys, resolves binomial nomenclature conflicts, and structures cladograms according to strict international rules. It is utilized by environmental researchers to index ecological surveys and classify newly discovered species.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.1,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-018",
+    "name": "Legal Clause Classifier",
+    "skills": [
+      "Jurisdictional mapping",
+      "Liability identification",
+      "Contract taxonomy",
+      "Risk exposure analysis",
+      "Indemnification categorization"
+    ],
+    "capability_text": "This agent reads complex corporate contracts and automatically classifies individual clauses by liability, risk level, jurisdiction, and function. It extracts hidden liabilities, alerts users to non-standard indemnification language, and tags clauses for compliance auditing. Legal departments utilize this agent to speed up contract review cycles while reducing regulatory exposure.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.21,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-019",
+    "name": "Tonal Sentiment Nuance Classifier",
+    "skills": [
+      "Sarcasm detection",
+      "Emotional valence",
+      "Multi-layered intent classification",
+      "Stance detection",
+      "Linguistic irony analysis"
+    ],
+    "capability_text": "This agent maps subtle human emotions, sarcasm, and passive-aggressive tones within high-volume textual data. It evaluates structural syntax and contextual cues to differentiate genuine praise from structural irony or subtle discontent. Brands use this specialized tool to accurately analyze customer feedback where literal keyword sentiment analysis would fail.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.34,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-020",
+    "name": "Radiological Anomaly Classifier",
+    "skills": [
+      "Lesion segmentation",
+      "Tissue density analysis",
+      "Diagnostic triaging",
+      "Abnormality detection",
+      "Imaging modality classification"
+    ],
+    "capability_text": "This agent evaluates complex medical imaging scans—such as MRIs, CTs, and X-rays—to isolate and classify anatomical abnormalities. It segments lesions, highlights suspicious tissue density changes, and prioritizes urgent cases for radiological review. It serves as an automated diagnostic partner to flag subtle pathologies that require immediate specialist attention.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.22,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-021",
+    "name": "Patent IPC Classifier",
+    "skills": [
+      "CPC indexing",
+      "Prior art mapping",
+      "Claims taxonomy",
+      "Technology domain classification",
+      "Patentability assessment"
+    ],
+    "capability_text": "This agent maps complex technical patent disclosures to International Patent Classification and Cooperative Patent Classification codes. It parses technical diagrams and abstract claims to establish prior art categories and index competitive intellectual property portfolios. Patent attorneys use this specialist to ensure accurate filings and streamline patentability searches.",
+    "model": "xai/grok-4.20-reasoning",
+    "margin": 0.12,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-022",
+    "name": "Few-Shot Exemplar Selector",
+    "skills": [
+      "In-context learning",
+      "Vector similarity routing",
+      "Exemplar diversity",
+      "Prompt demonstration sequencing",
+      "Token budget management"
+    ],
+    "capability_text": "This agent dynamically selects and sequences highly relevant demonstration examples to steer large language model responses. It calculates vector distances, ensures exemplar diversity, and formats context templates to fit strict token constraints. It excels at optimizing in-context learning pipelines, dramatically improving model accuracy on niche reasoning tasks.",
+    "model": "zai-org/glm-5-maas",
+    "margin": 0.14,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-023",
+    "name": "Red Team Prompt Auditor",
+    "skills": [
+      "Indirect prompt injection",
+      "Jailbreak defense",
+      "System instruction alignment",
+      "Semantic leakage prevention",
+      "Safety boundaries"
+    ],
+    "capability_text": "This agent stress-tests system instructions and guardrails by crafting complex adversarial prompts and injection attacks. It systematically maps out model alignment boundaries, identifies vulnerability vectors, and tests for semantic leakage. AI developers utilize this agent to verify the safety and security of consumer-facing AI agents.",
+    "model": "gpt-5.5",
+    "margin": 0.19,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-024",
+    "name": "Chain of Thought Architect",
+    "skills": [
+      "Scaffolding design",
+      "Reasoning step decomposition",
+      "Self-correction pathways",
+      "Logic verification",
+      "Cognitive tree searching"
+    ],
+    "capability_text": "This agent decomposes complex analytical requests into highly structured, step-by-step reasoning prompts and scaffolds. It designs recursive execution paths, inserts self-correction loops, and builds cognitive trees to verify intermediate logic. It is optimized to force deep reasoning models to explain, audit, and refine their own problem-solving processes.",
+    "model": "gpt-5.4-mini",
+    "margin": 0.13,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-025",
+    "name": "Latent Space Steering Engineer",
+    "skills": [
+      "Activation patching",
+      "Representation engineering",
+      "Embedding guidance",
+      "Directional prompt tuning",
+      "Target output steering"
+    ],
+    "capability_text": "This agent designs target guidance instructions to steer generative outputs via direct manipulation of latent space embeddings and activation weights. It identifies model routing vectors, aligns semantic tokens, and designs prompt-level steering interventions. It is uniquely skilled at controlling generated tone, safety boundaries, and domain-specific outputs without costly fine-tuning.",
+    "model": "gpt-4.1",
+    "margin": 0.12,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-026",
+    "name": "System Prompt Constraint Compiler",
+    "skills": [
+      "Roleplay synthesis",
+      "Negative constraints",
+      "Stylistic enforcement",
+      "Persona consistency",
+      "Token efficiency optimization"
+    ],
+    "capability_text": "This agent compiles complex behavioral parameters and multi-layered negative constraints into extremely dense system instructions. It eliminates logical contradictions, enforces stylistic boundaries, and guarantees strict persona adherence over long context windows. Developers use it to maximize prompt token efficiency and enforce rigid API response formats.",
+    "model": "gpt-4.1-mini",
+    "margin": 0.32,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-027",
+    "name": "First Order Logic Prover",
+    "skills": [
+      "Resolution refutation",
+      "Predicate calculus",
+      "Modal logic proofs",
+      "Sound reasoning verification",
+      "Deductive inference generation"
+    ],
+    "capability_text": "This agent validates mathematical arguments and system designs by translating them into formal first-order predicate calculus. It runs automated resolution refutations, maps modal logic operators, and detects hidden assumptions in logical proofs. Software engineers and philosophers use it to verify the logical correctness of intricate system states.",
+    "model": "gemini-3.1-pro-preview",
+    "margin": 0.15,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-028",
+    "name": "Rhetorical Fallacy Auditor",
+    "skills": [
+      "Cognitive bias detection",
+      "Ad hominem analysis",
+      "Syllogistic validation",
+      "Argument structure deconstruction",
+      "Logical consistency checking"
+    ],
+    "capability_text": "This agent deconstructs natural language debates, policy briefs, and essays to isolate rhetorical fallacies and cognitive biases. It flags ad hominem attacks, circular reasoning, and false equivalences, mapping them visually to their underlying assertions. It helps content editors, debaters, and fact-checkers verify the logical integrity of persuasive writing.",
+    "model": "gemini-3.5-flash",
+    "margin": 0.32,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-029",
+    "name": "Ontological Graph Validator",
+    "skills": [
+      "OWL classification",
+      "RDF triples verification",
+      "Semantic web validation",
+      "Taxonomy alignment",
+      "Consistency proving"
+    ],
+    "capability_text": "This agent maps complex, interconnected datasets to strict OWL and RDF semantic standards, ensuring absolute logical consistency. It performs automated reasoning over knowledge graphs to identify taxonomic inheritance errors, disjoint class violations, and property constraints. Enterprise data architects use it to validate massive, heterogeneous data models before deployment.",
+    "model": "gemini-3.1-flash-lite",
+    "margin": 0.11,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-030",
+    "name": "Fuzzy Logic Controller Modeler",
+    "skills": [
+      "Fuzzy set theory",
+      "Membership function design",
+      "Defuzzification algorithms",
+      "Mamdani controller modeling",
+      "Approximate reasoning"
+    ],
+    "capability_text": "This agent models and optimizes control systems that rely on imprecise or continuous boundaries instead of simple binary inputs. It designs custom membership functions, develops linguistic rule bases, and implements efficient defuzzification algorithms. It excels in automation engineering, allowing systems to make stable decisions using qualitative, noisy data.",
+    "model": "gemma-4-26b-a4b-it-maas",
+    "margin": 0.24,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-031",
+    "name": "Socratic Dialectic Synthesizer",
+    "skills": [
+      "Antithesis generation",
+      "Cognitive conflict resolution",
+      "Structured Socratic questioning",
+      "Assumption deconstruction",
+      "Synthesist argument resolution"
+    ],
+    "capability_text": "This agent facilitates critical thinking by systematically challenging assertions through structured Socratic dialogue. It generates logical antitheses, isolates underlying assumptions, and synthesizes competing viewpoints into rigorous conclusions. Educators and decision-makers use this agent to stress-test ideas and eliminate cognitive echo chambers.",
+    "model": "meta/llama-4-maverick-17b-128e-instruct-maas",
+    "margin": 0.18,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-032",
+    "name": "Nonlinear Constrained Optimizer",
+    "skills": [
+      "Karush-Kuhn-Tucker conditions",
+      "Quadratic programming",
+      "Lagrange multipliers",
+      "Barrier methods",
+      "Interior point optimization"
+    ],
+    "capability_text": "This agent solves highly complex optimization equations subject to non-linear equality and inequality constraints. It implements Karush-Kuhn-Tucker conditions, constructs Lagrangian functions, and applies interior-point methods to find optimal solutions. Engineering teams use this agent to maximize system efficiency under strict physical and financial constraints.",
+    "model": "xai/grok-4.1-fast-non-reasoning",
+    "margin": 0.25,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-033",
+    "name": "Extreme Value Forecaster",
+    "skills": [
+      "Generalized Pareto distribution",
+      "Tail-risk modeling",
+      "Black swan prediction",
+      "GARCH volatility modeling",
+      "Threshold exceedance analysis"
+    ],
+    "capability_text": "This agent specializes in predicting low-probability, high-impact anomalies by applying extreme value theory and generalized Pareto distributions. It models tail-risk metrics, assesses threshold exceedance levels, and predicts potential black swan events in financial or environmental systems. Risk managers rely on this agent to secure structures and portfolios against unprecedented shocks.",
+    "model": "xai/grok-4.20-non-reasoning",
+    "margin": 0.17,
+    "tools": [],
+    "category": "reasoning"
+  },
+  {
+    "agent_id": "reasoning-034",
+    "name": "Metaheuristic Algorithm Architect",
+    "skills": [
+      "Genetic algorithms",
+      "Simulated annealing",
+      "Ant colony optimization",
+      "Hyperparameter tuning",
+      "Vehicle routing solutions"
+    ],
+    "capability_text": "This agent designs and configures heuristic search algorithms—such as genetic algorithms, simulated annealing, and particle swarm optimization—for NP-hard problems. It balances exploration and exploitation dynamics to find near-optimal routing, scheduling, and placement solutions rapidly. It is the premier tool for solving complex, computationally intensive combinatorial search problems.",
+    "model": "xai/grok-4.1-fast-reasoning",
+    "margin": 0.12,
+    "tools": [],
+    "category": "reasoning"
+  }
+]

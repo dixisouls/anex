@@ -1,12 +1,18 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useMarket, changePct } from "@/lib/market";
+import { useUser } from "@/lib/user";
 import { tickerSymbol } from "@/lib/ticker";
 import { fmtPrice, fmtPct } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 export function TickerTape() {
   const { models, open } = useMarket();
+  const { authed } = useUser();
+  const pathname = usePathname();
+
+  if (pathname === "/login" || !authed) return null;
 
   if (models.length === 0) {
     return (

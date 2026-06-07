@@ -47,6 +47,14 @@ const PREFIX_CATEGORY: Record<string, Category> = {
   economist: "Reasoning",
   classifier: "Reasoning",
   prompter: "Reasoning",
+
+  // Generated roster (data/generated_agents.json) — id prefix is the category slug.
+  content: "Content",
+  engineering: "Engineering",
+  research: "Research",
+  language: "Language",
+  strategy: "Strategy",
+  reasoning: "Reasoning",
 };
 
 export function agentCategory(agentId: string): Category {

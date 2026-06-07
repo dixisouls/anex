@@ -2,13 +2,45 @@
 
 import weave
 
-from contracts.events import CreditsChanged, ReputationChanged
+from contracts.events import CreditsChanged, PortfolioChanged, ReputationChanged
 from backend.config import AWARD_RATE, EARN_BASELINE, EARN_RATE, REP_ALPHA
 from backend.db import repo
-from backend.market import exchange, registry
+from backend.infra.db import session_scope
+from backend.market import exchange, portfolio, registry
 from backend.ports.factory import get_event_bus
 
 bus = get_event_bus()
+
+
+@weave.op
+async def charge_hire(r, *, user_id, agent_id, price, task_id) -> None:
+    """Debit the poster and pay the hired agent's treasury (credits conserved).
+
+    Runs in its own committed transaction so the post-judge settle() (which
+    happens later in a separate session) reads the updated agent treasury and
+    does not clobber this write.
+    """
+    async with session_scope() as session:
+        await repo.adjust_user_credits(session, user_id, -price)
+        old_cred, new_cred = await repo.adjust_agent_credits(session, agent_id, price)
+        await repo.add_ledger_entry(
+            session,
+            agent_id=agent_id,
+            task_id=task_id,
+            kind="hire",
+            credits_delta=price,
+        )
+        await registry.reproject_agent(r, session, agent_id)
+        p = await portfolio.value(session, r, user_id)
+    await bus.publish(CreditsChanged(agent_id=agent_id, old=old_cred, new=new_cred))
+    await bus.publish(
+        PortfolioChanged(
+            user_id=str(user_id),
+            credits=p.credits,
+            holdings_value=p.holdings_value,
+            total=p.total,
+        )
+    )
 
 
 @weave.op

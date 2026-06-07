@@ -1,17 +1,16 @@
 "use client";
 
-import { useFeed } from "@/lib/feed";
+import { useEffect } from "react";
 import { useMarket, changePct } from "@/lib/market";
 import { tickerSymbol, issuer } from "@/lib/ticker";
 import { fmtPrice, fmtCompact, fmtNum, fmtSignedPrice, fmtTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { Delta, TierBadge, Panel, PanelHeader, useFlash } from "@/components/ui";
 import { PriceChart } from "./PriceChart";
-import type { EarningsInjectedEvent, ModelStock } from "@/lib/types";
+import type { ModelStock } from "@/lib/types";
 
 export function StockDetail({ model }: { model: ModelStock }) {
-  const { open, volume } = useMarket();
-  const { events } = useFeed();
+  const { open, volume, earnings: earningsMap, loadEarnings } = useMarket();
   const flash = useFlash(model.price);
 
   const openPrice = open[model.model_id];
@@ -19,12 +18,11 @@ export function StockDetail({ model }: { model: ModelStock }) {
   const abs = openPrice != null ? model.price - openPrice : 0;
   const k = model.shares * model.credits;
 
-  const earnings = events
-    .filter(
-      (e): e is EarningsInjectedEvent =>
-        e.type === "earnings_injected" && e.model_id === model.model_id,
-    )
-    .slice(0, 8);
+  useEffect(() => {
+    loadEarnings(model.model_id);
+  }, [model.model_id, loadEarnings]);
+
+  const earnings = (earningsMap[model.model_id] ?? []).slice(0, 8);
 
   return (
     <div className="flex h-full flex-col gap-3">
@@ -105,17 +103,17 @@ export function StockDetail({ model }: { model: ModelStock }) {
                 Earnings post when this model wins judged work.
               </div>
             )}
-            {earnings.map((e) => {
+            {earnings.map((e, i) => {
               const pos = e.amount >= 0;
               return (
                 <div
-                  key={e.event_id}
+                  key={e.event_id ?? `${e.ts}-${e.agent_id}-${i}`}
                   className="flex items-center justify-between border-b border-line/40 px-3 py-1.5 font-mono text-[11px]"
                 >
                   <span className="tabular text-dim">{fmtTime(e.ts)}</span>
                   <span className="truncate px-2 text-muted">{e.agent_id}</span>
                   <span className="tabular text-dim">
-                    J{e.judge_score.toFixed(2)}
+                    {e.judge_score != null ? `J${e.judge_score.toFixed(2)}` : "—"}
                   </span>
                   <span className={cn("tabular w-16 text-right", pos ? "text-up" : "text-down")}>
                     {fmtSignedPrice(e.amount)}

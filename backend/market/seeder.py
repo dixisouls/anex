@@ -60,7 +60,9 @@ async def seed() -> dict[str, int]:
 
     emb = get_embeddings()
     for agent in SEED_AGENTS:
-        await registry.project_agent(r, agent, emb.embed_bytes(agent.capability_text))
+        await registry.project_agent(
+            r, agent, emb.embed_bytes(registry.agent_embed_text(agent))
+        )
 
     return {"agents": len(SEED_AGENTS), "models": len(SEED_MODELS), "users": user_count}
 

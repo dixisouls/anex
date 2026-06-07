@@ -45,6 +45,8 @@ VECTOR_METRIC = "COSINE"
 GCP_PROJECT = os.getenv("GCP_PROJECT", os.getenv("VERTEX_PROJECT", ""))
 GCP_LOCATION = os.getenv("GCP_LOCATION", os.getenv("VERTEX_LOCATION", "global"))
 GCP_CHAT_MODEL = os.getenv("GCP_CHAT_MODEL", "gemini-3.5-flash")
+# Judge can use a stronger/steadier model than the default chat model.
+JUDGE_MODEL = os.getenv("JUDGE_MODEL", GCP_CHAT_MODEL)
 GCP_EMBED_MODEL = os.getenv(
     "GCP_EMBED_MODEL", os.getenv("VERTEX_EMBED_MODEL", "gemini-embedding-001")
 )
@@ -68,6 +70,10 @@ W_MATCH = float(os.getenv("W_MATCH", "1.0"))
 W_REP = float(os.getenv("W_REP", "0.5"))
 W_PRICE = float(os.getenv("W_PRICE", "0.05"))
 
+# Two-stage matching: cosine recall breadth, then LLM re-rank of finalists.
+RANK_RECALL_K = int(os.getenv("RANK_RECALL_K", "10"))
+RERANK_FINALISTS = int(os.getenv("RERANK_FINALISTS", "6"))
+
 # Model exchange IPO defaults (fixed constants)
 IPO_SHARES = float(os.getenv("IPO_SHARES", "1000"))
 TIER_IPO_PRICE = {
@@ -82,6 +88,11 @@ SIM_CADENCE_S = float(os.getenv("SIM_CADENCE_S", "4.0"))
 SIM_CADENCE_JITTER = float(os.getenv("SIM_CADENCE_JITTER", "0.5"))
 TRADE_CAP = float(os.getenv("TRADE_CAP", "100"))
 MAX_CONCURRENT_TASKS = int(os.getenv("MAX_CONCURRENT_TASKS", "2"))
+
+# Shared agent worker pool: all agents route to one of these generic workers
+# (the broker passes model config per dispatch, so any worker can run any agent).
+AGENT_WORKERS = int(os.getenv("AGENT_WORKERS", "16"))
+AGENT_WORKER_BASE_PORT = int(os.getenv("AGENT_WORKER_BASE_PORT", "9001"))
 
 # Model exchange AMM tuning
 EARN_RATE = float(os.getenv("EARN_RATE", "20.0"))

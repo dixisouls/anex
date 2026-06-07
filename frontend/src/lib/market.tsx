@@ -13,10 +13,10 @@ import { api } from "./api";
 import { useFeed } from "./feed";
 import { useUser } from "./user";
 import type {
+  EarningsRow,
   FeedEvent,
   ModelStock,
   Portfolio,
-  UserPublic,
 } from "./types";
 
 export interface SeriesPoint {
@@ -31,7 +31,8 @@ interface MarketContextValue {
   open: Record<string, number>;
   volume: Record<string, number>;
   portfolio: Portfolio | null;
-  leaderboard: UserPublic[];
+  earnings: Record<string, EarningsRow[]>;
+  loadEarnings: (modelId: string) => void;
   loading: boolean;
   error: string | null;
   refreshAll: () => void;
@@ -41,6 +42,7 @@ const MarketContext = createContext<MarketContextValue | null>(null);
 
 const POLL_MS = 20_000;
 const MAX_POINTS = 400;
+const MAX_EARNINGS = 30;
 
 export function MarketProvider({ children }: { children: ReactNode }) {
   const { subscribe } = useFeed();
@@ -51,11 +53,24 @@ export function MarketProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState<Record<string, number>>({});
   const [volume, setVolume] = useState<Record<string, number>>({});
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
-  const [leaderboard, setLeaderboard] = useState<UserPublic[]>([]);
+  const [earnings, setEarnings] = useState<Record<string, EarningsRow[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const timeCursor = useRef<Record<string, number>>({});
+  const earningsLoaded = useRef<Set<string>>(new Set());
+
+  const loadEarnings = useCallback((modelId: string) => {
+    if (earningsLoaded.current.has(modelId)) return;
+    earningsLoaded.current.add(modelId);
+    api
+      .getEarnings(modelId)
+      .then((rows) => setEarnings((prev) => ({ ...prev, [modelId]: rows })))
+      .catch(() => {
+        // allow a later retry if the fetch failed
+        earningsLoaded.current.delete(modelId);
+      });
+  }, []);
 
   const appendPoint = useCallback((modelId: string, value: number) => {
     setHistory((prev) => {
@@ -129,14 +144,6 @@ export function MarketProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const refreshLeaderboard = useCallback(async () => {
-    try {
-      setLeaderboard(await api.getUsers());
-    } catch {
-      /* non-critical */
-    }
-  }, []);
-
   const refreshPortfolio = useCallback(async () => {
     if (!userId) return;
     try {
@@ -148,20 +155,17 @@ export function MarketProvider({ children }: { children: ReactNode }) {
 
   const refreshAll = useCallback(() => {
     hydrate();
-    refreshLeaderboard();
     refreshPortfolio();
-  }, [hydrate, refreshLeaderboard, refreshPortfolio]);
+  }, [hydrate, refreshPortfolio]);
 
   // Initial load + polling reconciliation.
   useEffect(() => {
     hydrate();
-    refreshLeaderboard();
     const id = setInterval(() => {
       hydrate();
-      refreshLeaderboard();
     }, POLL_MS);
     return () => clearInterval(id);
-  }, [hydrate, refreshLeaderboard]);
+  }, [hydrate]);
 
   useEffect(() => {
     refreshPortfolio();
@@ -194,6 +198,21 @@ export function MarketProvider({ children }: { children: ReactNode }) {
               ? { ...prev, [e.model_id]: { ...prev[e.model_id], price: e.price } }
               : prev,
           );
+        } else if (e.type === "earnings_injected") {
+          const row: EarningsRow = {
+            event_id: e.event_id,
+            ts: e.ts,
+            agent_id: e.agent_id,
+            amount: e.amount,
+            judge_score: e.judge_score,
+          };
+          setEarnings((prev) => {
+            const list = prev[e.model_id] ?? [];
+            return {
+              ...prev,
+              [e.model_id]: [row, ...list].slice(0, MAX_EARNINGS),
+            };
+          });
         } else if (e.type === "portfolio_changed") {
           if (e.user_id === userId) {
             setPortfolio((prev) =>
@@ -225,7 +244,8 @@ export function MarketProvider({ children }: { children: ReactNode }) {
         open,
         volume,
         portfolio,
-        leaderboard,
+        earnings,
+        loadEarnings,
         loading,
         error,
         refreshAll,

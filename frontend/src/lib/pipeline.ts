@@ -20,6 +20,10 @@ export interface SubtaskState {
   output?: string;
   score?: number;
   stage: Stage;
+  hirePrice?: number;
+  budgetRemaining?: number;
+  skipped?: boolean;
+  skipReason?: string;
 }
 
 export interface TaskState {
@@ -94,7 +98,18 @@ export function buildPipelines(events: FeedEvent[], limit = 8): TaskState[] {
         const s = ensureSub(taskIdOf(e.subtask_id), e.subtask_id);
         if (s) {
           s.hiredAgentId = e.agent_id;
+          s.hirePrice = e.price;
+          s.budgetRemaining = e.budget_remaining;
+          s.skipped = false;
           bump(s, "hired");
+        }
+        break;
+      }
+      case "subtask_skipped": {
+        const s = ensureSub(taskIdOf(e.subtask_id), e.subtask_id);
+        if (s) {
+          s.skipped = true;
+          s.skipReason = e.reason;
         }
         break;
       }

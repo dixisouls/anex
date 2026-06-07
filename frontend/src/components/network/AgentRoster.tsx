@@ -21,14 +21,21 @@ export function AgentRoster({
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
+    const matches = (a: Agent) => {
+      if (!needle) return true;
+      return (
+        a.name.toLowerCase().includes(needle) ||
+        a.agent_id.toLowerCase().includes(needle) ||
+        a.model.toLowerCase().includes(needle) ||
+        tickerSymbol(a.model).toLowerCase().includes(needle) ||
+        agentCategory(a.agent_id).toLowerCase().includes(needle) ||
+        a.capability_text.toLowerCase().includes(needle) ||
+        a.skills.some((s) => s.toLowerCase().includes(needle))
+      );
+    };
     return list
       .filter((a) => (cat === "All" ? true : agentCategory(a.agent_id) === cat))
-      .filter(
-        (a) =>
-          !needle ||
-          a.name.toLowerCase().includes(needle) ||
-          a.skills.some((s) => s.toLowerCase().includes(needle)),
-      )
+      .filter(matches)
       .sort((a, b) => b.reputation - a.reputation);
   }, [list, cat, q]);
 
@@ -51,11 +58,14 @@ export function AgentRoster({
             </button>
           ))}
         </div>
+        <span className="ml-auto font-mono text-[10px] tabular text-dim">
+          {filtered.length}/{list.length}
+        </span>
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="search skills…"
-          className="ml-auto w-40 border border-line bg-base px-2 py-1 font-mono text-[11px] text-ink outline-none placeholder:text-faint focus:border-gold-dim"
+          placeholder="search name, skill, model…"
+          className="w-52 border border-line bg-base px-2 py-1 font-mono text-[11px] text-ink outline-none placeholder:text-faint focus:border-gold-dim"
         />
       </div>
 

@@ -8,7 +8,6 @@ import { StockDetail } from "@/components/exchange/StockDetail";
 import { OrderTicket } from "@/components/exchange/OrderTicket";
 import { PortfolioRail } from "@/components/exchange/PortfolioRail";
 import { TradeBlotter } from "@/components/exchange/TradeBlotter";
-import { Leaderboard } from "@/components/exchange/Leaderboard";
 import { BloombergTerminal } from "@/components/exchange/BloombergTerminal";
 import { cn } from "@/lib/cn";
 
@@ -83,7 +82,7 @@ export default function ExchangePage() {
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto xl:overflow-hidden">
       <div className="grid grid-cols-1 gap-3 p-3 xl:h-full xl:grid-cols-12">
-        {/* Left — watchlist + leaderboard */}
+        {/* Left — watchlist */}
         <section className="flex flex-col gap-3 xl:col-span-3 xl:min-h-0">
           <Panel className="flex h-[460px] flex-col xl:h-auto xl:min-h-0 xl:flex-1">
             <PanelHeader
@@ -96,12 +95,6 @@ export default function ExchangePage() {
             />
             <div className="min-h-0 flex-1">
               <Watchlist selected={selected} onSelect={setSelected} />
-            </div>
-          </Panel>
-          <Panel className="flex h-64 flex-col xl:h-[34%]">
-            <PanelHeader title="Investor leaderboard" />
-            <div className="min-h-0 flex-1">
-              <Leaderboard />
             </div>
           </Panel>
         </section>
