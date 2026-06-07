@@ -41,6 +41,13 @@ def model_key(model_id: str) -> str:
     return f"{MODEL_PREFIX}{model_id}"
 
 
+def agent_embed_text(agent: Agent) -> str:
+    """Document text projected into the hiring index. Includes name and skills
+    so retrieval aligns with how subtasks are phrased, not just the prose blurb."""
+    skills = ", ".join(agent.skills)
+    return f"{agent.name}. Skills: {skills}. {agent.capability_text}"
+
+
 def agent_to_mapping(agent: Agent, vector_bytes: bytes) -> dict:
     return {
         "agent_id": agent.agent_id,

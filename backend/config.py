@@ -68,6 +68,10 @@ W_MATCH = float(os.getenv("W_MATCH", "1.0"))
 W_REP = float(os.getenv("W_REP", "0.5"))
 W_PRICE = float(os.getenv("W_PRICE", "0.05"))
 
+# Two-stage matching: cosine recall breadth, then LLM re-rank of finalists.
+RANK_RECALL_K = int(os.getenv("RANK_RECALL_K", "10"))
+RERANK_FINALISTS = int(os.getenv("RERANK_FINALISTS", "6"))
+
 # Model exchange IPO defaults (fixed constants)
 IPO_SHARES = float(os.getenv("IPO_SHARES", "1000"))
 TIER_IPO_PRICE = {

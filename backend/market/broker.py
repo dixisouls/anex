@@ -13,7 +13,14 @@ from contracts.events import (
     TaskScored,
 )
 from contracts.schemas import Candidate, Subtask
-from backend.config import GCP_CHAT_MODEL, W_MATCH, W_PRICE, W_REP
+from backend.config import (
+    GCP_CHAT_MODEL,
+    RANK_RECALL_K,
+    RERANK_FINALISTS,
+    W_MATCH,
+    W_PRICE,
+    W_REP,
+)
 from backend.db import repo
 from backend.infra.db import session_scope
 from backend.infra.model_router import generate
@@ -97,8 +104,9 @@ def decompose(goal: str) -> list[str]:
 
 
 @weave.op
-async def rank(r, subtask_text: str, k: int = 5) -> list[Candidate]:
-    hits = await registry.search(r, emb.embed_bytes(subtask_text), k=k)
+async def rank(r, subtask_text: str, k: int = RANK_RECALL_K) -> list[Candidate]:
+    query_vec = emb.embed_bytes(subtask_text, task_type="RETRIEVAL_QUERY")
+    hits = await registry.search(r, query_vec, k=k)
     out: list[Candidate] = []
     for agent_id, match in hits:
         a = await registry.get_agent_cached(r, agent_id)
@@ -118,6 +126,50 @@ async def rank(r, subtask_text: str, k: int = 5) -> list[Candidate]:
         )
     out.sort(key=lambda c: c.final_score, reverse=True)
     return out
+
+
+@weave.op
+async def select_best(r, subtask_text: str, cands: list[Candidate]) -> Candidate:
+    """LLM re-rank: pick the best-fit agent among the cosine finalists.
+
+    Cosine recall is good at breadth but often returns an over-narrow specialist
+    as the nearest neighbour. A single cheap call inspecting each finalist's
+    name/skills/capability fixes the 'close but wrong' mismatch. Falls back to
+    the cosine top on any error or unknown id, and skips the call for <=1
+    candidate.
+    """
+    if len(cands) <= 1:
+        return cands[0]
+
+    finalists = cands[:RERANK_FINALISTS]
+    lines: list[str] = []
+    for c in finalists:
+        a = await registry.get_agent_cached(r, c.agent_id)
+        if a is None:
+            continue
+        skills = ", ".join(a.skills)
+        lines.append(
+            f"- {c.agent_id} | {a.name} | skills: {skills} | {a.capability_text}"
+        )
+    if not lines:
+        return cands[0]
+
+    prompt = (
+        "Pick the single best agent to perform TASK. Choose the one whose skills "
+        "and capability most directly produce the required deliverable.\n"
+        'Reply ONLY JSON: {"agent_id": "<id>", "reason": "<one line>"}.\n\n'
+        f"TASK:\n{subtask_text}\n\nAGENTS:\n" + "\n".join(lines)
+    )
+    valid = {c.agent_id for c in finalists}
+    try:
+        raw = generate(GCP_CHAT_MODEL, "gcp", prompt)["output"]
+        data = json.loads(raw[raw.find("{") : raw.rfind("}") + 1])
+        chosen_id = str(data.get("agent_id", "")).strip()
+        if chosen_id in valid:
+            return next(c for c in finalists if c.agent_id == chosen_id)
+    except Exception:
+        pass
+    return cands[0]
 
 
 @weave.op
@@ -147,10 +199,11 @@ async def _run_task_body(r, session, task_id: str, goal: str) -> None:
         cands = await rank(r, st.text)
         if not cands:
             continue
+        top = await select_best(r, st.text, cands)
+        ranked = [top] + [c for c in cands if c.agent_id != top.agent_id]
         await bus.publish(
-            CandidatesRanked(subtask_id=st.subtask_id, candidates=cands)
+            CandidatesRanked(subtask_id=st.subtask_id, candidates=ranked)
         )
-        top = cands[0]
         await bus.publish(
             AgentHired(subtask_id=st.subtask_id, agent_id=top.agent_id)
         )

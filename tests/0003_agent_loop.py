@@ -178,5 +178,73 @@ async def test_run_task_dispatches_sequentially(mock_agent):
     assert "output-00000000-0000-0000-0000-000000000001-0" in second_input
 
 
+def _cand(agent_id: str, final: float) -> Candidate:
+    return Candidate(
+        agent_id=agent_id,
+        match_score=final,
+        reputation=0.5,
+        price=1.0,
+        final_score=final,
+    )
+
+
+@pytest.mark.asyncio
+async def test_select_best_single_candidate_skips_llm():
+    r = AsyncMock()
+    cands = [_cand("only-01", 0.9)]
+    with patch.object(broker, "generate") as mock_gen:
+        chosen = await broker.select_best(r, "task", cands)
+    assert chosen.agent_id == "only-01"
+    mock_gen.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_select_best_picks_llm_choice(mock_agent):
+    r = AsyncMock()
+    cands = [_cand("a", 0.9), _cand("b", 0.7), _cand("c", 0.6)]
+    with (
+        patch.object(
+            broker.registry, "get_agent_cached", new_callable=AsyncMock
+        ) as mock_get,
+        patch.object(broker, "generate") as mock_gen,
+    ):
+        mock_get.return_value = mock_agent
+        mock_gen.return_value = {"output": '{"agent_id": "b", "reason": "best fit"}'}
+        chosen = await broker.select_best(r, "task", cands)
+    assert chosen.agent_id == "b"
+
+
+@pytest.mark.asyncio
+async def test_select_best_falls_back_on_unknown_id(mock_agent):
+    r = AsyncMock()
+    cands = [_cand("a", 0.9), _cand("b", 0.7)]
+    with (
+        patch.object(
+            broker.registry, "get_agent_cached", new_callable=AsyncMock
+        ) as mock_get,
+        patch.object(broker, "generate") as mock_gen,
+    ):
+        mock_get.return_value = mock_agent
+        mock_gen.return_value = {"output": '{"agent_id": "nonexistent"}'}
+        chosen = await broker.select_best(r, "task", cands)
+    assert chosen.agent_id == "a"
+
+
+@pytest.mark.asyncio
+async def test_select_best_falls_back_on_bad_json(mock_agent):
+    r = AsyncMock()
+    cands = [_cand("a", 0.9), _cand("b", 0.7)]
+    with (
+        patch.object(
+            broker.registry, "get_agent_cached", new_callable=AsyncMock
+        ) as mock_get,
+        patch.object(broker, "generate") as mock_gen,
+    ):
+        mock_get.return_value = mock_agent
+        mock_gen.return_value = {"output": "not json at all"}
+        chosen = await broker.select_best(r, "task", cands)
+    assert chosen.agent_id == "a"
+
+
 def test_derived_price():
     assert pricing.derived_price(10.0, 0.2) == pytest.approx(12.0)
