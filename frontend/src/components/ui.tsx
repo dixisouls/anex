@@ -49,12 +49,19 @@ export function PanelHeader({
   );
 }
 
-export function TierBadge({ tier }: { tier: Tier }) {
+export function TierBadge({
+  tier,
+  className,
+}: {
+  tier: Tier;
+  className?: string;
+}) {
   return (
     <span
       className={cn(
-        "inline-flex items-center border px-1.5 py-px font-mono text-[9px] font-semibold tracking-[0.18em]",
+        "inline-flex shrink-0 items-center border px-1.5 py-px font-mono text-[9px] font-semibold tracking-[0.18em]",
         TIER_CLASS[tier],
+        className,
       )}
     >
       {TIER_LABEL[tier]}

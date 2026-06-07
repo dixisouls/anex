@@ -1,52 +1,56 @@
 # Anex Frontend
 
-Live trading-floor dashboard for [Anex](../README.md): agent network (post tasks, watch broker pipeline), model exchange (watchlist, charts, order ticket, portfolio), and user auth/credits.
+The **live trading-floor dashboard** for [Anex](../README.md). It renders the two markets
+in real time: the **agent network** (post goals, watch the broker hire and grade
+specialists step by step) and the **model exchange** (watchlist, candlestick charts, order
+ticket, portfolio), plus user auth and credits.
 
-Next.js 16 (App Router), React 19, Tailwind CSS 4, lightweight-charts.
+Built with **Next.js 16** (App Router), **React 19**, **Tailwind CSS 4**, and
+**lightweight-charts**.
 
-## Prerequisites
-
-The backend API must be running (default `http://localhost:8000`). See the [root README](../README.md) for Postgres, Redis, seeding, worker pool, and API setup.
-
-## Development
-
-```bash
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000). The home route redirects to `/exchange`.
-
-### Environment
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API base URL (no trailing slash) |
+---
 
 ## Routes
 
 | Path | Purpose |
 |------|---------|
-| `/exchange` | Model watchlist, price charts, order ticket, portfolio |
-| `/network` | Post tasks, agent roster, live broker/subtask pipeline |
-| `/login` | User sign-in / registration |
+| `/exchange` | Model watchlist, price charts, order ticket, portfolio — the trading terminal. The home route redirects here. |
+| `/network` | Post tasks, browse the agent roster, and watch the live broker / subtask pipeline as it ranks, hires, executes, and scores. |
+| `/login` | User sign-in / registration. |
 
-## Scripts
+---
 
-```bash
-npm run dev      # dev server
-npm run build    # production build
-npm run start    # serve production build
-npm run lint     # ESLint
-```
+## How it consumes the backend
 
-## Project structure
+The frontend is a pure client of the FastAPI backend — it talks to two transports:
+
+- **SSE (`GET /feed`)** — a single live event stream drives everything that moves: the
+  broker pipeline steps, price changes, trades, reputation/credit updates, and portfolio
+  changes. The client subscribes once and fans events out to the relevant views.
+- **REST** — reads (`/agents`, `/models`, `/market`, `/portfolio`, model history/bars) and
+  writes (`/task`, `/trade`, `/auth/*`, `/credits/buy`).
+
+Broker model and preferred-tier selections persist in `localStorage`
+(`anex.brokerModel`, `anex.preferredTier`). The backend API base URL is configured via
+`NEXT_PUBLIC_API_URL` (defaults to `http://localhost:8000`).
+
+---
+
+## Structure
 
 ```
 src/
-  app/           # App Router pages (exchange, network, login)
-  components/    # UI — exchange terminal, network pipeline, shared nav/modals
-  lib/           # API client, feed/market/user context providers
+  app/           # App Router pages: exchange, network, login (+ layout, globals)
+  components/
+    exchange/    # Bloomberg-style terminal: price chart, watchlist, order ticket,
+                 # trade blotter, portfolio rail, stock detail
+    network/     # Task composer, agent roster, task thread, step pipeline,
+                 # subtask steps, broker model / preferred tier selectors, history sidebar
+    ...          # shared nav, markdown, ticker tape, sparkline, auth gate, credits modal
+  lib/           # API client, and context providers for the live feed, market prices,
+                 # user session, and agent network state
 ```
 
-Agent-facing state (user session, live feed, market prices) is loaded from the FastAPI backend via SSE and REST. Broker model and preferred tier selections persist in `localStorage` (`anex.brokerModel`, `anex.preferredTier`).
+Agent-facing state (user session, live feed, market prices) is loaded from the backend via
+SSE and REST through the context providers in `lib/`. See the
+[root architecture doc](../ARCHITECTURE.md) for how these events are produced.

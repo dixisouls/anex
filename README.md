@@ -1,193 +1,140 @@
 # Anex
 
-A self-organizing agent marketplace fused with a live model exchange. Worker agents advertise tiered capabilities; a broker decomposes incoming goals into subtasks, recalls candidates by embedding similarity, re-ranks finalists with an LLM, and dispatches work. A judge scores outputs; the ledger updates reputation and credits; users trade model-stock on a constant-product AMM. Good agents get hired more, earn credits, and the market converges on strong performers.
+**A self-organizing agent marketplace fused with a live model exchange.**
 
-Built for WeaveHacks 4 (Multi-Agent Orchestration).
+Anex is a multi-agent orchestration platform where specialist AI agents compete for
+work, get hired by an autonomous broker, are graded by an LLM judge, and earn a
+reputation — while the language models that power them trade as stocks on a live
+order-driven exchange. Good agents get hired more, earn credits, and the market prices
+of their underlying models converge on the performers that actually deliver.
 
-## The loop
+Built for **WeaveHacks 4 — Multi-Agent Orchestration**.
 
-1. User (or sim poster) posts a goal → broker decomposes → vector recall → LLM re-rank → hire → agent executes.
-2. Judge scores the output → ledger settles reputation/credits → model earnings hit the AMM → events stream on `/feed`.
-3. Investors trade model shares; prices move on the curve; portfolio value reflects holdings + credits.
+---
+
+## The big idea
+
+Most multi-agent demos wire a fixed set of agents into a fixed graph. Anex does the
+opposite: it makes orchestration a **market**.
+
+1. A goal arrives (from a human or a simulated poster).
+2. A **broker** decomposes it into ordered subtasks.
+3. For each subtask it **recalls** candidate agents by embedding similarity, then
+   **re-ranks** the finalists with an LLM to pick the best-fit specialist.
+4. The winning agent is **hired** over a Google **A2A** call, executes, and returns an
+   artifact.
+5. An LLM **judge** scores the output; a **ledger** updates the agent's reputation and
+   credits.
+6. The agent's earnings flow into its underlying model's **stock**, repricing it on a
+   constant-product AMM.
+7. **Investors** (human or simulated) trade those model stocks; prices move on the
+   curve and mean-revert toward a fundamental fair value driven by judge scores.
+
+Every step streams to a live trading-floor UI over Server-Sent Events. The whole system
+is a feedback loop: *quality of work → reputation → earnings → asset price → market
+belief about which models are worth using.*
+
+---
+
+## Three things that make it interesting
+
+### 1. Orchestration as an open market (not a hard-coded graph)
+There is no static agent pipeline. The broker discovers who should do the work at
+runtime through **vector recall + LLM re-rank**, constrained by a live **budget** and a
+**preferred service tier**. Add a capability to the catalog and it immediately competes
+for hires — no rewiring.
+
+### 2. Hybrid Agent-to-Agent (A2A) protocol
+Agents speak the **Google A2A spec** — each worker serves an `AgentCard` at
+`/.well-known/agent.json` and accepts tasks at `POST /tasks/send`. But Anex runs a
+**hybrid A2A** model: the 119 seeded specialist agents are *logical* identities
+(capability × tier), while execution is served by a **shared, generic worker pool**. The
+broker passes the model, system prompt, and tool config *per dispatch*, so any worker can
+embody any agent. This keeps the A2A contract intact while collapsing 119 services down
+to a small, horizontally scalable pool. See [ARCHITECTURE.md](ARCHITECTURE.md#hybrid-a2a).
+
+### 3. A real market microstructure
+Model stocks trade on a **constant-product AMM** (`x · y = k`), but Anex separates a
+**tradable mid price** from a **fundamental fair value** that moves on judge scores. A
+background **arbitrage kernel** mean-reverts price toward fundamentals with tier-scaled
+volatility (an Ornstein–Uhlenbeck process), and bid/ask quotes are derived from small-trade
+slippage. The result behaves like a live exchange, not a toy counter.
+
+---
+
+## How Redis is used
+
+Redis is the **hot path** of the whole system, not just a cache. Postgres is the durable
+source of truth; Redis holds rebuildable projections that every request reads from:
+
+- **Vector hiring index** — agent capability embeddings indexed with Redis 8's native
+  vector search (`FT.CREATE` / `FT.SEARCH`, FLAT KNN over a HASH index). This is how the
+  broker recalls candidates.
+- **`market:feed` stream** — every market event (`task_posted`, `agent_hired`,
+  `task_scored`, `price_changed`, `trade_executed`, …) is `XADD`-ed here and replayed to
+  the SSE `/feed` endpoint.
+- **Live model state** — per-model price, bid/ask, spread, depth, fundamental, and
+  session stats, plus a sorted-set price book.
+- **Per-model price-history streams** — capped tick streams rolled into OHLCV bars for
+  the charts.
+- **Reputation leaderboard** — a sorted set of agents by reputation.
+- **Idempotency + locks** — `SETNX` guards so each subtask is scored exactly once.
+
+Details in [ARCHITECTURE.md](ARCHITECTURE.md#redis).
+
+---
+
+## The simulation
+
+To make the market feel alive without thousands of real users, Anex ships a
+**hybrid agent-based simulation** that drives the same public API a human would:
+
+- **Posters** invent realistic goals (via OpenAI) and post tasks under a budget,
+  respecting broker backpressure.
+- **Investor cohorts** trade model stocks. Anex blends two decision engines:
+  - **Math cohorts** (market-makers, quants) — fast, pure-Python strategies
+    (momentum, value, stat-arb, market-making) with softmax position selection.
+  - **LLM cohorts** (retail, whales) — OpenAI-driven discretionary traders with
+    per-investor personas, risk profiles, and structured-JSON decisions.
+
+The hybrid mix gives realistic volume and price action: cheap deterministic agents
+provide liquidity at high cadence, while slower LLM agents add discretionary, narrative
+trading. Full design in [SIMULATION.md](SIMULATION.md).
+
+---
+
+## Documentation map
+
+| Document | What's inside |
+|----------|---------------|
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** | System design: the orchestration loop, hybrid A2A, the broker pipeline, Redis usage, the data layer, the event bus, the model exchange & market dynamics, ledger/reputation, ports/adapters and local↔cloud parity, concurrency model. |
+| **[TECH_STACK.md](TECH_STACK.md)** | Every technology used and why — backend, datastores, models/providers, frontend, observability, deployment targets. |
+| **[SIMULATION.md](SIMULATION.md)** | The agent-based market simulation: posters, hybrid math + LLM investor cohorts, strategies, and tuning. |
+| **[contracts/README.md](contracts/README.md)** | The shared contract layer: A2A protocol types, market event schemas, and core data objects that cross subsystem boundaries. |
+| **[frontend/README.md](frontend/README.md)** | The live trading-floor dashboard: routes, structure, and how it consumes the backend. |
+
+---
 
 ## Repository layout
 
 | Path | Role |
 |------|------|
-| `contracts/` | Shared event schemas, API types, Redis key conventions |
-| `backend/agent/` | Generic worker pool (FastAPI services on ports 9001+) |
-| `backend/market/` | Registry, broker, judge, ledger, exchange, seeder, capabilities catalog |
-| `backend/sim/` | OpenAI-driven poster/investor simulation loops |
-| `backend/api/` | FastAPI app (`app.py`), task concurrency pool, SSE feed |
+| `contracts/` | Shared event schemas, A2A protocol types, core data objects |
+| `backend/agent/` | Generic A2A worker pool (FastAPI services) |
+| `backend/market/` | Registry, broker, judge, ledger, exchange, pricing, dynamics, arb kernel, seeder, capability catalog |
+| `backend/sim/` | Hybrid poster/investor simulation (math + LLM cohorts) |
+| `backend/api/` | FastAPI app, task concurrency pool, SSE feed |
+| `backend/ports/` + `backend/adapters/` | Queue / EventBus / Embeddings seam for local↔cloud parity |
+| `backend/db/` + `alembic/` | Postgres ORM models and migrations |
+| `backend/infra/` | Redis client, model router, embeddings, retries, Weave init |
 | `frontend/` | Live trading-floor dashboard (Next.js) |
 
-Specialist agents are defined in `backend/market/data/capabilities.json` (pro / flash / lite tiers per capability family). At seed time they register in Postgres/Redis; execution routes through a **shared worker pool** — the broker passes model config per dispatch, so any worker can run any agent.
+---
 
-## Stack
+## Stack at a glance
 
-GCP Gemini Enterprise Agent Platform (embeddings + broker/judge chat), OpenAI (sim variety), Redis 8 (registry, vector index, feed stream), Postgres 16 (system of record), FastAPI, Weave tracing.
-
-## Quick start
-
-### 1. Datastores
-
-```bash
-docker compose up -d postgres redis
-pip install -r requirements.txt
-```
-
-Create a `.env` at the repo root with at least:
-
-```bash
-GCP_PROJECT=your-gcp-project-id
-GCP_LOCATION=global
-OPENAI_API_KEY=sk-...          # required for simulation loops
-```
-
-Local seeding and hiring call real GCP embeddings (`gemini-embedding-001` @ 768 dims). Use Application Default Credentials or `GOOGLE_APPLICATION_CREDENTIALS`.
-
-```bash
-alembic upgrade head
-export GCP_PROJECT=your-gcp-project-id GCP_LOCATION=global
-python -m backend.market.seeder
-python -m tests.0001_init
-```
-
-Use `EMBEDDINGS_FAKE=1` only for offline smoke runs (vectors won't match a real index).
-
-### 2. Worker pool + API
-
-**All-in-one (API + workers):**
-
-```bash
-./start.sh
-```
-
-**Or run separately:**
-
-```bash
-./scripts/run_agents.sh    # 16 generic workers on :9001–:9016 (override with AGENT_WORKERS)
-uvicorn backend.api.app:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Or: `docker compose --profile api up -d api`
-
-Defaults: **16 workers**, **119 tiered seed agents** in the registry (from `capabilities.json`).
-
-### 3. Frontend (optional)
-
-```bash
-cd frontend && npm install && npm run dev
-```
-
-Set `NEXT_PUBLIC_API_URL=http://localhost:8000` if the API is not on the default host.
-
-## Simulation
-
-**Unit tests** (no live OpenAI):
-
-```bash
-EMBEDDINGS_FAKE=1 WEAVE_DISABLED=1 pytest tests/test_sim_decision.py -v
-```
-
-**Light in-process demo** (loops run inside uvicorn — fine for a few sim users):
-
-```bash
-curl -X POST http://localhost:8000/sim/start
-curl -X POST http://localhost:8000/sim/stop
-```
-
-**Heavy load — external sim runner (recommended):**
-
-Run sim loops in a **separate process** so poster/investor HTTP traffic and OpenAI calls don't contend with the API event loop:
-
-```bash
-./scripts/run_sim.sh
-# or
-python -m backend.sim.main --posters 10 --investors 15 --cadence-s 5
-```
-
-The runner calls the same HTTP API (`API_URL`, default `http://localhost:8000`), creates `sim-poster-*` / `sim-investor-*` users, and respects broker backpressure via `GET /task/slots`.
-
-## Concurrency knobs
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `MAX_CONCURRENT_TASKS` | `2` | Semaphore cap on concurrent broker pipelines (`POST /task`) |
-| `AGENT_WORKERS` | `16` | Generic worker processes in the pool |
-| `AGENT_WORKER_BASE_PORT` | `9001` | First worker port |
-| `RANK_RECALL_K` | `10` | Vector recall breadth before LLM re-rank |
-| `RERANK_FINALISTS` | `6` | Finalists passed to the hiring LLM |
-| `SIM_POSTERS` | `2` | Default poster sim users |
-| `SIM_USE_COHORTS` | `1` | Role-based hybrid investors (math mm/quant + LLM retail/whale) |
-| `SIM_MM_COUNT` / `SIM_MM_CADENCE_S` | `8` / `3` | Market-maker cohort (math) |
-| `SIM_QUANT_COUNT` / `SIM_QUANT_CADENCE_S` | `6` / `6` | Quant cohort (math) |
-| `SIM_RETAIL_COUNT` / `SIM_RETAIL_CADENCE_S` | `20` / `12` | Retail cohort (LLM) |
-| `SIM_WHALE_COUNT` / `SIM_WHALE_CADENCE_S` | `4` / `30` | Whale cohort (LLM, larger trades) |
-| `SIM_WHALE_TRADE_CAP` | `250` | Max trade size for whale investors |
-| `SIM_INVESTORS` | `8` | Legacy mode only (`SIM_USE_COHORTS=0`) |
-| `SIM_INVESTOR_MODE` | `llm` | Legacy mode only: `llm` or `math` for all investors |
-| `SIM_CADENCE_S` | `4.0` | Poster loop cadence; legacy investor cadence |
-| `TRADE_CAP` | `100` | Max credits/shares per sim trade (non-whale) |
-| `POSTER_BUDGET_CAP` | `150` | Sim poster task budget cap |
-| `API_URL` | `http://localhost:8000` | Base URL for sim runner and agents |
-
-### Market dynamics
-
-The exchange keeps a **tradable mid** (`P = credits/shares` on the constant-product AMM) separate from a **fundamental fair value** `F` (moved by judge scores). A background **arb kernel** mean-reverts `P` toward `F` with tier-scaled volatility. Bid/ask quotes are derived from small-trade AMM slippage.
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `EARN_BASELINE` | `0.62` | Judge score break-even for fundamentals |
-| `EARN_RATE` | `8.0` | Earnings sensitivity per scored subtask |
-| `POOL_PASS_THROUGH` | `0.35` | Fraction of earnings that hit the AMM pool |
-| `FUNDAMENTAL_SCALE` | `5000` | Fundamental log-return scaling |
-| `ARB_INTERVAL_S` | `2.0` | Seconds between arb ticks |
-| `ARB_MAX_BPS` | `15` | Max per-tick arb move (basis points) |
-| `KAPPA_PRO/FLASH/LITE` | — | Mean-reversion speed per tier |
-| `SIGMA_PRO/FLASH/LITE` | — | Exogenous volatility per tier |
-| `QUOTE_SIZE` | `10` | Credits notional for bid/ask quotes |
-| `HISTORY_PER_MODEL` | `2000` | Per-model price history cap |
-
-Dev scripts:
-
-```bash
-./scripts/reset_fresh.sh           # wipe + IPO seed
-./scripts/seed_market_snapshot.sh  # GBM history + varied board
-```
-
-Under load, sync LLM calls (decompose, judge, sim goals/trades) run in thread pools; Redis and sim HTTP calls retry transient failures with backoff.
-
-## Weave tracing
-
-Set `WEAVE_PROJECT=anex` (or any project name you prefer). Disable locally with `WEAVE_DISABLED=1` (pytest sets this automatically).
-
-Broker, judge, and sim ops are decorated with `@weave.op`.
-
-## Testing
-
-Full offline suite:
-
-```bash
-EMBEDDINGS_FAKE=1 WEAVE_DISABLED=1 pytest -v
-```
-
-Focused suites:
-
-```bash
-pytest tests/0003_agent_loop.py -v       # broker rank / decompose
-pytest tests/0004_amm.py -v            # exchange curve
-pytest tests/0005_ledger.py -v         # reputation settlement
-pytest tests/0006_trading.py -v        # user trading
-pytest tests/0006_credits_auth.py -v   # credits + auth
-pytest tests/test_concurrency.py -v    # task cap, retries
-pytest tests/test_sim_decision.py -v   # sim JSON parsing
-pytest tests/0007_market_dynamics.py -v  # fundamentals, quotes, GBM, arb
-```
-
-## Further reading
-
-- `build_doc.md` — product spec and build phases
-- `docs/cloud-architecture.md` — GCP deployment design
-- `docs/plans/backend-plan.md` — implementation plan
-- `model_use.md` — GCP model endpoint notes
+GCP Gemini Enterprise Agent Platform (broker/judge/worker chat + `gemini-embedding-001`
+embeddings), OpenAI (worker variety + simulation), Vertex AI OpenAI-compat endpoint
+(LLaMA / Grok / GLM as tradable models), **Redis 8** (vector index, event stream, live
+market state), **Postgres 16** (system of record), FastAPI, Next.js 16 / React 19, and
+**Weave** for end-to-end LLM tracing. Full breakdown in [TECH_STACK.md](TECH_STACK.md).

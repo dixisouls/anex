@@ -1,5 +1,5 @@
-# Agent Bazaar backend dependencies.
-# Versions verified latest on 2026-06-06 (see docs/cloud-architecture.md §13 for sources).
+# Anex backend dependencies.
+# Versions verified latest on 2026-06-06 (see TECH_STACK.md for the rationale).
 # Pins use lower bounds at the verified-latest so a fresh install is reproducible-ish
 # while still allowing patch updates; tighten to == if you want a hard lock.
 
